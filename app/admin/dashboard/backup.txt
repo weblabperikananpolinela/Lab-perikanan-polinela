@@ -1,0 +1,1593 @@
+'use client';
+
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import {
+  LayoutDashboard,
+  PackageSearch,
+  FolderOutput,
+  FileStack,
+  Menu,
+  CheckCircle,
+  XCircle,
+  Search,
+  Clock,
+  CheckSquare,
+  AlertCircle,
+  Eye,
+  Plus,
+  ChevronLeft,
+  ChevronRight,
+  ClipboardList,
+  FileText,
+  Circle,
+  Upload,
+  LogOut
+} from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+
+// --- CONFIG & HELPERS ---
+const labMap: Record<number, string> = {
+  1: 'Lab SFS budidaya perikanan',
+  2: 'Lab A (lab pembenihan ikan)',
+  3: 'Lab pengolahan perikanan',
+  4: 'Lab perikanan bawah',
+  5: 'Tefa polifishfarm',
+  6: 'Tefa POFF',
+  7: 'Tefa polifeed',
+  8: 'Lab Simulator',
+  9: 'Lab Tangkap',
+  10: 'Lab Radar',
+};
+
+const getDashboardTitle = (lab_id: number) => {
+  if ([8, 9, 10].includes(lab_id)) {
+    return 'Dashboard Pengelola: Lab Perikanan Tangkap';
+  }
+  return `Dashboard Pengelola: ${labMap[lab_id] || 'Laboratorium'}`;
+};
+
+const applyLabFilter = (supabaseQuery: any, lab_id: number) => {
+  if ([8, 9, 10].includes(lab_id)) {
+    return supabaseQuery.in('lab_id', [8, 9, 10]);
+  }
+  return supabaseQuery.eq('lab_id', lab_id);
+};
+
+// --- SUB-COMPONENTS ---
+
+// 1. OVERVIEW TAB
+function OverviewTab({
+  adminProfile,
+  supabase,
+}: {
+  adminProfile: any;
+  supabase: any;
+}) {
+  const [stats, setStats] = useState({
+    menunggu: 0,
+    total: 0,
+    disetujui: 0,
+    alatJenis: 0,
+    alatTotal: 0,
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      // Validasi status secara aman (karena status default bisa saja null)
+      const q1 = applyLabFilter(
+        supabase
+          .from('peminjaman')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'Menunggu validasi'),
+        adminProfile.lab_id,
+      );
+      const res1 = await q1;
+
+      const q2 = applyLabFilter(
+        supabase.from('peminjaman').select('*', { count: 'exact', head: true }),
+        adminProfile.lab_id,
+      );
+      const res2 = await q2;
+
+      const q3 = applyLabFilter(
+        supabase
+          .from('peminjaman')
+          .select('*', { count: 'exact', head: true })
+          .eq('status', 'Disetujui'),
+        adminProfile.lab_id,
+      );
+      const res3 = await q3;
+
+      const q4 = applyLabFilter(
+        supabase.from('inventaris').select('jumlah'),
+        adminProfile.lab_id,
+      );
+      const res4 = await q4;
+
+      let jenisCount = 0;
+      let totalUnit = 0;
+      if (res4.data) {
+        jenisCount = res4.data.length;
+        totalUnit = res4.data.reduce(
+          (acc: number, curr: any) => acc + (curr.jumlah || 0),
+          0,
+        );
+      }
+
+      setStats({
+        menunggu: res1.count || 0,
+        total: res2.count || 0,
+        disetujui: res3.count || 0,
+        alatJenis: jenisCount,
+        alatTotal: totalUnit,
+      });
+      setLoading(false);
+    };
+
+    fetchStats();
+  }, [adminProfile, supabase]);
+
+  if (loading)
+    return (
+      <div className='animate-pulse text-lg text-slate-500 font-medium'>
+        Memuat data ringkasan...
+      </div>
+    );
+
+  return (
+    <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6'>
+      <Card className='border-l-4 border-l-amber-500 shadow-sm relative overflow-hidden'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm font-medium text-slate-500 uppercase tracking-wider'>
+            Menunggu Validasi
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='text-3xl font-bold text-slate-900'>
+            {stats.menunggu}
+          </div>
+          <Clock className='absolute right-4 bottom-4 size-10 text-amber-100' />
+        </CardContent>
+      </Card>
+
+      <Card className='border-l-4 border-l-green-500 shadow-sm relative overflow-hidden'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm font-medium text-slate-500 uppercase tracking-wider'>
+            Pengajuan Diterima
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='text-3xl font-bold text-slate-900'>
+            {stats.disetujui}
+          </div>
+          <CheckSquare className='absolute right-4 bottom-4 size-10 text-green-100' />
+        </CardContent>
+      </Card>
+
+      <Card className='border-l-4 border-l-blue-500 shadow-sm relative overflow-hidden'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm font-medium text-slate-500 uppercase tracking-wider'>
+            Total Pengajuan
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='text-3xl font-bold text-slate-900'>{stats.total}</div>
+          <FileText className='absolute right-4 bottom-4 size-10 text-blue-100' />
+        </CardContent>
+      </Card>
+
+      <Card className='border-l-4 border-l-purple-500 shadow-sm relative overflow-hidden'>
+        <CardHeader className='pb-2'>
+          <CardTitle className='text-sm font-medium text-slate-500 uppercase tracking-wider'>
+            Info Inventaris
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className='text-3xl font-bold text-slate-900'>
+            {stats.alatJenis}{' '}
+            <span className='text-base font-normal text-slate-500'>
+              Jenis Alat
+            </span>
+          </div>
+          <p className='mt-1 text-sm font-medium text-slate-600'>
+            Total {stats.alatTotal} Unit Tersedia
+          </p>
+          <PackageSearch className='absolute right-4 bottom-4 size-10 text-purple-100' />
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+// 2. LIHAT PENGAJUAN TAB
+function PengajuanTab({
+  adminProfile,
+  supabase,
+}: {
+  adminProfile: any;
+  supabase: any;
+}) {
+  const [dataMenunggu, setDataMenunggu] = useState<any[]>([]);
+  const [dataRiwayat, setDataRiwayat] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Pagination State for Riwayat
+  const [page, setPage] = useState(1);
+  const rowsPerPage = 10;
+
+  // Detail Modal State
+  const [selectedPengajuan, setSelectedPengajuan] = useState<any>(null);
+  const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [pesanFeedback, setPesanFeedback] = useState('');
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
+
+  const fetchPengajuan = async () => {
+    setLoading(true);
+
+    // Fetch Menunggu
+    const q1 = applyLabFilter(
+      supabase
+        .from('peminjaman')
+        .select('*')
+        .eq('status', 'Menunggu validasi')
+        .order('created_at', { ascending: false }),
+      adminProfile.lab_id,
+    );
+    const res1 = await q1;
+    if (res1.data) setDataMenunggu(res1.data);
+
+    // Fetch All Riwayat (termasuk yang tidak menunggu)
+    const q2 = applyLabFilter(
+      supabase
+        .from('peminjaman')
+        .select('*')
+        .order('created_at', { ascending: false }),
+      adminProfile.lab_id,
+    );
+    const res2 = await q2;
+    if (res2.data) setDataRiwayat(res2.data);
+
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchPengajuan();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const openDetailModal = async (pengajuan: any) => {
+    setSelectedPengajuan(pengajuan);
+    setPesanFeedback(pengajuan.pesan_feedback || '');
+
+    // Fetch items
+    const { data: items } = await supabase
+      .from('peminjaman_item')
+      .select('*')
+      .eq('peminjaman_id', pengajuan.id);
+    setSelectedItems(items || []);
+
+    setIsDialogOpen(true);
+  };
+
+  const handleVerifikasi = async (newStatus: string) => {
+    if (!selectedPengajuan) return;
+    setIsProcessing(true);
+
+    const { error } = await supabase
+      .from('peminjaman')
+      .update({ 
+        status: newStatus, 
+        pesan_feedback: pesanFeedback,
+        admin_checker: adminProfile.email
+      })
+      .eq('id', selectedPengajuan.id);
+
+    setIsProcessing(false);
+
+    if (error) {
+      alert('Gagal memproses validasi pengajuan!');
+    } else {
+      alert(`Pengajuan berhasil di-${newStatus.toLowerCase()}!`);
+      setIsDialogOpen(false);
+      fetchPengajuan(); // Refresh
+    }
+  };
+
+  const totalPages = Math.ceil(dataRiwayat.length / rowsPerPage);
+  const paginatedRiwayat = dataRiwayat.slice(
+    (page - 1) * rowsPerPage,
+    page * rowsPerPage,
+  );
+
+  if (loading)
+    return (
+      <div className='animate-pulse text-lg text-slate-500 font-medium'>
+        Memuat data pengajuan...
+      </div>
+    );
+
+  return (
+    <div className='space-y-8'>
+      <Tabs defaultValue="tindakan" className="w-full">
+        <TabsList className="h-auto w-full mb-6 grid lg:w-[500px] grid-cols-2 p-1.5 bg-slate-200/60 rounded-xl">
+          <TabsTrigger value="tindakan" className="rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4">
+            Perlu Tindakan
+          </TabsTrigger>
+          <TabsTrigger value="riwayat" className="rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4">
+            Riwayat Pengajuan
+          </TabsTrigger>
+        </TabsList>
+
+        <div className="relative w-full min-h-[400px]">
+          {/* BAGIAN ATAS: Menunggu Validasi */}
+          <TabsContent value="tindakan" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0">
+            <Card className='border-slate-200 shadow-sm border-t-4 border-t-amber-400'>
+              <CardHeader>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <AlertCircle className='size-5 text-amber-500' />
+                  Perlu Tindakan (Menunggu Validasi)
+                </CardTitle>
+                <CardDescription className='text-base text-slate-600'>
+                  Daftar pengajuan yang masuk dan memerlukan persetujuan dari lab
+                  Anda.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className='rounded-md border overflow-x-auto'>
+                  <Table>
+                    <TableHeader className='bg-slate-50'>
+                      <TableRow>
+                        <TableHead className='font-semibold text-slate-800 text-base'>
+                          Tanggal
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-base'>
+                          Nama Lengkap
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-base'>
+                          Kegiatan
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-center text-base'>
+                          Aksi
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {dataMenunggu.map((item) => (
+                        <TableRow key={item.id} className='hover:bg-slate-50/50'>
+                          <TableCell className='font-medium text-slate-600 text-base'>
+                            {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                          </TableCell>
+                          <TableCell className='font-semibold text-slate-900 text-base'>
+                            {item.nama_lengkap}
+                          </TableCell>
+                          <TableCell
+                            className='truncate max-w-[200px] text-base'
+                            title={item.judul_kegiatan}>
+                            {item.judul_kegiatan}
+                          </TableCell>
+                          <TableCell className='text-center'>
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => openDetailModal(item)}
+                              className='font-medium text-base py-4'>
+                              <Eye className='size-4 mr-1' /> Detail
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {dataMenunggu.length === 0 && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className='text-center py-10 text-slate-500 text-lg'>
+                            Tidak ada antrean validasi pengajuan saat ini.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          {/* BAGIAN BAWAH: Riwayat Lengkap */}
+          <TabsContent value="riwayat" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0">
+            <Card className='border-slate-200 shadow-sm'>
+              <CardHeader>
+                <CardTitle className='text-xl flex items-center gap-2'>
+                  <ClipboardList className='size-5 text-slate-600' />
+                  Riwayat Semua Pengajuan
+                </CardTitle>
+                <CardDescription className='text-base text-slate-600'>
+                  Daftar arsip penuh seluruh transaksi peminjaman.
+                </CardDescription>
+              </CardHeader>
+              <CardContent>
+                <div className='rounded-md border overflow-x-auto'>
+                  <Table>
+                    <TableHeader className='bg-slate-50'>
+                      <TableRow>
+                        <TableHead className='font-semibold text-slate-800 text-base'>
+                          Nama
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-base'>
+                          Tanggal
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 max-w-[200px] text-base'>
+                          Kegiatan
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-right text-base'>
+                          Status
+                        </TableHead>
+                        <TableHead className='font-semibold text-slate-800 text-center text-base'>
+                          Aksi
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {paginatedRiwayat.map((item) => (
+                        <TableRow key={item.id}>
+                          <TableCell className='font-medium text-slate-900 text-base'>
+                            {item.nama_lengkap}
+                          </TableCell>
+                          <TableCell className='text-slate-600 text-base'>
+                            {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                          </TableCell>
+                          <TableCell
+                            className='text-slate-600 truncate max-w-[200px] text-base'
+                            title={item.judul_kegiatan}>
+                            {item.judul_kegiatan}
+                          </TableCell>
+                          <TableCell className='text-right'>
+                            <Badge
+                              variant={
+                                item.status === 'Disetujui'
+                                  ? 'default'
+                                  : item.status === 'Ditolak'
+                                    ? 'destructive'
+                                    : 'secondary'
+                              }
+                              className='text-sm px-2 py-1'>
+                              {item.status || 'Menunggu validasi'}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className='text-center'>
+                            <Button size='sm' variant='outline' onClick={() => openDetailModal(item)}>
+                              <Eye className="size-4 mr-1"/> Detail
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {paginatedRiwayat.length === 0 && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className='text-center py-10 text-slate-500 text-lg'>
+                            Belum ada riwayat pengajuan.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+
+                {totalPages > 1 && (
+                  <div className='flex items-center justify-end space-x-2 mt-4'>
+                    <span className='text-base text-slate-500 mr-4'>
+                      Halaman {page} dari {totalPages}
+                    </span>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setPage((p) => Math.max(1, p - 1))}
+                      disabled={page === 1}
+                      className="text-base"
+                    >
+                      <ChevronLeft className='size-4 mr-1' /> Prev
+                    </Button>
+                    <Button
+                      variant='outline'
+                      size='sm'
+                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={page === totalPages}
+                      className="text-base"
+                    >
+                      Next <ChevronRight className='size-4 ml-1' />
+                    </Button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </div>
+      </Tabs>
+
+      {/* POP-UP DETAIL */}
+      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+        <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto'>
+          <DialogHeader>
+            <DialogTitle className='text-2xl font-bold'>
+              Detail Pengajuan
+            </DialogTitle>
+            <DialogDescription className='text-base'>
+              Periksa rincian peminjam dan alat dengan saksama sebelum mengambil
+              keputusan.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedPengajuan && (
+            <div className='space-y-6 mt-4'>
+              <div className='grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100'>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Nama Lengkap</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {selectedPengajuan.nama_lengkap}
+                  </p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Email</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {selectedPengajuan.email_pemohon || '-'}
+                  </p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Kategori</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {selectedPengajuan.kategori_pemohon}
+                  </p>
+                </div>
+
+                {selectedPengajuan.kategori_pemohon?.toLowerCase().includes('umum') || selectedPengajuan.kategori_pemohon?.toLowerCase().includes('eksternal') ? (
+                  <div className="col-span-2 md:col-span-1">
+                    <p className='font-semibold text-slate-500'>NIK</p>
+                    <p className='font-bold text-slate-900'>
+                      {selectedPengajuan.nik || '-'}
+                    </p>
+                  </div>
+                ) : (
+                  <>
+                    <div className="col-span-2 md:col-span-1">
+                      <p className='font-semibold text-slate-500'>NPM</p>
+                      <p className='font-bold text-slate-900'>
+                        {selectedPengajuan.npm || '-'}
+                      </p>
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <p className='font-semibold text-slate-500'>Program Studi</p>
+                      <p className='font-bold text-slate-900'>
+                        {selectedPengajuan.program_studi || '-'}
+                      </p>
+                    </div>
+                  </>
+                )}
+                
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Dosen Pembimbing</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {selectedPengajuan.dosen_pembimbing || '-'}
+                  </p>
+                </div>
+              </div>
+
+              <div className='space-y-1'>
+                <p className='font-semibold text-slate-500 text-sm'>
+                  Judul Kegiatan
+                </p>
+                <p className='text-base font-medium'>
+                  {selectedPengajuan.judul_kegiatan}
+                </p>
+              </div>
+
+              <div className='space-y-1'>
+                <p className='font-semibold text-slate-500 text-sm'>
+                  Waktu & Tempat
+                </p>
+                <div className='bg-white border rounded-lg p-3'>
+                  <p className='font-medium text-base'>
+                    Tanggal:{' '}
+                    <span className='font-bold text-slate-800'>
+                      {selectedPengajuan.tanggal ? new Date(selectedPengajuan.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                    </span>
+                  </p>
+                  <p className='font-medium text-base mt-0.5'>
+                    Waktu:{' '}
+                    <span className='font-bold text-blue-700'>
+                      {selectedPengajuan.jam_mulai} - {selectedPengajuan.jam_selesai} WIB
+                    </span>
+                  </p>
+                  <p className='text-slate-500 mt-2 text-base font-medium'>
+                    Lab Target: <span className="text-slate-700">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
+                  </p>
+                </div>
+              </div>
+
+              <div className='space-y-1'>
+                <p className='font-semibold text-slate-500 text-sm'>
+                  Alat yang Dipinjam
+                </p>
+                <div className='border rounded-md'>
+                  <Table>
+                    <TableHeader className='bg-slate-50'>
+                      <TableRow>
+                        <TableHead className='h-8 py-1'>Nama Alat</TableHead>
+                        <TableHead className='h-8 py-1 text-center'>
+                          Jml
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {selectedItems.map((itm) => (
+                        <TableRow key={itm.id} className='h-8'>
+                          <TableCell className='py-2 text-sm font-medium'>
+                            {itm.nama_alat_bahan}
+                          </TableCell>
+                          <TableCell className='py-2 text-sm text-center'>
+                            {itm.jumlah}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                      {selectedItems.length === 0 && (
+                        <TableRow>
+                          <TableCell
+                            colSpan={2}
+                            className='text-center text-xs py-2'>
+                            Tidak ada data alat.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </div>
+
+              {selectedPengajuan.status === 'Menunggu validasi' ? (
+                <div className='space-y-2 pt-2 border-t'>
+                  <Label htmlFor='pesanFeedback' className='text-base font-semibold'>
+                    Pesan Feedback / Alasan (Opsional)
+                  </Label>
+                  <Textarea
+                    id='pesanFeedback'
+                    placeholder='Misal: Harap kembalikan bersih, atau Alasan penolakan terperinci.'
+                    className='resize-none text-base'
+                    rows={3}
+                    value={pesanFeedback}
+                    onChange={(e) => setPesanFeedback(e.target.value)}
+                  />
+                </div>
+              ) : selectedPengajuan.pesan_feedback ? (
+                <div className='space-y-1 pt-2 border-t'>
+                  <p className='font-semibold text-slate-500 text-sm'>
+                    Pesan Feedback / Alasan
+                  </p>
+                  <div className="bg-slate-100 p-3 rounded-md text-base text-slate-800 font-medium">
+                     {selectedPengajuan.pesan_feedback}
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          )}
+
+          {selectedPengajuan?.status === 'Menunggu validasi' && (
+            <DialogFooter className='mt-6 flex gap-3 sm:justify-between w-full'>
+              <Button
+                type='button'
+                variant='destructive'
+                className='w-full sm:w-1/2 py-6 text-base font-bold shadow-sm'
+                disabled={isProcessing}
+                onClick={() => handleVerifikasi('Ditolak')}>
+                <XCircle className='size-5 mr-2' /> Tolak Pengajuan
+              </Button>
+              <Button
+                type='button'
+                className='w-full sm:w-1/2 py-6 text-base font-bold bg-green-600 hover:bg-green-700 shadow-sm text-white'
+                disabled={isProcessing}
+                onClick={() => handleVerifikasi('Disetujui')}>
+                <CheckCircle className='size-5 mr-2' /> Terima Pengajuan
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+    </div>
+  );
+}
+
+// 3. RIWAYAT PEMAKAIAN TAB
+function RiwayatTab({
+  adminProfile,
+  supabase,
+}: {
+  adminProfile: any;
+  supabase: any;
+}) {
+  const [dataRiwayat, setDataRiwayat] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Manual Form State
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [selectedRiwayat, setSelectedRiwayat] = useState<any>(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+
+  const openDetail = (item: any) => {
+    setSelectedRiwayat(item);
+    setIsDetailOpen(true);
+  };
+
+  const [formData, setFormData] = useState({
+    nama_lengkap: '',
+    judul_kegiatan: '',
+    tanggal: '',
+    jam_mulai: '',
+    jam_selesai: '',
+  });
+
+  const fetchRiwayat = async () => {
+    setLoading(true);
+    const q = applyLabFilter(
+      supabase
+        .from('peminjaman')
+        .select('*')
+        .eq('status', 'Disetujui')
+        .order('tanggal', { ascending: false }),
+      adminProfile.lab_id,
+    );
+    const res = await q;
+    if (res.data) setDataRiwayat(res.data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchRiwayat();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const getDayName = (dateStr: string) => {
+    if (!dateStr) return '-';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('id-ID', { weekday: 'long' });
+  };
+
+  const submitManual = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    const payload = {
+      ...formData,
+      kategori_pemohon: 'Dosen/Internal', // Identifikasi input manual
+      lab_id: adminProfile.lab_id, // Hardcoded to protecting scope!
+      status: 'Disetujui', // Auto-appoved
+    };
+
+    const { error } = await supabase.from('peminjaman').insert(payload);
+    setIsSubmitting(false);
+
+    if (error) {
+      alert('Gagal menambahkan riwayat!');
+    } else {
+      alert('Riwayat berhasil ditambahkan!');
+      setIsFormOpen(false);
+      setFormData({
+        nama_lengkap: '',
+        judul_kegiatan: '',
+        tanggal: '',
+        jam_mulai: '',
+        jam_selesai: '',
+      });
+      fetchRiwayat();
+    }
+  };
+
+  if (loading)
+    return (
+      <div className='animate-pulse text-lg text-slate-500 font-medium'>
+        Memuat data log pemakaian...
+      </div>
+    );
+
+  return (
+    <Card className='border-slate-200 shadow-sm border-t-4 border-t-blue-600'>
+      <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 gap-4'>
+        <div>
+          <CardTitle className='text-xl flex items-center gap-2'>
+            <CheckSquare className='size-5 text-blue-600' />
+            Riwayat Pemakaian Lab (Sah)
+          </CardTitle>
+          <CardDescription className='text-base text-slate-600 mt-1'>
+            Daftar semua kegiatan yang telah disetujui untuk menggunakan
+            laboratorium.
+          </CardDescription>
+        </div>
+
+        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+          <DialogTrigger asChild>
+            <Button className='bg-blue-600 hover:bg-blue-700 font-bold shadow-md text-base py-5'>
+              <Plus className='size-4 mr-2' /> Tambah Riwayat Manual
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='sm:max-w-md'>
+            <DialogHeader>
+              <DialogTitle className="text-xl">Input Pemakaian Manual</DialogTitle>
+              <DialogDescription className="text-base">
+                Gunakan ini jika ada dosen/kegiatan internal yang memakai lab
+                tanpa form aplikasi luar.
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={submitManual} className='space-y-4 pt-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='m_nama' className="text-base">Nama Penanggung Jawab</Label>
+                <Input
+                  id='m_nama'
+                  required
+                  value={formData.nama_lengkap}
+                  onChange={(e) =>
+                    setFormData({ ...formData, nama_lengkap: e.target.value })
+                  }
+                  placeholder='Contoh: Dosen A'
+                  className="text-base h-11"
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='m_kegiatan' className="text-base">Judul Kegiatan</Label>
+                <Input
+                  id='m_kegiatan'
+                  required
+                  value={formData.judul_kegiatan}
+                  onChange={(e) =>
+                    setFormData({ ...formData, judul_kegiatan: e.target.value })
+                  }
+                  placeholder='Contoh: Praktikum Kelas Siang'
+                  className="text-base h-11"
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='m_tgl' className="text-base">Tanggal</Label>
+                <Input
+                  id='m_tgl'
+                  type='date'
+                  required
+                  value={formData.tanggal}
+                  onChange={(e) =>
+                    setFormData({ ...formData, tanggal: e.target.value })
+                  }
+                  className="text-base h-11"
+                />
+              </div>
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='m_jamMulai' className="text-base">Jam Mulai</Label>
+                  <Input
+                    id='m_jamMulai'
+                    type='time'
+                    required
+                    value={formData.jam_mulai}
+                    onChange={(e) =>
+                      setFormData({ ...formData, jam_mulai: e.target.value })
+                    }
+                    className="text-base h-11"
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='m_jamSelesai' className="text-base">Jam Selesai</Label>
+                  <Input
+                    id='m_jamSelesai'
+                    type='time'
+                    required
+                    value={formData.jam_selesai}
+                    onChange={(e) =>
+                      setFormData({ ...formData, jam_selesai: e.target.value })
+                    }
+                    className="text-base h-11"
+                  />
+                </div>
+              </div>
+              <DialogFooter className='mt-6 pt-4'>
+                <Button
+                  type='submit'
+                  className='w-full font-bold bg-blue-600 hover:bg-blue-700 text-base py-6'
+                  disabled={isSubmitting}>
+                  {isSubmitting ? 'Menyimpan...' : 'Simpan ke Riwayat'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+
+      <CardContent>
+        <div className='rounded-md border overflow-x-auto'>
+          <Table>
+            <TableHeader className='bg-slate-50'>
+              <TableRow>
+                <TableHead className='font-semibold text-slate-800 text-base'>
+                  Hari
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>
+                  Tanggal
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>
+                  Waktu
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>
+                  Nama Peminjam
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 max-w-[200px] text-base'>
+                  Kegiatan
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>
+                  Lab
+                </TableHead>
+                <TableHead className='font-semibold text-slate-800 text-center text-base'>
+                  Aksi
+                </TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dataRiwayat.map((item) => (
+                <TableRow key={item.id}>
+                  <TableCell className='font-medium text-slate-700 text-base'>
+                    {getDayName(item.tanggal)}
+                  </TableCell>
+                  <TableCell className='text-slate-700 text-base'>
+                    {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                  </TableCell>
+                  <TableCell className='text-slate-700 min-w-24 font-medium text-blue-700 text-base'>
+                    {item.jam_mulai} - {item.jam_selesai}
+                  </TableCell>
+                  <TableCell className='font-semibold text-slate-900 text-base'>
+                    {item.nama_lengkap}
+                  </TableCell>
+                  <TableCell
+                    className='text-slate-600 truncate max-w-[250px] text-base'
+                    title={item.judul_kegiatan}>
+                    {item.judul_kegiatan}
+                  </TableCell>
+                  <TableCell className='text-slate-600 text-sm'>
+                    {labMap[item.lab_id]}
+                  </TableCell>
+                  <TableCell className='text-center'>
+                    <Button size="sm" variant="outline" onClick={() => openDetail(item)}>
+                       <Eye className="size-4 mr-1"/> Detail
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {dataRiwayat.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className='text-center py-10 text-slate-500 text-lg'>
+                    Belum ada riwayat lab yang berjalan (status sah).
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+      {/* POP-UP DETAIL PEMAKAIAN */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='text-xl font-bold'>
+              Detail Pemakaian Lab
+            </DialogTitle>
+          </DialogHeader>
+          {selectedRiwayat && (
+            <div className='space-y-4 mt-2'>
+              <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3'>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Penanggung Jawab</p>
+                  <p className='font-bold text-slate-900 text-base'>{selectedRiwayat.nama_lengkap}</p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Kegiatan</p>
+                  <p className='font-bold text-slate-900 text-base'>{selectedRiwayat.judul_kegiatan}</p>
+                </div>
+                <div className='col-span-2 md:col-span-1'>
+                  <p className='font-semibold text-slate-500'>Tanggal</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {selectedRiwayat.tanggal ? new Date(selectedRiwayat.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                  </p>
+                </div>
+                <div className='col-span-2 md:col-span-1'>
+                  <p className='font-semibold text-slate-500'>Waktu</p>
+                  <p className='font-bold text-slate-900 text-base'>{selectedRiwayat.jam_mulai} - {selectedRiwayat.jam_selesai} WIB</p>
+                </div>
+                <div className="col-span-2 md:col-span-1">
+                  <p className='font-semibold text-slate-500'>Laboratorium</p>
+                  <p className='font-bold text-slate-900 text-base'>{labMap[selectedRiwayat.lab_id]}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+    </Card>
+  );
+}
+
+// 4. INVENTARIS TAB
+function InventarisTab({
+  adminProfile,
+  supabase,
+}: {
+  adminProfile: any;
+  supabase: any;
+}) {
+  const [dataInventaris, setDataInventaris] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // Form State
+  const isMultiTenant = [8, 9, 10].includes(adminProfile.lab_id);
+  const allowedLabs = isMultiTenant ? [8, 9, 10] : [adminProfile.lab_id];
+  
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({
+    jenis_alat: '',
+    spesifikasi: '',
+    jumlah: 1,
+    kondisi: 'Baik',
+    keterangan: '',
+    lab_id: allowedLabs[0]
+  });
+  const [editItemId, setEditItemId] = useState<number | null>(null);
+
+  const fetchInventaris = async () => {
+    setLoading(true);
+    const q = applyLabFilter(
+      supabase.from('inventaris').select('*').order('jenis_alat', { ascending: true }),
+      adminProfile.lab_id,
+    );
+    const res = await q;
+    if (res.data) setDataInventaris(res.data);
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchInventaris();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const submitInventaris = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+
+    let error;
+    if (editItemId) {
+      const { error: updateError } = await supabase.from('inventaris').update(formData).eq('id', editItemId);
+      error = updateError;
+    } else {
+      const { error: insertError } = await supabase.from('inventaris').insert(formData);
+      error = insertError;
+    }
+    
+    setIsSubmitting(false);
+
+    if (error) {
+      alert(`Gagal ${editItemId ? 'mengupdate' : 'menambahkan'} alat!`);
+    } else {
+      alert(`Alat berhasil ${editItemId ? 'diperbarui' : 'ditambahkan'}!`);
+      setIsFormOpen(false);
+      setEditItemId(null);
+      setFormData({
+        jenis_alat: '',
+        spesifikasi: '',
+        jumlah: 1,
+        kondisi: 'Baik',
+        keterangan: '',
+        lab_id: allowedLabs[0]
+      });
+      fetchInventaris();
+    }
+  };
+
+  const openEdit = (item: any) => {
+    setFormData({
+      jenis_alat: item.jenis_alat,
+      spesifikasi: item.spesifikasi || '',
+      jumlah: item.jumlah,
+      kondisi: item.kondisi,
+      keterangan: item.keterangan || '',
+      lab_id: item.lab_id
+    });
+    setEditItemId(item.id);
+    setIsFormOpen(true);
+  };
+
+  const openAdd = () => {
+    setFormData({
+      jenis_alat: '',
+      spesifikasi: '',
+      jumlah: 1,
+      kondisi: 'Baik',
+      keterangan: '',
+      lab_id: allowedLabs[0]
+    });
+    setEditItemId(null);
+    setIsFormOpen(true);
+  };
+
+  if (loading)
+    return (
+      <div className='animate-pulse text-lg text-slate-500 font-medium'>
+        Memuat data inventaris...
+      </div>
+    );
+
+  return (
+    <Card className='border-slate-200 shadow-sm border-t-4 border-t-purple-500'>
+      <CardHeader className='flex flex-col sm:flex-row items-start sm:items-center justify-between pb-4 gap-4'>
+        <div>
+          <CardTitle className='text-xl flex items-center gap-2'>
+            <PackageSearch className='size-5 text-purple-600' />
+            Inventaris Laboratorium
+          </CardTitle>
+          <CardDescription className='text-base text-slate-600 mt-1'>
+            Kelola daftar aset, alat tangkap, atau perlengkapan lab di sini.
+          </CardDescription>
+        </div>
+
+        <Dialog open={isFormOpen} onOpenChange={(open) => {
+            if(!open) { setEditItemId(null); setIsFormOpen(false); }
+            else setIsFormOpen(true);
+        }}>
+          <DialogTrigger asChild>
+            <Button onClick={openAdd} className='bg-purple-600 hover:bg-purple-700 font-bold shadow-md text-base py-5'>
+              <Plus className='size-4 mr-2' /> Tambah Alat & Bahan
+            </Button>
+          </DialogTrigger>
+          <DialogContent className='sm:max-w-md max-h-[90vh] overflow-y-auto'>
+            <DialogHeader>
+              <DialogTitle className="text-xl">{editItemId ? 'Edit Data Alat' : 'Tambah Alat Baru'}</DialogTitle>
+              <DialogDescription className="text-base">
+                {editItemId ? 'Ubah informasi inventaris ini sesuai keadaan terbaru.' : 'Registrasi data aset baru ke dalam inventaris laboratorium Anda.'}
+              </DialogDescription>
+            </DialogHeader>
+            <form onSubmit={submitInventaris} className='space-y-4 pt-4'>
+              <div className='space-y-2'>
+                <Label htmlFor='i_lab' className="text-base">Laboratorium</Label>
+                {isMultiTenant ? (
+                  <select 
+                    id="i_lab"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background"
+                    value={formData.lab_id}
+                    onChange={(e) => setFormData({...formData, lab_id: Number(e.target.value)})}
+                    required
+                  >
+                    {[8, 9, 10].map(id => (
+                       <option key={id} value={id}>{labMap[id]}</option>
+                    ))}
+                  </select>
+                ) : (
+                  <Input id="i_lab" value={labMap[adminProfile.lab_id]} readOnly className="bg-slate-100 text-base h-11 text-slate-500 font-medium" />
+                )}
+              </div>
+            
+              <div className='space-y-2'>
+                <Label htmlFor='i_nama' className="text-base">Jenis Alat</Label>
+                <Input
+                  id='i_nama'
+                  required
+                  value={formData.jenis_alat}
+                  onChange={(e) => setFormData({ ...formData, jenis_alat: e.target.value })}
+                  placeholder='Contoh: Mikroskop Digital'
+                  className="text-base h-11"
+                />
+              </div>
+              <div className='space-y-2'>
+                <Label htmlFor='i_spec' className="text-base">Spesifikasi (Opsional)</Label>
+                <Textarea
+                  id='i_spec'
+                  value={formData.spesifikasi}
+                  onChange={(e) => setFormData({ ...formData, spesifikasi: e.target.value })}
+                  placeholder='Contoh: Lensa 1000x Zoom'
+                  className="text-base resize-none"
+                  rows={2}
+                />
+              </div>
+              
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-2'>
+                  <Label htmlFor='i_jml' className="text-base">Jumlah</Label>
+                  <Input
+                    id='i_jml'
+                    type='number'
+                    min="1"
+                    required
+                    value={formData.jumlah}
+                    onChange={(e) => setFormData({ ...formData, jumlah: parseInt(e.target.value) })}
+                    className="text-base h-11"
+                  />
+                </div>
+                <div className='space-y-2'>
+                  <Label htmlFor='i_kondisi' className="text-base">Kondisi</Label>
+                  <select 
+                    id="i_kondisi"
+                    className="flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base"
+                    value={formData.kondisi}
+                    onChange={(e) => setFormData({...formData, kondisi: e.target.value})}
+                  >
+                    <option value="Baik">Baik</option>
+                    <option value="Rusak Ringan">Rusak Ringan</option>
+                    <option value="Rusak Berat">Rusak Berat</option>
+                  </select>
+                </div>
+              </div>
+              
+               <div className='space-y-2'>
+                  <Label htmlFor='i_ket' className="text-base">Keterangan (Asal Pengadaan)</Label>
+                  <Input 
+                    id="i_ket"
+                    className="flex h-11 w-full text-base"
+                    placeholder="Contoh: Hibah, Pembelian 2024"
+                    value={formData.keterangan}
+                    onChange={(e) => setFormData({...formData, keterangan: e.target.value})}
+                  />
+                </div>
+
+              <DialogFooter className='mt-6 pt-4'>
+                <Button
+                  type='submit'
+                  className='w-full font-bold bg-purple-600 hover:bg-purple-700 text-base py-6'
+                  disabled={isSubmitting}>
+                  {isSubmitting ? 'Menyimpan...' : editItemId ? 'Simpan Perubahan' : 'Simpan Alat'}
+                </Button>
+              </DialogFooter>
+            </form>
+          </DialogContent>
+        </Dialog>
+      </CardHeader>
+
+      <CardContent>
+        <div className='rounded-md border overflow-x-auto'>
+          <Table>
+            <TableHeader className='bg-slate-50'>
+              <TableRow>
+                <TableHead className='font-semibold text-slate-800 text-base w-12 text-center'>No</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>Jenis Alat</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>Spesifikasi</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base text-center'>Jumlah</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>Kondisi</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-base'>Keterangan</TableHead>
+                <TableHead className='font-semibold text-slate-800 text-center text-base'>Aksi</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {dataInventaris.map((item, index) => (
+                <TableRow key={item.id}>
+                  <TableCell className='text-slate-700 text-base text-center font-medium'>{index + 1}</TableCell>
+                  <TableCell className='font-semibold text-slate-900 text-base'>
+                    {item.jenis_alat}
+                    {isMultiTenant && <span className="block text-xs font-normal text-slate-500">{labMap[item.lab_id]}</span>}
+                  </TableCell>
+                  <TableCell className='text-slate-600 text-base max-w-[200px] truncate' title={item.spesifikasi}>
+                    {item.spesifikasi || '-'}
+                  </TableCell>
+                  <TableCell className='font-bold text-slate-900 text-base text-center'>
+                    {item.jumlah}
+                  </TableCell>
+                  <TableCell className='text-slate-600 text-base'>
+                    <Badge variant="outline" className={`text-sm ${item.kondisi === 'Baik' ? 'text-green-600 border-green-200 bg-green-50' : 'text-amber-600 border-amber-200 bg-amber-50'}`}>
+                       {item.kondisi}
+                    </Badge>
+                  </TableCell>
+                  <TableCell className='text-slate-600 text-base truncate max-w-[120px]' title={item.keterangan}>
+                     {item.keterangan || '-'}
+                  </TableCell>
+                  <TableCell className='text-center'>
+                    <Button size="sm" variant="outline" onClick={() => openEdit(item)}>
+                       Edit
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              ))}
+              {dataInventaris.length === 0 && (
+                <TableRow>
+                  <TableCell
+                    colSpan={6}
+                    className='text-center py-10 text-slate-500 text-lg'>
+                    Belum ada data inventaris.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
+// 5. UNGGAH MATERI TAB
+function MateriTab() {
+  return (
+    <Card className='border-slate-200 shadow-sm border-t-4 border-t-teal-500 max-w-3xl'>
+      <CardHeader>
+        <CardTitle className='text-xl flex items-center gap-2'>
+          <Upload className='size-5 text-teal-600' />
+          Unggah Materi & SOP
+        </CardTitle>
+        <CardDescription className='text-base text-slate-600 mt-1'>
+          Fitur ini sedang dalam mode Placeholder. Segera akan dihubungkan ke Supabase Storage.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+         <form className='space-y-6 pt-4' onSubmit={(e) => e.preventDefault()}>
+            <div className='space-y-2'>
+              <Label htmlFor='mt_judul' className="text-base font-semibold">Judul Materi</Label>
+              <Input
+                id='mt_judul'
+                placeholder='Masukkan judul dokumen...'
+                className="text-base h-12"
+              />
+            </div>
+            <div className='space-y-2'>
+              <Label htmlFor='mt_desc' className="text-base font-semibold">Deskripsi</Label>
+              <Textarea
+                id='mt_desc'
+                placeholder='Tambahkan deskripsi singkat tentang dokumen ini...'
+                className="text-base resize-none"
+                rows={3}
+              />
+            </div>
+            <div className="space-y-2">
+               <Label htmlFor="file" className="text-base font-semibold">File Dokumen (PDF, DOCX)</Label>
+               <div className="border border-slate-200 p-4 rounded-xl flex items-center bg-slate-50">
+                  <Input 
+                    id="file" 
+                    type="file" 
+                    className="bg-transparent border-0 cursor-pointer text-base file:text-teal-700 file:bg-teal-100 file:border-0 file:py-2 file:px-4 file:rounded-full file:font-semibold hover:file:bg-teal-200"
+                  />
+                </div>
+            </div>
+            <div className="pt-2">
+              <Button
+                type='button'
+                className='w-full sm:w-auto font-bold bg-teal-600 hover:bg-teal-700 text-base py-6 px-10'>
+                Unggah File (Placeholder)
+              </Button>
+            </div>
+          </form>
+      </CardContent>
+    </Card>
+  )
+}
+
+// --- MAIN WRAPPER COMPONENT ---
+export default function AdminDashboardPage() {
+  const [initLoading, setInitLoading] = useState(true);
+  const [adminProfile, setAdminProfile] = useState<any>(null);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+
+  const router = useRouter();
+  const supabase = createClient();
+
+  useEffect(() => {
+    const initApp = async () => {
+      const {
+        data: { session },
+        error: sessionError,
+      } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        router.push('/');
+        return;
+      }
+
+      const { data: adminData } = await supabase
+        .from('whitelist_admin')
+        .select('*')
+        .eq('email', session.user.email)
+        .single();
+
+      if (!adminData) {
+        router.push('/');
+      } else {
+        setAdminProfile(adminData);
+        setInitLoading(false);
+      }
+    };
+
+    initApp();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  if (initLoading) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-slate-50'>
+        <p className='text-slate-500 font-medium md:text-lg animate-pulse'>
+          Memuat Keamanan Multi-Tenant...
+        </p>
+      </div>
+    );
+  }
+
+  // Fallback rendering
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case 'overview':
+        return <OverviewTab adminProfile={adminProfile} supabase={supabase} />;
+      case 'pengajuan':
+        return <PengajuanTab adminProfile={adminProfile} supabase={supabase} />;
+      case 'riwayat':
+        return <RiwayatTab adminProfile={adminProfile} supabase={supabase} />;
+      case 'inventaris':
+        return <InventarisTab adminProfile={adminProfile} supabase={supabase} />;
+      case 'materi':
+        return <MateriTab />;
+      default:
+        return <p>Modul dalam pengembangan.</p>;
+    }
+  };
+
+  return (
+    <div className='min-h-screen flex bg-slate-50'>
+      {/* Sidebar - Desktop */}
+      <aside className={`hidden md:flex flex-col bg-slate-900 border-r border-slate-800 shadow-xl z-20 transition-all duration-300 ease-in-out relative ${isSidebarCollapsed ? 'w-24' : 'w-72'}`}>
+        {/* Toggle Button */}
+        <button
+          onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+          className="absolute -right-3.5 top-14 bg-slate-800 border border-slate-700 text-white p-1 rounded-full hover:bg-blue-600 transition-colors z-30 shadow-md flex items-center justify-center"
+        >
+          {isSidebarCollapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+        </button>
+
+        <div className={`p-8 pb-6 flex flex-col ${isSidebarCollapsed ? 'items-center px-4' : ''}`}>
+          {!isSidebarCollapsed ? (
+            <>
+              <h2 className='text-2xl font-bold text-white tracking-tight shrink-0'>
+                Admin<span className='text-blue-400'>Panel</span>
+              </h2>
+              <p className='text-slate-400 mt-2 font-medium text-sm leading-snug shrink-0'>
+                Sistem Administrasi Terpusat
+              </p>
+              <div className='mt-4 py-2 px-3 bg-slate-800 rounded-lg flex items-center gap-3 border border-slate-700 shrink-0'>
+                <div className='size-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase text-sm shrink-0'>
+                  {adminProfile.nama_dosen?.charAt(0) || 'A'}
+                </div>
+                <div className='overflow-hidden'>
+                  <p className='text-sm font-semibold text-slate-200 truncate'>
+                    {adminProfile.nama_dosen}
+                  </p>
+                  <p className='text-xs text-amber-500 font-medium truncate'>
+                    Akses Tervalidasi
+                  </p>
+                </div>
+              </div>
+            </>
+          ) : (
+             <div className="flex flex-col items-center mt-2 space-y-6">
+                <div className="size-10 bg-blue-600/20 border border-blue-500/30 rounded-xl flex items-center justify-center font-bold text-xl text-blue-400 uppercase shadow-inner">
+                   A
+                </div>
+                <div className='size-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold uppercase text-base border border-slate-700 shrink-0' title={adminProfile.nama_dosen}>
+                  {adminProfile.nama_dosen?.charAt(0) || 'A'}
+                </div>
+             </div>
+          )}
+        </div>
+
+        <nav className={`flex-1 px-4 space-y-3 mt-2 text-base font-medium ${isSidebarCollapsed ? 'px-3' : ''}`}>
+          <button
+            onClick={() => setActiveTab('overview')}
+            title="Dashboard Utama"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <LayoutDashboard className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Dashboard Utama</span>}
+          </button>
+          <button
+            onClick={() => setActiveTab('pengajuan')}
+            title="Lihat Pengajuan"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'pengajuan' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <FileStack className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Lihat Pengajuan</span>}
+          </button>
+          <button
+            onClick={() => setActiveTab('riwayat')}
+            title="Riwayat Pemakaian Lab"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'riwayat' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <FolderOutput className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Riwayat Pemakaian Lab</span>}
+          </button>
+          <button
+            onClick={() => setActiveTab('inventaris')}
+            title="Inventaris Lab"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'inventaris' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <PackageSearch className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Inventaris Lab</span>}
+          </button>
+           <button
+            onClick={() => setActiveTab('materi')}
+            title="Unggah Materi"
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'materi' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <Upload className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Unggah Materi</span>}
+          </button>
+        </nav>
+
+        <div className={`p-6 border-t border-slate-800/80 ${isSidebarCollapsed ? 'flex justify-center px-4' : ''}`}>
+          <Link
+            href='/'
+            title="Kembali ke Beranda"
+            className={`flex items-center justify-center w-full py-3 text-base font-semibold text-slate-300 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-slate-700/50 ${isSidebarCollapsed ? 'px-0' : ''}`}>
+            {isSidebarCollapsed ? <LogOut className="size-5" /> : 'Kembali ke Beranda'}
+          </Link>
+        </div>
+      </aside>
+
+      {/* Main Content Area */}
+      <main className='flex-1 flex flex-col min-h-screen overflow-hidden relative'>
+        {/* Mobile Header Placeholder */}
+        <header className='md:hidden flex items-center justify-between p-5 bg-slate-900 border-b shadow-sm z-20'>
+          <h2 className='text-xl font-bold text-white'>AdminPanel</h2>
+          <button className='p-2.5 bg-slate-800 rounded-lg text-slate-300'>
+            <Menu className='size-6' />
+          </button>
+        </header>
+
+        <div className='flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 pb-20'>
+          <div className='max-w-6xl mx-auto space-y-8 w-full'>
+            {/* Header Konten Dinamis berdasarkan hak akses Lab */}
+            <div className='pb-4 border-b border-slate-200 flex flex-col items-start'>
+              <div className='mb-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 tracking-wide border border-emerald-200'>
+                <Circle className="size-2.5 fill-emerald-500 text-emerald-500 animate-pulse" />
+                Status Sistem: Online
+              </div>
+              <h1 className='text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight'>
+                {getDashboardTitle(adminProfile.lab_id)}
+              </h1>
+              <p className='mt-3 text-slate-500 text-lg max-w-3xl leading-relaxed'>
+                Platform terisolasi. Anda memegang kendali penuh pada validasi
+                peminjaman dan pengelolaan inventaris yang masuk ke wilayah
+                kewenangan Anda secara aman.
+              </p>
+            </div>
+
+            {/* Injeksi Sub-Komponen */}
+            {renderTabContent()}
+          </div>
+        </div>
+      </main>
+    </div>
+  );
+}
