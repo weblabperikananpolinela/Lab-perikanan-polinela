@@ -5,19 +5,27 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import { Search, ArrowLeft, Clock, CheckCircle, XCircle } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { Navbar } from '@/components/navbar';
 
+// Telah diperbarui menjadi 18 Lab/TEFA terbaru
 const labMap: Record<number, string> = {
-  1: 'Lab SFS budidaya perikanan',
-  2: 'Lab A (lab pembenihan ikan)',
-  3: 'Lab pengolahan perikanan',
-  4: 'Lab perikanan bawah',
-  5: 'Tefa polifishfarm',
-  6: 'Tefa POFF',
-  7: 'Tefa polifeed',
-  8: 'Lab Simulator',
-  9: 'Lab Tangkap',
-  10: 'Lab Radar',
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'Politeknik Ornamental Fish Farm (POFA)',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
 };
 
 export default function StatusRiwayatPage() {
@@ -40,7 +48,7 @@ export default function StatusRiwayatPage() {
   }, []);
 
   const filteredRiwayat = riwayat.filter((item) =>
-    item.nama_lengkap.toLowerCase().includes(searchQuery.toLowerCase()),
+    item.nama_lengkap?.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
   const getStatusBadge = (status: string) => {

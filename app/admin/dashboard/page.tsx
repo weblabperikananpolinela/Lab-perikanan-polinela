@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useEffect, useState, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -15,6 +15,8 @@ import {
   Circle,
   Upload,
   LogOut,
+  Building2,
+  ArrowRight,
 } from 'lucide-react';
 
 import OverviewTab from './_components/OverviewTab';
@@ -23,35 +25,43 @@ import InventarisTab from './_components/InventarisTab';
 import RiwayatTab from './_components/RiwayatTab';
 import PengajuanTab from './_components/PengajuanTab';
 
-// --- CONFIG & HELPERS ---
+// --- CONFIG & HELPERS (UPDATED 18 LABS) ---
 const labMap: Record<number, string> = {
-  1: 'Lab SFS budidaya perikanan',
-  2: 'Lab A (lab pembenihan ikan)',
-  3: 'Lab pengolahan perikanan',
-  4: 'Lab perikanan bawah',
-  5: 'Tefa polifishfarm',
-  6: 'Tefa POFF',
-  7: 'Tefa polifeed',
-  8: 'Lab Simulator',
-  9: 'Lab Tangkap',
-  10: 'Lab Radar',
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'POFA',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
 };
 
 const getDashboardTitle = (lab_id: number) => {
-  if ([8, 9, 10].includes(lab_id)) {
-    return 'Dashboard Pengelola: Lab Perikanan Tangkap';
-  }
   return `Dashboard Pengelola: ${labMap[lab_id] || 'Laboratorium'}`;
 };
 
-// --- MAIN WRAPPER COMPONENT ---
-export default function AdminDashboardPage() {
+// --- INNER COMPONENT DENGAN LOGIKA MULTI-LAB ---
+function DashboardContent() {
   const [initLoading, setInitLoading] = useState(true);
-  const [adminProfile, setAdminProfile] = useState<any>(null);
+  const [adminProfiles, setAdminProfiles] = useState<any[]>([]);
+  const [activeProfile, setActiveProfile] = useState<any>(null); // Profil Lab yang sedang aktif
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
 
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const labIdParam = searchParams.get('lab_id');
   const supabase = createClient();
 
   useEffect(() => {
@@ -66,23 +76,43 @@ export default function AdminDashboardPage() {
         return;
       }
 
+      // Tarik SEMUA data lab yang dimiliki oleh email dosen ini
       const { data: adminData } = await supabase
         .from('whitelist_admin')
         .select('*')
-        .eq('email', session.user.email)
-        .single();
+        .eq('email', session.user.email);
 
-      if (!adminData) {
+      if (!adminData || adminData.length === 0) {
         router.push('/');
-      } else {
-        setAdminProfile(adminData);
-        setInitLoading(false);
+        return;
       }
+
+      setAdminProfiles(adminData);
+
+      // Logika Penentuan Lab Aktif
+      if (adminData.length === 1) {
+        // Punya 1 lab, langsung jadikan aktif
+        setActiveProfile(adminData[0]);
+      } else if (adminData.length > 1) {
+        // Punya banyak lab
+        if (labIdParam) {
+          // Kalau ada di URL, cari data yang cocok
+          const selected = adminData.find(
+            (p) => p.lab_id.toString() === labIdParam,
+          );
+          if (selected) setActiveProfile(selected);
+        } else {
+          // Kalau tidak ada di URL, biarkan activeProfile = null (Memunculkan layar pemilihan)
+          setActiveProfile(null);
+        }
+      }
+
+      setInitLoading(false);
     };
 
     initApp();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [labIdParam]); // Re-run jika param URL berubah (dari klik Navbar)
 
   if (initLoading) {
     return (
@@ -94,24 +124,74 @@ export default function AdminDashboardPage() {
     );
   }
 
-  // Fallback rendering
+  // --- LAYAR PEMILIHAN LAB (Hanya muncul jika Dosen punya >1 lab dan belum memilih) ---
+  if (!activeProfile && adminProfiles.length > 1) {
+    return (
+      <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4'>
+        <div className='max-w-4xl w-full'>
+          <div className='text-center mb-10'>
+            <h1 className='text-3xl md:text-4xl font-bold text-slate-900 mb-3'>
+              Pilih Ruang Kerja Anda
+            </h1>
+            <p className='text-slate-500 text-lg'>
+              Sistem mendeteksi Anda memiliki hak akses untuk mengelola lebih
+              dari satu fasilitas.
+            </p>
+          </div>
+
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
+            {adminProfiles.map((profile) => (
+              <button
+                key={profile.lab_id}
+                onClick={() =>
+                  router.push(`/admin/dashboard?lab_id=${profile.lab_id}`)
+                }
+                className='bg-white p-6 rounded-2xl border border-slate-200 shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300 text-left group flex flex-col h-full'>
+                <div className='size-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center mb-4 group-hover:bg-blue-600 group-hover:text-white transition-colors'>
+                  <Building2 size={24} />
+                </div>
+                <h3 className='text-xl font-bold text-slate-800 mb-2'>
+                  {labMap[profile.lab_id]}
+                </h3>
+                <p className='text-sm text-slate-500 mt-auto flex items-center gap-2 group-hover:text-blue-600 font-medium transition-colors'>
+                  Buka Dashboard <ArrowRight size={16} />
+                </p>
+              </button>
+            ))}
+          </div>
+
+          <div className='mt-12 text-center'>
+            <Link
+              href='/'
+              className='text-slate-500 hover:text-slate-800 font-medium inline-flex items-center gap-2'>
+              <ChevronLeft size={18} /> Kembali ke Beranda Utama
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // --- RENDER TAB DASHBOARD UTAMA ---
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
         return (
           <OverviewTab
-            adminProfile={adminProfile}
+            adminProfile={activeProfile}
             supabase={supabase}
             setActiveTab={setActiveTab}
           />
         );
       case 'pengajuan':
-        return <PengajuanTab adminProfile={adminProfile} supabase={supabase} />;
+        return (
+          <PengajuanTab adminProfile={activeProfile} supabase={supabase} />
+        );
       case 'riwayat':
-        return <RiwayatTab adminProfile={adminProfile} supabase={supabase} />;
+        return <RiwayatTab adminProfile={activeProfile} supabase={supabase} />;
       case 'inventaris':
         return (
-          <InventarisTab adminProfile={adminProfile} supabase={supabase} />
+          <InventarisTab adminProfile={activeProfile} supabase={supabase} />
         );
       case 'materi':
         return <MateriTab />;
@@ -148,14 +228,14 @@ export default function AdminDashboardPage() {
               </p>
               <div className='mt-4 py-2 px-3 bg-slate-800 rounded-lg flex items-center gap-3 border border-slate-700 shrink-0'>
                 <div className='size-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400 font-bold uppercase text-sm shrink-0'>
-                  {adminProfile.nama_dosen?.charAt(0) || 'A'}
+                  {activeProfile.nama_dosen?.charAt(0) || 'A'}
                 </div>
                 <div className='overflow-hidden'>
                   <p className='text-sm font-semibold text-slate-200 truncate'>
-                    {adminProfile.nama_dosen}
+                    {activeProfile.nama_dosen}
                   </p>
                   <p className='text-xs text-amber-500 font-medium truncate'>
-                    Akses Tervalidasi
+                    {labMap[activeProfile.lab_id]}
                   </p>
                 </div>
               </div>
@@ -167,8 +247,8 @@ export default function AdminDashboardPage() {
               </div>
               <div
                 className='size-10 rounded-full bg-slate-800 flex items-center justify-center text-slate-300 font-bold uppercase text-base border border-slate-700 shrink-0'
-                title={adminProfile.nama_dosen}>
-                {adminProfile.nama_dosen?.charAt(0) || 'A'}
+                title={activeProfile.nama_dosen}>
+                {activeProfile.nama_dosen?.charAt(0) || 'A'}
               </div>
             </div>
           )}
@@ -247,7 +327,7 @@ export default function AdminDashboardPage() {
                 Status Sistem: Online
               </div>
               <h1 className='text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight'>
-                {getDashboardTitle(adminProfile.lab_id)}
+                {getDashboardTitle(activeProfile.lab_id)}
               </h1>
               <p className='mt-3 text-slate-500 text-lg max-w-3xl leading-relaxed'>
                 Platform terisolasi. Anda memegang kendali penuh pada validasi
@@ -262,5 +342,20 @@ export default function AdminDashboardPage() {
         </div>
       </main>
     </div>
+  );
+}
+
+export default function AdminDashboardPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className='min-h-screen flex items-center justify-center bg-slate-50'>
+          <p className='text-slate-500 font-medium md:text-lg animate-pulse'>
+            Memuat Sistem Dashboard...
+          </p>
+        </div>
+      }>
+      <DashboardContent />
+    </Suspense>
   );
 }

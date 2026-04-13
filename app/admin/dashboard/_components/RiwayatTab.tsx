@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { CheckSquare, Eye, Plus, PackageCheck, RotateCcw } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,24 +34,26 @@ import {
   DialogTrigger,
 } from '@/components/ui/dialog';
 
+// Daftar 18 Lab/TEFA Terbaru
 const labMap: Record<number, string> = {
-  1: 'Lab SFS budidaya perikanan',
-  2: 'Lab A (lab pembenihan ikan)',
-  3: 'Lab pengolahan perikanan',
-  4: 'Lab perikanan bawah',
-  5: 'Tefa polifishfarm',
-  6: 'Tefa POFF',
-  7: 'Tefa polifeed',
-  8: 'Lab Simulator',
-  9: 'Lab Tangkap',
-  10: 'Lab Radar',
-};
-
-const applyLabFilter = (supabaseQuery: any, lab_id: number) => {
-  if ([8, 9, 10].includes(lab_id)) {
-    return supabaseQuery.in('lab_id', [8, 9, 10]);
-  }
-  return supabaseQuery.eq('lab_id', lab_id);
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'Politeknik Ornamental Fish Farm (POFA)',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
 };
 
 // --- Tipe untuk form pengembalian per-item ---
@@ -99,16 +102,15 @@ export default function RiwayatTab({
 
   const fetchRiwayat = async () => {
     setLoading(true);
-    const q = applyLabFilter(
-      supabase
-        .from('peminjaman')
-        .select('*')
-        .eq('status', 'Disetujui')
-        .order('tanggal', { ascending: false }),
-      adminProfile.lab_id,
-    );
-    const res = await q;
-    if (res.data) setDataRiwayat(res.data);
+    // Menggunakan langsung .eq('lab_id') sesuai lab admin yang sedang aktif
+    const { data: res } = await supabase
+      .from('peminjaman')
+      .select('*')
+      .eq('status', 'Disetujui')
+      .eq('lab_id', adminProfile.lab_id)
+      .order('tanggal', { ascending: false });
+      
+    if (res) setDataRiwayat(res);
     setLoading(false);
   };
 
@@ -197,7 +199,7 @@ export default function RiwayatTab({
 
       // 2. Update inventaris — increment stok berdasarkan pengembalian
       for (const item of returnForms) {
-        // Cari inventaris berdasarkan nama alat
+        // Cari inventaris berdasarkan nama alat (karena tidak ada foreign key langsung ke inventaris.id)
         const { data: invRows } = await supabase
           .from('inventaris')
           .select('id, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat')
@@ -228,13 +230,24 @@ export default function RiwayatTab({
 
       if (pError) throw new Error('Gagal menandai peminjaman selesai: ' + pError.message);
 
-      alert('Pengembalian berhasil dicatat! Stok inventaris telah diperbarui.');
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: 'Pengembalian berhasil dicatat! Stok inventaris telah diperbarui.',
+        confirmButtonColor: '#10b981'
+      });
+      
       setIsDetailOpen(false);
       setSelectedRiwayat(null);
       fetchRiwayat();
     } catch (error: any) {
       console.error(error);
-      alert(error.message || 'Terjadi kesalahan saat memproses pengembalian.');
+      Swal.fire({
+        icon: 'error',
+        title: 'Terjadi Kesalahan',
+        text: error.message || 'Gagal memproses pengembalian.',
+        confirmButtonColor: '#ef4444'
+      });
     } finally {
       setIsSubmittingReturn(false);
     }
@@ -250,7 +263,7 @@ export default function RiwayatTab({
     const payload = {
       ...formData,
       kategori_pemohon: 'Dosen/Internal', // Identifikasi input manual
-      lab_id: adminProfile.lab_id, // Hardcoded to protecting scope!
+      lab_id: adminProfile.lab_id, // Hardcoded sesuai lab aktif
       status: 'Disetujui', // Auto-approved
     };
 
@@ -258,9 +271,19 @@ export default function RiwayatTab({
     setIsSubmitting(false);
 
     if (error) {
-      alert('Gagal menambahkan riwayat!');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Gagal menambahkan riwayat manual!',
+        confirmButtonColor: '#ef4444'
+      });
     } else {
-      alert('Riwayat berhasil ditambahkan!');
+      Swal.fire({
+        icon: 'success',
+        title: 'Tersimpan!',
+        text: 'Riwayat manual berhasil ditambahkan!',
+        confirmButtonColor: '#10b981'
+      });
       setIsFormOpen(false);
       setFormData({
         nama_lengkap: '',
@@ -391,7 +414,7 @@ export default function RiwayatTab({
 
       <CardContent>
         {/* ============================================================= */}
-        {/*  TABEL UTAMA RIWAYAT                                          */}
+        {/* TABEL UTAMA RIWAYAT                                          */}
         {/* ============================================================= */}
         <div className='rounded-md border overflow-x-auto'>
           <Table>
@@ -481,7 +504,7 @@ export default function RiwayatTab({
       </CardContent>
 
       {/* ================================================================= */}
-      {/*  MODAL DETAIL + FORM PENGEMBALIAN                                 */}
+      {/* MODAL DETAIL + FORM PENGEMBALIAN                                 */}
       {/* ================================================================= */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
         <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto'>

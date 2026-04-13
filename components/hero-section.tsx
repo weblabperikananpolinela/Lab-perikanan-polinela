@@ -70,11 +70,14 @@ export function HeroSection() {
           </Button>
 
           <Button
+          asChild
             size='lg'
             variant='outline'
             className='w-full gap-2 border-white bg-transparent text-white transition-all hover:bg-white hover:text-slate-800 sm:w-auto'>
-            <Calendar className='size-5' />
-            Lihat Jadwal Tersedia
+            <Link href='/jadwal'>
+              <Calendar className='size-5' />
+              Lihat Jadwal Tersedia
+            </Link>
           </Button>
         </div>
 

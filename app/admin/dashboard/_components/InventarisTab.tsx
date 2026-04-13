@@ -32,24 +32,26 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 
+// Daftar 18 Lab & TEFA terbaru
 const labMap: Record<number, string> = {
-  1: 'Lab SFS budidaya perikanan',
-  2: 'Lab A (lab pembenihan ikan)',
-  3: 'Lab pengolahan perikanan',
-  4: 'Lab perikanan bawah',
-  5: 'Tefa polifishfarm',
-  6: 'Tefa POFF',
-  7: 'Tefa polifeed',
-  8: 'Lab Simulator',
-  9: 'Lab Tangkap',
-  10: 'Lab Radar',
-};
-
-const applyLabFilter = (supabaseQuery: any, lab_id: number) => {
-  if ([8, 9, 10].includes(lab_id)) {
-    return supabaseQuery.in('lab_id', [8, 9, 10]);
-  }
-  return supabaseQuery.eq('lab_id', lab_id);
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'Politeknik Ornamental Fish Farm (POFA)',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
 };
 
 // --- Tipe Data ---
@@ -96,14 +98,9 @@ export default function InventarisTab({
   const [dataInventaris, setDataInventaris] = useState<InventarisItem[]>([]);
   const [loadingInventaris, setLoadingInventaris] = useState(false);
 
-  // --- Multi-tenant ---
-  const isMultiTenant = [8, 9, 10].includes(adminProfile.lab_id);
-  const allowedLabs = isMultiTenant ? [8, 9, 10] : [adminProfile.lab_id];
-
   // --- Modal Tambah Kategori ---
   const [isKategoriModalOpen, setIsKategoriModalOpen] = useState(false);
   const [newKategoriName, setNewKategoriName] = useState('');
-  const [newKategoriLabId, setNewKategoriLabId] = useState<number>(allowedLabs[0]);
   const [isSubmittingKategori, setIsSubmittingKategori] = useState(false);
 
   // --- Modal Tambah/Edit Alat ---
@@ -113,18 +110,15 @@ export default function InventarisTab({
   const [editItemId, setEditItemId] = useState<number | null>(null);
 
   // ===================================================================
-  //  FETCH KATEGORI — Dipicu saat komponen mount / lab_id berubah
+  //  FETCH KATEGORI — Hanya tarik kategori untuk lab yang sedang aktif
   // ===================================================================
   const fetchKategori = useCallback(async () => {
     setLoadingKategori(true);
-    const q = applyLabFilter(
-      supabase
-        .from('kategori_inventaris')
-        .select('*')
-        .order('nama_kategori', { ascending: true }),
-      adminProfile.lab_id,
-    );
-    const { data } = await q;
+    const { data } = await supabase
+      .from('kategori_inventaris')
+      .select('*')
+      .eq('lab_id', adminProfile.lab_id) // LOGIKA MULTI-TENANT LAMA DIHAPUS, GANTI JADI INI
+      .order('nama_kategori', { ascending: true });
 
     if (data && data.length > 0) {
       setKategoriList(data);
@@ -177,7 +171,7 @@ export default function InventarisTab({
     setIsSubmittingKategori(true);
 
     const { error } = await supabase.from('kategori_inventaris').insert({
-      lab_id: newKategoriLabId,
+      lab_id: adminProfile.lab_id, // Langsung insert ke lab_id milik admin saat ini
       nama_kategori: newKategoriName.trim(),
     });
 
@@ -282,7 +276,7 @@ export default function InventarisTab({
           <div>
             <CardTitle className='text-xl flex items-center gap-2'>
               <PackageSearch className='size-5 text-purple-600' />
-              Inventaris Laboratorium
+              Inventaris {labMap[adminProfile.lab_id] || 'Laboratorium'}
             </CardTitle>
             <CardDescription className='text-base text-slate-600 mt-1'>
               Kelola daftar aset, alat tangkap, atau perlengkapan lab di sini.
@@ -298,7 +292,7 @@ export default function InventarisTab({
         </div>
 
         {/* ============================================================= */}
-        {/*  NAVIGATION BAR KATEGORI                                      */}
+        {/* NAVIGATION BAR KATEGORI                                      */}
         {/* ============================================================= */}
         <div className='flex items-center gap-2 overflow-x-auto pb-1 -mb-2 scrollbar-thin'>
           {kategoriList.map((kat) => (
@@ -311,18 +305,12 @@ export default function InventarisTab({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
               }`}>
               {kat.nama_kategori}
-              {isMultiTenant && (
-                <span className='ml-1.5 text-xs opacity-70'>
-                  ({labMap[kat.lab_id]?.split(' ').pop()})
-                </span>
-              )}
             </button>
           ))}
 
           <button
             onClick={() => {
               setNewKategoriName('');
-              setNewKategoriLabId(allowedLabs[0]);
               setIsKategoriModalOpen(true);
             }}
             className='shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border-2 border-dashed border-slate-300 text-slate-500 hover:border-purple-400 hover:text-purple-600 transition-all'>
@@ -334,11 +322,11 @@ export default function InventarisTab({
 
       <CardContent>
         {/* ============================================================= */}
-        {/*  TABEL INVENTARIS                                              */}
+        {/* TABEL INVENTARIS                                              */}
         {/* ============================================================= */}
         {activeKategoriId === null ? (
           <div className='text-center py-16 text-slate-500 text-lg'>
-            Belum ada kategori. Klik <strong>"+ Tambah Kategori"</strong> di atas untuk memulai.
+            Belum ada kategori. Klik <strong className="text-purple-600">"+ Tambah Kategori"</strong> di atas untuk memulai.
           </div>
         ) : loadingInventaris ? (
           <div className='animate-pulse text-center py-16 text-slate-500 text-lg font-medium'>
@@ -428,7 +416,7 @@ export default function InventarisTab({
       </CardContent>
 
       {/* ================================================================= */}
-      {/*  MODAL — TAMBAH KATEGORI                                          */}
+      {/* MODAL — TAMBAH KATEGORI                                          */}
       {/* ================================================================= */}
       <Dialog open={isKategoriModalOpen} onOpenChange={setIsKategoriModalOpen}>
         <DialogContent className='sm:max-w-md'>
@@ -439,25 +427,6 @@ export default function InventarisTab({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submitKategori} className='space-y-4 pt-4'>
-            {isMultiTenant && (
-              <div className='space-y-2'>
-                <Label htmlFor='kat_lab' className='text-base'>
-                  Laboratorium
-                </Label>
-                <select
-                  id='kat_lab'
-                  className='flex h-11 w-full rounded-md border border-input bg-background px-3 py-2 text-base ring-offset-background'
-                  value={newKategoriLabId}
-                  onChange={(e) => setNewKategoriLabId(Number(e.target.value))}
-                  required>
-                  {[8, 9, 10].map((id) => (
-                    <option key={id} value={id}>
-                      {labMap[id]}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            )}
             <div className='space-y-2'>
               <Label htmlFor='kat_nama' className='text-base'>
                 Nama Kategori
@@ -484,7 +453,7 @@ export default function InventarisTab({
       </Dialog>
 
       {/* ================================================================= */}
-      {/*  MODAL — TAMBAH / EDIT ALAT                                       */}
+      {/* MODAL — TAMBAH / EDIT ALAT                                       */}
       {/* ================================================================= */}
       <Dialog
         open={isFormOpen}

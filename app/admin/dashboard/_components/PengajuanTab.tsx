@@ -10,6 +10,7 @@ import {
   ChevronRight,
   ClipboardList,
 } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -40,25 +41,29 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+// 1. Daftar 18 Lab/TEFA Terbaru
 const labMap: Record<number, string> = {
-  1: 'Lab SFS budidaya perikanan',
-  2: 'Lab A (lab pembenihan ikan)',
-  3: 'Lab pengolahan perikanan',
-  4: 'Lab perikanan bawah',
-  5: 'Tefa polifishfarm',
-  6: 'Tefa POFF',
-  7: 'Tefa polifeed',
-  8: 'Lab Simulator',
-  9: 'Lab Tangkap',
-  10: 'Lab Radar',
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'Politeknik Ornamental Fish Farm (POFA)',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
 };
 
-const applyLabFilter = (supabaseQuery: any, lab_id: number) => {
-  if ([8, 9, 10].includes(lab_id)) {
-    return supabaseQuery.in('lab_id', [8, 9, 10]);
-  }
-  return supabaseQuery.eq('lab_id', lab_id);
-};
+// Fungsi applyLabFilter lama SUDAH DIHAPUS karena logika Multi-tenant berubah.
 
 // 2. LIHAT PENGAJUAN TAB
 export default function PengajuanTab({
@@ -86,28 +91,24 @@ export default function PengajuanTab({
   const fetchPengajuan = async () => {
     setLoading(true);
 
-    // Fetch Menunggu
-    const q1 = applyLabFilter(
-      supabase
-        .from('peminjaman')
-        .select('*')
-        .eq('status', 'Menunggu validasi')
-        .order('created_at', { ascending: false }),
-      adminProfile.lab_id,
-    );
-    const res1 = await q1;
-    if (res1.data) setDataMenunggu(res1.data);
+    // Fetch Menunggu (Hanya untuk lab admin yang aktif)
+    const { data: res1 } = await supabase
+      .from('peminjaman')
+      .select('*')
+      .eq('status', 'Menunggu validasi')
+      .eq('lab_id', adminProfile.lab_id)
+      .order('created_at', { ascending: false });
+    
+    if (res1) setDataMenunggu(res1);
 
-    // Fetch All Riwayat (termasuk yang tidak menunggu)
-    const q2 = applyLabFilter(
-      supabase
-        .from('peminjaman')
-        .select('*')
-        .order('created_at', { ascending: false }),
-      adminProfile.lab_id,
-    );
-    const res2 = await q2;
-    if (res2.data) setDataRiwayat(res2.data);
+    // Fetch All Riwayat (termasuk yang tidak menunggu, hanya untuk lab ini)
+    const { data: res2 } = await supabase
+      .from('peminjaman')
+      .select('*')
+      .eq('lab_id', adminProfile.lab_id)
+      .order('created_at', { ascending: false });
+      
+    if (res2) setDataRiwayat(res2);
 
     setLoading(false);
   };
@@ -146,10 +147,21 @@ export default function PengajuanTab({
 
     setIsProcessing(false);
 
+    // Menggunakan SweetAlert2 agar lebih elegan
     if (error) {
-      alert('Gagal memproses validasi pengajuan!');
+      Swal.fire({
+        icon: 'error',
+        title: 'Oops...',
+        text: 'Gagal memproses validasi pengajuan: ' + error.message,
+        confirmButtonColor: '#ef4444'
+      });
     } else {
-      alert(`Pengajuan berhasil di-${newStatus.toLowerCase()}!`);
+      Swal.fire({
+        icon: 'success',
+        title: 'Berhasil!',
+        text: `Pengajuan berhasil di-${newStatus.toLowerCase()}!`,
+        confirmButtonColor: '#10b981'
+      });
       setIsDialogOpen(false);
       fetchPengajuan(); // Refresh
     }
@@ -411,7 +423,7 @@ export default function PengajuanTab({
                 ) : (
                   <>
                     <div className="col-span-2 md:col-span-1">
-                      <p className='font-semibold text-slate-500'>NPM</p>
+                      <p className='font-semibold text-slate-500'>NPM / NIP</p>
                       <p className='font-bold text-slate-900'>
                         {selectedPengajuan.npm || '-'}
                       </p>
@@ -426,7 +438,7 @@ export default function PengajuanTab({
                 )}
                 
                 <div className="col-span-2 md:col-span-1">
-                  <p className='font-semibold text-slate-500'>Dosen Pembimbing</p>
+                  <p className='font-semibold text-slate-500'>Dosen / PIC</p>
                   <p className='font-bold text-slate-900 text-base'>
                     {selectedPengajuan.dosen_pembimbing || '-'}
                   </p>
