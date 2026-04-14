@@ -1,14 +1,16 @@
-import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import './globals.css'
+import type { Metadata } from 'next';
+import { Geist, Geist_Mono } from 'next/font/google';
+import { Analytics } from '@vercel/analytics/next';
+import { SpeedInsights } from '@vercel/speed-insights/next';
+import './globals.css';
 
-const _geist = Geist({ subsets: ["latin"] });
-const _geistMono = Geist_Mono({ subsets: ["latin"] });
+const _geist = Geist({ subsets: ['latin'] });
+const _geistMono = Geist_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
   title: 'Laboratorium Perikanan Polinela',
-  description: 'Laboratorium Perikanan Politeknik Negeri Lampung - Fasilitas pendidikan dan penelitian di bidang perikanan',
+  description:
+    'Laboratorium Perikanan Politeknik Negeri Lampung - Fasilitas pendidikan dan penelitian di bidang perikanan',
   generator: 'v0.app',
   icons: {
     icon: [
@@ -27,21 +29,21 @@ export const metadata: Metadata = {
     ],
     apple: '/apple-icon.png',
   },
-}
+};
 
 export default function RootLayout({
   children,
 }: Readonly<{
-  children: React.ReactNode
+  children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body className="font-sans antialiased">
-        <main>
-          {children}
-        </main>
+    <html lang='id'>
+      <body className='font-sans antialiased'>
+        <main>{children}</main>
+        {/* Vercel Trackers */}
         <Analytics />
+        <SpeedInsights />
       </body>
     </html>
-  )
+  );
 }
