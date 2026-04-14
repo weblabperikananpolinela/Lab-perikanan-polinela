@@ -153,7 +153,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className='hidden items-center gap-8 md:flex'>
-          {/* Tambahkan ini di Desktop Navigation */}
+          {/* Profil Dropdown (Sudah Diperbarui) */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className='flex items-center gap-1 text-sm font-medium text-slate-800 transition-colors hover:text-blue-600 focus:outline-none'>
               Profil
@@ -162,15 +162,23 @@ export function Navbar() {
             <DropdownMenuContent
               align='start'
               sideOffset={16}
-              className='w-56 p-2 flex flex-col gap-1'>
+              className='w-[400px] p-4 flex flex-col gap-2'>
               <DropdownMenuItem
                 asChild
-                className='p-3 cursor-pointer rounded-md transition-all hover:bg-slate-50'>
-                <Link href='/organisasi' className='flex items-center gap-3'>
-                  <Users className='size-5 text-blue-600' />
-                  <span className='font-semibold text-slate-900'>
-                    Struktur Organisasi
-                  </span>
+                className='p-3 cursor-pointer rounded-md transition-all focus:bg-slate-50 hover:bg-slate-50'>
+                <Link href='/organisasi' className='flex items-start gap-4'>
+                  <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600'>
+                    <Users className='size-5' />
+                  </div>
+                  <div>
+                    <h4 className='text-sm font-semibold text-slate-900'>
+                      Struktur Organisasi
+                    </h4>
+                    <p className='text-sm text-slate-500 mt-1'>
+                      Personel pengelola fasilitas Laboratorium dan Teaching
+                      Factory.
+                    </p>
+                  </div>
                 </Link>
               </DropdownMenuItem>
             </DropdownMenuContent>
