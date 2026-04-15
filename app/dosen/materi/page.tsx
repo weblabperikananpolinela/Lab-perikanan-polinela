@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import Swal from 'sweetalert2';
 import { createClient } from '@/lib/supabase/client';
 import {
   ArrowLeft,
@@ -89,7 +90,7 @@ export default function MateriDosenPage() {
 
     // Pastikan ENV sudah terbaca
     if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-      alert('Error Konfigurasi: Variabel Cloudinary di .env belum diatur.');
+      Swal.fire({ text: 'Error Konfigurasi: Variabel Cloudinary di .env belum diatur.', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
       return;
     }
 
@@ -141,10 +142,10 @@ export default function MateriDosenPage() {
       if (fileInput) fileInput.value = '';
 
       fetchHistory(session.user.email as string);
-      alert('Materi berhasil diunggah dan disimpan!');
+      Swal.fire({ text: 'Materi berhasil diunggah dan disimpan!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } catch (error: any) {
       console.error(error);
-      alert(`Terjadi kesalahan: ${error.message}`);
+      Swal.fire({ text: `Terjadi kesalahan: ${error.message}`, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } finally {
       setIsUploading(false);
     }
@@ -162,8 +163,9 @@ export default function MateriDosenPage() {
     const { error } = await supabase.from('materi_dosen').delete().eq('id', id);
     if (!error) {
       setHistory(history.filter((item) => item.id !== id));
+      Swal.fire({ text: 'Materi berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } else {
-      alert('Gagal menghapus data.');
+      Swal.fire({ text: 'Gagal menghapus data.', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     }
   };
 

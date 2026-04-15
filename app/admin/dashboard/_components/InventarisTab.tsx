@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { PackageSearch, Plus, Pencil, FolderPlus } from 'lucide-react';
+import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -178,11 +179,12 @@ export default function InventarisTab({
     setIsSubmittingKategori(false);
 
     if (error) {
-      alert('Gagal menambahkan kategori: ' + error.message);
+      Swal.fire({ text: 'Gagal menambahkan kategori: ' + error.message, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } else {
       setNewKategoriName('');
       setIsKategoriModalOpen(false);
       fetchKategori();
+      Swal.fire({ text: 'Kategori berhasil ditambahkan!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     }
   };
 
@@ -192,7 +194,7 @@ export default function InventarisTab({
   const submitInventaris = async (e: React.FormEvent) => {
     e.preventDefault();
     if (activeKategoriId === null) {
-      alert('Pilih atau buat kategori terlebih dahulu.');
+      Swal.fire({ text: 'Pilih atau buat kategori terlebih dahulu.', icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
       return;
     }
     setIsSubmitting(true);
@@ -224,12 +226,13 @@ export default function InventarisTab({
     setIsSubmitting(false);
 
     if (error) {
-      alert(`Gagal ${editItemId ? 'mengupdate' : 'menambahkan'} alat: ${error.message}`);
+      Swal.fire({ text: `Gagal ${editItemId ? 'mengupdate' : 'menambahkan'} alat: ${error.message}`, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     } else {
       setIsFormOpen(false);
       setEditItemId(null);
       setFormData(defaultFormData);
       fetchInventaris();
+      Swal.fire({ text: `Alat berhasil ${editItemId ? 'diperbarui' : 'ditambahkan'}!`, icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
     }
   };
 

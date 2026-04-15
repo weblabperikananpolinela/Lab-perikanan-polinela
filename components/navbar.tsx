@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
+import Swal from 'sweetalert2';
 import { createClient } from '@/lib/supabase/client';
 import {
   Users,
@@ -134,9 +135,15 @@ export function Navbar() {
 
     // 3. Jika bukan keduanya, KICK / LOGOUT otomatis
     await supabase.auth.signOut();
-    alert(
-      'Akses Ditolak! Hanya dosen dengan email @polinela.ac.id atau admin terdaftar yang diizinkan masuk.',
-    );
+    Swal.fire({
+      text: 'Akses Ditolak! Hanya dosen dengan email @polinela.ac.id atau admin terdaftar yang diizinkan masuk.',
+      icon: 'error',
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 3000,
+      timerProgressBar: true
+    });
     setUserRole(null);
     setAdminProfiles([]);
   };
@@ -151,10 +158,33 @@ export function Navbar() {
   };
 
   const handleLogout = async () => {
+    Swal.fire({
+      title: 'Memutus Sesi...',
+      text: 'Mengamankan data Anda.',
+      allowOutsideClick: false,
+      allowEscapeKey: false,
+      showConfirmButton: false,
+      didOpen: () => {
+        Swal.showLoading();
+      }
+    });
+    
     await supabase.auth.signOut();
     setSession(null);
     setUserRole(null);
     setAdminProfiles([]);
+    
+    Swal.fire({
+      text: 'Logout Berhasil',
+      icon: 'success',
+      toast: true,
+      position: 'top-end',
+      showConfirmButton: false,
+      timer: 1500,
+      timerProgressBar: true
+    }).then(() => {
+      window.location.reload();
+    });
   };
 
   // Helper untuk mendapatkan nama yang akan ditampilkan di tombol
