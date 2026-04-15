@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
 import { Analytics } from '@vercel/analytics/next';
 import { SpeedInsights } from '@vercel/speed-insights/next';
+import { LayoutWrapper } from '@/components/layout-wrapper'; // <-- Import wrapper yang baru dibuat
 import './globals.css';
 
 const _geist = Geist({ subsets: ['latin'] });
@@ -38,8 +39,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang='id'>
-      <body className='font-sans antialiased'>
-        <main>{children}</main>
+      <body className='font-sans antialiased bg-white'>
+        
+        {/* Bungkus seluruh aplikasi dengan LayoutWrapper */}
+        <LayoutWrapper>
+          {children}
+        </LayoutWrapper>
+        
         {/* Vercel Trackers */}
         <Analytics />
         <SpeedInsights />

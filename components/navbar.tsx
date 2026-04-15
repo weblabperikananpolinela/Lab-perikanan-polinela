@@ -17,6 +17,7 @@ import {
   LogOut,
   Calendar,
   PackageSearch,
+  FileUp, // <-- Icon untuk Upload Materi
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -70,6 +71,9 @@ const labMap: Record<number, string> = {
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [session, setSession] = useState<any>(null);
+
+  // STATE BARU: Menyimpan role dan data admin
+  const [userRole, setUserRole] = useState<'admin_lab' | 'dosen' | null>(null);
   const [adminProfiles, setAdminProfiles] = useState<any[]>([]);
 
   const supabase = createClient();
@@ -80,7 +84,7 @@ export function Navbar() {
         data: { session },
       } = await supabase.auth.getSession();
       setSession(session);
-      if (session) checkWhitelist(session.user?.email);
+      if (session) checkUserRole(session.user);
     };
     initSession();
 
@@ -89,8 +93,9 @@ export function Navbar() {
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        checkWhitelist(session.user?.email);
+        checkUserRole(session.user);
       } else {
+        setUserRole(null);
         setAdminProfiles([]);
       }
     });
@@ -99,21 +104,41 @@ export function Navbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const checkWhitelist = async (email: string | undefined) => {
-    if (!email) return;
+  // LOGIKA LOGIN BARU: Memisahkan Admin Lab (Whitelist) dan Dosen Reguler (@polinela.ac.id)
+  const checkUserRole = async (user: any) => {
+    if (!user || !user.email) return;
+    const email = user.email;
 
+    // 1. Cek apakah email ada di Whitelist Admin
     const { data: adminData, error } = await supabase
       .from('whitelist_admin')
       .select('*')
       .eq('email', email);
 
-    if (error || !adminData || adminData.length === 0) {
-      await supabase.auth.signOut();
-      alert('Akses Ditolak! Email Anda tidak terdaftar sebagai pengelola Lab.');
-      setAdminProfiles([]);
-    } else {
+    if (!error && adminData && adminData.length > 0) {
+      setUserRole('admin_lab');
       setAdminProfiles(adminData);
+      return;
     }
+
+    // 2. Jika bukan admin, cek apakah domain emailnya @polinela.ac.id
+    // (Juga memasukkan email dev kamu agar mudah saat testing)
+    if (
+      email.endsWith('@polinela.ac.id') ||
+      email === 'afnanimadurrosyad911@gmail.com'
+    ) {
+      setUserRole('dosen');
+      setAdminProfiles([]); // Kosongkan admin profile karena dia cuma dosen
+      return;
+    }
+
+    // 3. Jika bukan keduanya, KICK / LOGOUT otomatis
+    await supabase.auth.signOut();
+    alert(
+      'Akses Ditolak! Hanya dosen dengan email @polinela.ac.id atau admin terdaftar yang diizinkan masuk.',
+    );
+    setUserRole(null);
+    setAdminProfiles([]);
   };
 
   const handleLogin = async () => {
@@ -128,7 +153,24 @@ export function Navbar() {
   const handleLogout = async () => {
     await supabase.auth.signOut();
     setSession(null);
+    setUserRole(null);
     setAdminProfiles([]);
+  };
+
+  // Helper untuk mendapatkan nama yang akan ditampilkan di tombol
+  const getDisplayName = () => {
+    if (
+      userRole === 'admin_lab' &&
+      adminProfiles.length > 0 &&
+      adminProfiles[0].nama_dosen
+    ) {
+      return adminProfiles[0].nama_dosen;
+    }
+    return (
+      session?.user?.user_metadata?.full_name ||
+      session?.user?.email?.split('@')[0] ||
+      'Dosen Polinela'
+    );
   };
 
   return (
@@ -153,7 +195,7 @@ export function Navbar() {
 
         {/* Desktop Navigation */}
         <div className='hidden items-center gap-8 md:flex'>
-          {/* Profil Dropdown (Sudah Diperbarui) */}
+          {/* Profil Dropdown */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className='flex items-center gap-1 text-sm font-medium text-slate-800 transition-colors hover:text-blue-600 focus:outline-none'>
               Profil
@@ -183,6 +225,7 @@ export function Navbar() {
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
+
           {/* Administrasi Dropdown */}
           <DropdownMenu modal={false}>
             <DropdownMenuTrigger className='flex items-center gap-1 text-sm font-medium text-slate-800 transition-colors hover:text-blue-600 focus:outline-none'>
@@ -297,18 +340,20 @@ export function Navbar() {
 
         {/* Desktop CTA & Login/Logout Logic */}
         <div className='hidden md:block'>
-          {session && adminProfiles.length > 0 ? (
+          {session && userRole ? (
             <DropdownMenu modal={false}>
               <DropdownMenuTrigger asChild>
-                <Button className='bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg flex items-center gap-2'>
-                  Halo, {adminProfiles[0].nama_dosen || session.user?.email}
-                  <ChevronDown className='size-4' />
+                <Button className='bg-blue-600 text-white hover:bg-blue-700 hover:shadow-lg flex items-center gap-2 max-w-[200px]'>
+                  <span className='truncate'>
+                    Halo, {getDisplayName().split(' ')[0]}
+                  </span>
+                  <ChevronDown className='size-4 shrink-0' />
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align='end' className='w-64 p-2'>
                 <div className='px-2 py-3 bg-slate-50 rounded-lg mb-2'>
-                  <p className='text-sm font-bold text-slate-800'>
-                    {adminProfiles[0].nama_dosen}
+                  <p className='text-sm font-bold text-slate-800 truncate'>
+                    {getDisplayName()}
                   </p>
                   <p className='text-xs text-slate-500 font-medium truncate'>
                     {session.user?.email}
@@ -320,23 +365,40 @@ export function Navbar() {
                     Ruang Kerja Anda
                   </p>
                 </div>
-                {adminProfiles.map((profile) => (
+
+                {/* Dashboard Lab (Khusus Admin Lab) */}
+                {userRole === 'admin_lab' &&
+                  adminProfiles.map((profile) => (
+                    <DropdownMenuItem
+                      key={profile.lab_id}
+                      asChild
+                      className='cursor-pointer py-2.5 rounded-md'>
+                      <Link href={`/admin/dashboard?lab_id=${profile.lab_id}`}>
+                        <Building2 className='size-4 mr-2 text-slate-400' />
+                        <span className='truncate'>
+                          Dashboard{' '}
+                          {labMap[profile.lab_id] || `Lab ${profile.lab_id}`}
+                        </span>
+                      </Link>
+                    </DropdownMenuItem>
+                  ))}
+
+                {/* Upload Materi (Untuk SEMUA Dosen & Admin) */}
+                {(userRole === 'admin_lab' || userRole === 'dosen') && (
                   <DropdownMenuItem
-                    key={profile.lab_id}
                     asChild
-                    className='cursor-pointer py-2.5 rounded-md'>
-                    <Link href={`/admin/dashboard?lab_id=${profile.lab_id}`}>
-                      Dashboard{' '}
-                      {labMap[profile.lab_id] || `Lab ${profile.lab_id}`}
+                    className='cursor-pointer py-2.5 rounded-md font-semibold text-blue-700 focus:text-blue-800 focus:bg-blue-50'>
+                    <Link href={`/dosen/materi`}>
+                      <FileUp className='size-4 mr-2' /> Upload Materi
                     </Link>
                   </DropdownMenuItem>
-                ))}
+                )}
 
                 <div className='border-t mt-2 pt-2'>
                   <DropdownMenuItem
                     className='cursor-pointer py-2.5 text-red-600 focus:text-red-700 focus:bg-red-50 rounded-md font-medium'
                     onClick={handleLogout}>
-                    Keluar Sistem
+                    <LogOut className='size-4 mr-2' /> Keluar Sistem
                   </DropdownMenuItem>
                 </div>
               </DropdownMenuContent>
@@ -358,7 +420,6 @@ export function Navbar() {
                 <Menu className='size-6' />
               </Button>
             </SheetTrigger>
-            {/* SheetContent diubah menjadi flex-col agar area admin bisa terdorong ke bawah */}
             <SheetContent
               side='right'
               className='w-[85vw] sm:w-96 flex flex-col p-0'>
@@ -372,7 +433,6 @@ export function Navbar() {
               <div className='flex-1 overflow-y-auto p-4'>
                 <div className='flex flex-col gap-1'>
                   <Accordion type='single' collapsible className='w-full'>
-                    {/* Tambahkan ini di Accordion Mobile */}
                     <AccordionItem value='profil' className='border-b-0'>
                       <AccordionTrigger className='py-4 px-3 rounded-xl text-base font-bold text-slate-800 hover:no-underline hover:bg-slate-50 transition-colors'>
                         Profil
@@ -387,7 +447,7 @@ export function Navbar() {
                         </Link>
                       </AccordionContent>
                     </AccordionItem>
-                    {/* Akordion Administrasi */}
+
                     <AccordionItem value='administrasi' className='border-b-0'>
                       <AccordionTrigger className='py-4 px-3 rounded-xl text-base font-bold text-slate-800 hover:no-underline hover:bg-slate-50 transition-colors'>
                         Administrasi
@@ -410,7 +470,6 @@ export function Navbar() {
                       </AccordionContent>
                     </AccordionItem>
 
-                    {/* Akordion Dokumen */}
                     <AccordionItem value='dokumen' className='border-b-0'>
                       <AccordionTrigger className='py-4 px-3 rounded-xl text-base font-bold text-slate-800 hover:no-underline hover:bg-slate-50 transition-colors'>
                         Dokumen
@@ -434,7 +493,6 @@ export function Navbar() {
                     </AccordionItem>
                   </Accordion>
 
-                  {/* Link Biasa */}
                   <Link
                     href='/inventaris'
                     onClick={() => setIsOpen(false)}
@@ -450,18 +508,18 @@ export function Navbar() {
                 </div>
               </div>
 
-              {/* AREA ADMIN BERLATAR AKSEN BIRU (Di bagian paling bawah) */}
+              {/* AREA USER BERLATAR AKSEN BIRU */}
               <div className='p-4 bg-slate-50 border-t border-slate-200 mt-auto'>
-                {session && adminProfiles.length > 0 ? (
+                {session && userRole ? (
                   <div className='bg-gradient-to-br from-blue-600 to-blue-800 rounded-2xl p-5 shadow-lg shadow-blue-900/20'>
                     {/* Info Profil */}
                     <div className='flex items-center gap-3 mb-5 pb-5 border-b border-blue-400/30'>
                       <div className='size-12 bg-white/20 rounded-full flex items-center justify-center text-white font-bold text-xl shrink-0'>
-                        {adminProfiles[0].nama_dosen.charAt(0)}
+                        {getDisplayName().charAt(0).toUpperCase()}
                       </div>
                       <div className='overflow-hidden'>
                         <p className='text-base font-bold text-white truncate'>
-                          {adminProfiles[0].nama_dosen}
+                          {getDisplayName()}
                         </p>
                         <p className='text-xs text-blue-200 font-medium truncate'>
                           {session.user?.email}
@@ -469,25 +527,46 @@ export function Navbar() {
                       </div>
                     </div>
 
-                    {/* Menu Dashboard Dosen */}
                     <div className='space-y-2.5'>
                       <p className='text-[10px] font-bold text-blue-300 uppercase tracking-wider'>
                         Ruang Kerja Anda
                       </p>
-                      {adminProfiles.map((profile) => (
+
+                      {/* Menu Dashboard (Khusus Admin Lab) */}
+                      {userRole === 'admin_lab' &&
+                        adminProfiles.map((profile) => (
+                          <Button
+                            key={profile.lab_id}
+                            asChild
+                            variant='secondary'
+                            className='w-full justify-start text-left h-auto py-3 bg-white hover:bg-blue-50 text-blue-700 font-semibold border-none shadow-sm'>
+                            <Link
+                              href={`/admin/dashboard?lab_id=${profile.lab_id}`}
+                              onClick={() => setIsOpen(false)}>
+                              <Building2 className='size-4 mr-2 text-blue-500' />
+                              <span className='truncate'>
+                                Dashboard{' '}
+                                {labMap[profile.lab_id]?.split(' ')[1] ||
+                                  `Lab ${profile.lab_id}`}
+                              </span>
+                            </Link>
+                          </Button>
+                        ))}
+
+                      {/* Menu Upload Materi (Semua Dosen & Admin) */}
+                      {(userRole === 'admin_lab' || userRole === 'dosen') && (
                         <Button
-                          key={profile.lab_id}
                           asChild
                           variant='secondary'
                           className='w-full justify-start text-left h-auto py-3 bg-white hover:bg-blue-50 text-blue-700 font-semibold border-none shadow-sm'>
                           <Link
-                            href={`/admin/dashboard?lab_id=${profile.lab_id}`}
+                            href={`/dosen/materi`}
                             onClick={() => setIsOpen(false)}>
-                            <Building2 className='size-4 mr-2 text-blue-500' />
-                            Dashboard {labMap[profile.lab_id]}
+                            <FileUp className='size-4 mr-2 text-blue-500' />
+                            Upload Materi Perkuliahan
                           </Link>
                         </Button>
-                      ))}
+                      )}
                     </div>
 
                     {/* Tombol Keluar */}

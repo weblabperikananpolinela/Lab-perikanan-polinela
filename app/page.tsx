@@ -10,14 +10,14 @@ import { Footer } from '@/components/footer';
 export default function HomePage() {
   return (
     <main className='min-h-screen'>
-      <Navbar />
+      {/* <Navbar /> */}
       <HeroSection />
       <OrganisasiSection />
       <SopSection />
       <DokumentasiSection />
       <ProgramStudiSection />
       <LokasiSection />
-      <Footer />
+      {/* <Footer /> */}
     </main>
   );
 }
