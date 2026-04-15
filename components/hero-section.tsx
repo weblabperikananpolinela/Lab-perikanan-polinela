@@ -53,8 +53,8 @@ export function HeroSection() {
         </h1>
         <p className='mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-white/90 sm:text-xl'>
           Fasilitas pendidikan dan penelitian terdepan di bidang perikanan.
-          Mendukung pengembangan ilmu pengetahuan dan teknologi akuakultur untuk
-          masa depan yang berkelanjutan.
+          Mendukung pengembangan ilmu perikanan dan kelautan untuk masa depan
+          yang berkelanjutan.
         </p>
 
         <div className='mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row'>
