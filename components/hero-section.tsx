@@ -7,10 +7,10 @@ import Link from 'next/link'; // <-- Tambahkan import ini
 import { useEffect, useState } from 'react';
 
 const heroImages = [
-  '/hero-lab-1.jpg',
-  '/hero-lab-2.jpg',
-  '/hero-lab-3.jpg',
-  '/hero-lab-4.jpg',
+  '/banner/hero-1.jpg',
+  '/banner/hero-2.jpg',
+  '/banner/hero-3.jpg',
+  '/banner/hero-4.jpg',
 ];
 
 export function HeroSection() {
@@ -70,7 +70,7 @@ export function HeroSection() {
           </Button>
 
           <Button
-          asChild
+            asChild
             size='lg'
             variant='outline'
             className='w-full gap-2 border-white bg-transparent text-white transition-all hover:bg-white hover:text-slate-800 sm:w-auto'>

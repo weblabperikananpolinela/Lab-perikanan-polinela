@@ -530,6 +530,12 @@ export default function RiwayatTab({
                   <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>Kegiatan</p>
                   <p className='font-bold text-slate-900 text-base'>{selectedRiwayat.judul_kegiatan}</p>
                 </div>
+                <div>
+                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>Laboratorium</p>
+                  <p className='font-bold text-slate-900 text-base'>
+                    {labMap[selectedRiwayat.lab_id] || `Lab ${selectedRiwayat.lab_id}`}
+                  </p>
+                </div>
                 <div className='grid grid-cols-2 gap-3'>
                   <div>
                     <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>Tanggal</p>

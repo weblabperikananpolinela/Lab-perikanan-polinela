@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { PackageSearch, Plus, Pencil, FolderPlus } from 'lucide-react';
+import { PackageSearch, Plus, Pencil, FolderPlus, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -60,6 +60,7 @@ interface Kategori {
   id: number;
   lab_id: number;
   nama_kategori: string;
+  is_bisa_berkurang: boolean; // Field Baru
 }
 
 interface InventarisItem {
@@ -82,7 +83,6 @@ const defaultFormData = {
   keterangan: '',
 };
 
-// 4. INVENTARIS TAB
 export default function InventarisTab({
   adminProfile,
   supabase,
@@ -90,18 +90,17 @@ export default function InventarisTab({
   adminProfile: any;
   supabase: any;
 }) {
-  // --- Kategori State ---
   const [kategoriList, setKategoriList] = useState<Kategori[]>([]);
   const [activeKategoriId, setActiveKategoriId] = useState<number | null>(null);
   const [loadingKategori, setLoadingKategori] = useState(true);
 
-  // --- Inventaris State ---
   const [dataInventaris, setDataInventaris] = useState<InventarisItem[]>([]);
   const [loadingInventaris, setLoadingInventaris] = useState(false);
 
   // --- Modal Tambah Kategori ---
   const [isKategoriModalOpen, setIsKategoriModalOpen] = useState(false);
   const [newKategoriName, setNewKategoriName] = useState('');
+  const [newKategoriIsBerkurang, setNewKategoriIsBerkurang] = useState(false); // State Baru
   const [isSubmittingKategori, setIsSubmittingKategori] = useState(false);
 
   // --- Modal Tambah/Edit Alat ---
@@ -110,20 +109,17 @@ export default function InventarisTab({
   const [formData, setFormData] = useState(defaultFormData);
   const [editItemId, setEditItemId] = useState<number | null>(null);
 
-  // ===================================================================
-  //  FETCH KATEGORI — Hanya tarik kategori untuk lab yang sedang aktif
-  // ===================================================================
+  // FETCH KATEGORI
   const fetchKategori = useCallback(async () => {
     setLoadingKategori(true);
     const { data } = await supabase
       .from('kategori_inventaris')
       .select('*')
-      .eq('lab_id', adminProfile.lab_id) // LOGIKA MULTI-TENANT LAMA DIHAPUS, GANTI JADI INI
+      .eq('lab_id', adminProfile.lab_id)
       .order('nama_kategori', { ascending: true });
 
     if (data && data.length > 0) {
       setKategoriList(data);
-      // Pilih kategori pertama secara default jika belum ada yang aktif
       setActiveKategoriId((prev) => {
         const stillExists = data.some((k: Kategori) => k.id === prev);
         return stillExists ? prev : data[0].id;
@@ -139,9 +135,7 @@ export default function InventarisTab({
     fetchKategori();
   }, [fetchKategori]);
 
-  // ===================================================================
-  //  FETCH INVENTARIS — Dipicu saat kategori aktif berubah
-  // ===================================================================
+  // FETCH INVENTARIS
   const fetchInventaris = useCallback(async () => {
     if (activeKategoriId === null) {
       setDataInventaris([]);
@@ -163,40 +157,51 @@ export default function InventarisTab({
     fetchInventaris();
   }, [fetchInventaris]);
 
-  // ===================================================================
-  //  SUBMIT KATEGORI BARU
-  // ===================================================================
+  // SUBMIT KATEGORI BARU
   const submitKategori = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!newKategoriName.trim()) return;
     setIsSubmittingKategori(true);
 
     const { error } = await supabase.from('kategori_inventaris').insert({
-      lab_id: adminProfile.lab_id, // Langsung insert ke lab_id milik admin saat ini
+      lab_id: adminProfile.lab_id,
       nama_kategori: newKategoriName.trim(),
+      is_bisa_berkurang: newKategoriIsBerkurang, // Simpan status habis pakai
     });
 
     setIsSubmittingKategori(false);
 
     if (error) {
-      Swal.fire({ text: 'Gagal menambahkan kategori: ' + error.message, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({
+        text: 'Gagal menambahkan kategori: ' + error.message,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     } else {
       setNewKategoriName('');
+      setNewKategoriIsBerkurang(false);
       setIsKategoriModalOpen(false);
       fetchKategori();
-      Swal.fire({ text: 'Kategori berhasil ditambahkan!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({
+        text: 'Kategori berhasil ditambahkan!',
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     }
   };
 
-  // ===================================================================
-  //  SUBMIT INVENTARIS (INSERT / UPDATE)
-  // ===================================================================
+  // SUBMIT INVENTARIS
   const submitInventaris = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (activeKategoriId === null) {
-      Swal.fire({ text: 'Pilih atau buat kategori terlebih dahulu.', icon: 'warning', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-      return;
-    }
+    if (activeKategoriId === null) return;
     setIsSubmitting(true);
 
     const payload = {
@@ -226,19 +231,78 @@ export default function InventarisTab({
     setIsSubmitting(false);
 
     if (error) {
-      Swal.fire({ text: `Gagal ${editItemId ? 'mengupdate' : 'menambahkan'} alat: ${error.message}`, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({
+        text: `Gagal ${editItemId ? 'mengupdate' : 'menambahkan'} alat.`,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     } else {
       setIsFormOpen(false);
       setEditItemId(null);
       setFormData(defaultFormData);
       fetchInventaris();
-      Swal.fire({ text: `Alat berhasil ${editItemId ? 'diperbarui' : 'ditambahkan'}!`, icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({
+        text: `Alat berhasil ${editItemId ? 'diperbarui' : 'ditambahkan'}!`,
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+        timerProgressBar: true,
+      });
     }
   };
 
-  // ===================================================================
-  //  OPEN HELPERS
-  // ===================================================================
+  // FUNGSI HAPUS INVENTARIS
+  const deleteInventaris = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!editItemId) return;
+
+    // Simpan ID ke variabel lokal agar tidak hilang saat state modal di-reset
+    const currentId = editItemId;
+
+    // 1. TUTUP MODAL DULU agar Radix UI melepas kuncian layarnya
+    setIsFormOpen(false);
+
+    // 2. Beri jeda 200ms agar animasi modal benar-benar selesai tertutup
+    setTimeout(async () => {
+      const result = await Swal.fire({
+        title: 'Yakin hapus alat ini?',
+        text: 'Data yang dihapus tidak bisa dikembalikan!',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: 'Ya, Hapus!',
+        cancelButtonText: 'Batal',
+      });
+
+      if (result.isConfirmed) {
+        setIsSubmitting(true);
+        const { error } = await supabase
+          .from('inventaris')
+          .delete()
+          .eq('id', currentId);
+        setIsSubmitting(false);
+
+        if (error) {
+          Swal.fire({ text: 'Gagal menghapus: ' + error.message, icon: 'error', toast: true, position: 'top-end' });
+        } else {
+          Swal.fire({ text: 'Data alat berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          setEditItemId(null);
+          fetchInventaris();
+        }
+      } else {
+        // 3. JIKA BATAL: Buka kembali modal form editnya
+        setIsFormOpen(true);
+      }
+    }, 200);
+  };
+
   const openEdit = (item: InventarisItem) => {
     setFormData({
       jenis_alat: item.jenis_alat,
@@ -258,9 +322,6 @@ export default function InventarisTab({
     setIsFormOpen(true);
   };
 
-  // ===================================================================
-  //  LOADING STATE
-  // ===================================================================
   if (loadingKategori) {
     return (
       <div className='animate-pulse text-lg text-slate-500 font-medium'>
@@ -269,9 +330,6 @@ export default function InventarisTab({
     );
   }
 
-  // ===================================================================
-  //  RENDER
-  // ===================================================================
   return (
     <Card className='border-slate-200 shadow-sm border-t-4 border-t-purple-500'>
       <CardHeader className='flex flex-col gap-4 pb-4'>
@@ -294,26 +352,30 @@ export default function InventarisTab({
           </Button>
         </div>
 
-        {/* ============================================================= */}
-        {/* NAVIGATION BAR KATEGORI                                      */}
-        {/* ============================================================= */}
         <div className='flex items-center gap-2 overflow-x-auto pb-1 -mb-2 scrollbar-thin'>
           {kategoriList.map((kat) => (
             <button
               key={kat.id}
               onClick={() => setActiveKategoriId(kat.id)}
-              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all border ${
+              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 ${
                 activeKategoriId === kat.id
                   ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
               }`}>
               {kat.nama_kategori}
+              {kat.is_bisa_berkurang && (
+                <span
+                  className={`size-2 rounded-full ${activeKategoriId === kat.id ? 'bg-amber-300' : 'bg-amber-500'}`}
+                  title='Stok Berkurang Otomatis (Bahan Habis Pakai)'
+                />
+              )}
             </button>
           ))}
 
           <button
             onClick={() => {
               setNewKategoriName('');
+              setNewKategoriIsBerkurang(false);
               setIsKategoriModalOpen(true);
             }}
             className='shrink-0 flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold border-2 border-dashed border-slate-300 text-slate-500 hover:border-purple-400 hover:text-purple-600 transition-all'>
@@ -324,12 +386,11 @@ export default function InventarisTab({
       </CardHeader>
 
       <CardContent>
-        {/* ============================================================= */}
-        {/* TABEL INVENTARIS                                              */}
-        {/* ============================================================= */}
         {activeKategoriId === null ? (
           <div className='text-center py-16 text-slate-500 text-lg'>
-            Belum ada kategori. Klik <strong className="text-purple-600">"+ Tambah Kategori"</strong> di atas untuk memulai.
+            Belum ada kategori. Klik{' '}
+            <strong className='text-purple-600'>"+ Tambah Kategori"</strong> di
+            atas untuk memulai.
           </div>
         ) : loadingInventaris ? (
           <div className='animate-pulse text-center py-16 text-slate-500 text-lg font-medium'>
@@ -340,9 +401,15 @@ export default function InventarisTab({
             <Table>
               <TableHeader className='bg-slate-50'>
                 <TableRow>
-                  <TableHead className='font-semibold text-slate-800 text-sm w-12 text-center'>No</TableHead>
-                  <TableHead className='font-semibold text-slate-800 text-sm'>Jenis Alat</TableHead>
-                  <TableHead className='font-semibold text-slate-800 text-sm'>Spesifikasi</TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm w-12 text-center'>
+                    No
+                  </TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm'>
+                    Jenis Alat
+                  </TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm'>
+                    Spesifikasi
+                  </TableHead>
                   <TableHead className='font-semibold text-slate-800 text-sm text-center'>
                     <span className='text-green-600'>Baik</span>
                   </TableHead>
@@ -352,14 +419,23 @@ export default function InventarisTab({
                   <TableHead className='font-semibold text-slate-800 text-sm text-center'>
                     <span className='text-red-600'>R. Berat</span>
                   </TableHead>
-                  <TableHead className='font-semibold text-slate-800 text-sm text-center'>Total</TableHead>
-                  <TableHead className='font-semibold text-slate-800 text-sm'>Keterangan</TableHead>
-                  <TableHead className='font-semibold text-slate-800 text-sm text-center'>Aksi</TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm text-center'>
+                    Total
+                  </TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm'>
+                    Keterangan
+                  </TableHead>
+                  <TableHead className='font-semibold text-slate-800 text-sm text-center'>
+                    Aksi
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {dataInventaris.map((item, index) => {
-                  const total = (item.jumlah_baik ?? 0) + (item.jumlah_rusak_ringan ?? 0) + (item.jumlah_rusak_berat ?? 0);
+                  const total =
+                    (item.jumlah_baik ?? 0) +
+                    (item.jumlah_rusak_ringan ?? 0) +
+                    (item.jumlah_rusak_berat ?? 0);
                   return (
                     <TableRow key={item.id}>
                       <TableCell className='text-slate-700 text-sm text-center font-medium'>
@@ -374,17 +450,23 @@ export default function InventarisTab({
                         {item.spesifikasi || '-'}
                       </TableCell>
                       <TableCell className='text-center'>
-                        <Badge variant='outline' className='text-sm text-green-700 border-green-200 bg-green-50 font-bold'>
+                        <Badge
+                          variant='outline'
+                          className='text-sm text-green-700 border-green-200 bg-green-50 font-bold'>
                           {item.jumlah_baik ?? 0}
                         </Badge>
                       </TableCell>
                       <TableCell className='text-center'>
-                        <Badge variant='outline' className='text-sm text-amber-700 border-amber-200 bg-amber-50 font-bold'>
+                        <Badge
+                          variant='outline'
+                          className='text-sm text-amber-700 border-amber-200 bg-amber-50 font-bold'>
                           {item.jumlah_rusak_ringan ?? 0}
                         </Badge>
                       </TableCell>
                       <TableCell className='text-center'>
-                        <Badge variant='outline' className='text-sm text-red-700 border-red-200 bg-red-50 font-bold'>
+                        <Badge
+                          variant='outline'
+                          className='text-sm text-red-700 border-red-200 bg-red-50 font-bold'>
                           {item.jumlah_rusak_berat ?? 0}
                         </Badge>
                       </TableCell>
@@ -397,9 +479,11 @@ export default function InventarisTab({
                         {item.keterangan || '-'}
                       </TableCell>
                       <TableCell className='text-center'>
-                        <Button size='sm' variant='outline' onClick={() => openEdit(item)}>
-                          <Pencil className='size-3.5 mr-1.5' />
-                          Edit
+                        <Button
+                          size='sm'
+                          variant='outline'
+                          onClick={() => openEdit(item)}>
+                          <Pencil className='size-3.5 mr-1.5' /> Edit
                         </Button>
                       </TableCell>
                     </TableRow>
@@ -407,7 +491,9 @@ export default function InventarisTab({
                 })}
                 {dataInventaris.length === 0 && (
                   <TableRow>
-                    <TableCell colSpan={9} className='text-center py-10 text-slate-500 text-lg'>
+                    <TableCell
+                      colSpan={9}
+                      className='text-center py-10 text-slate-500 text-lg'>
                       Belum ada data inventaris di kategori ini.
                     </TableCell>
                   </TableRow>
@@ -418,9 +504,7 @@ export default function InventarisTab({
         )}
       </CardContent>
 
-      {/* ================================================================= */}
-      {/* MODAL — TAMBAH KATEGORI                                          */}
-      {/* ================================================================= */}
+      {/* MODAL — TAMBAH KATEGORI */}
       <Dialog open={isKategoriModalOpen} onOpenChange={setIsKategoriModalOpen}>
         <DialogContent className='sm:max-w-md'>
           <DialogHeader>
@@ -443,6 +527,30 @@ export default function InventarisTab({
                 className='text-base h-11'
               />
             </div>
+
+            {/* OPSI BAHAN HABIS PAKAI */}
+            <div className='flex items-start gap-3 p-3 bg-amber-50 border border-amber-200 rounded-lg mt-2'>
+              <input
+                type='checkbox'
+                id='is_berkurang'
+                className='mt-1 size-4 rounded border-amber-300 text-amber-600 focus:ring-amber-600 cursor-pointer'
+                checked={newKategoriIsBerkurang}
+                onChange={(e) => setNewKategoriIsBerkurang(e.target.checked)}
+              />
+              <div className='flex flex-col'>
+                <Label
+                  htmlFor='is_berkurang'
+                  className='font-bold text-amber-900 cursor-pointer text-sm'>
+                  Ini adalah Bahan Habis Pakai
+                </Label>
+                <span className='text-xs text-amber-700 mt-0.5 leading-tight'>
+                  Centang jika stok alat/bahan dalam kategori ini harus otomatis
+                  berkurang secara permanen saat disetujui peminjamannya (Cth:
+                  Pakan ikan, Bahan kimia).
+                </span>
+              </div>
+            </div>
+
             <DialogFooter className='mt-6 pt-4'>
               <Button
                 type='submit'
@@ -455,20 +563,16 @@ export default function InventarisTab({
         </DialogContent>
       </Dialog>
 
-      {/* ================================================================= */}
-      {/* MODAL — TAMBAH / EDIT ALAT                                       */}
-      {/* ================================================================= */}
+      {/* MODAL — TAMBAH / EDIT ALAT */}
       <Dialog
         open={isFormOpen}
         onOpenChange={(open) => {
           if (!open) {
             setEditItemId(null);
             setIsFormOpen(false);
-          } else {
-            setIsFormOpen(true);
-          }
+          } else setIsFormOpen(true);
         }}>
-        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto' onInteractOutside={(e) => { const isSwalOpen = document.querySelector('.swal2-container'); if (isSwalOpen) e.preventDefault(); }}>
           <DialogHeader>
             <DialogTitle className='text-xl'>
               {editItemId ? 'Edit Data Alat' : 'Tambah Alat Baru'}
@@ -480,12 +584,12 @@ export default function InventarisTab({
             </DialogDescription>
           </DialogHeader>
           <form onSubmit={submitInventaris} className='space-y-4 pt-4'>
-            {/* Kategori (read-only indicator) */}
             <div className='space-y-2'>
               <Label className='text-base'>Kategori</Label>
               <Input
                 value={
-                  kategoriList.find((k) => k.id === activeKategoriId)?.nama_kategori || '-'
+                  kategoriList.find((k) => k.id === activeKategoriId)
+                    ?.nama_kategori || '-'
                 }
                 readOnly
                 className='bg-slate-100 text-base h-11 text-slate-500 font-medium'
@@ -524,7 +628,6 @@ export default function InventarisTab({
               />
             </div>
 
-            {/* 3 Input Kondisi Sejajar */}
             <div className='space-y-2'>
               <Label className='text-base'>Jumlah per Kondisi</Label>
               <div className='grid grid-cols-3 gap-3'>
@@ -583,13 +686,6 @@ export default function InventarisTab({
                   />
                 </div>
               </div>
-              <p className='text-xs text-slate-400 mt-1'>
-                Total:{' '}
-                <span className='font-bold text-slate-600'>
-                  {formData.jumlah_baik + formData.jumlah_rusak_ringan + formData.jumlah_rusak_berat}
-                </span>{' '}
-                unit
-              </p>
             </div>
 
             <div className='space-y-2'>
@@ -607,10 +703,22 @@ export default function InventarisTab({
               />
             </div>
 
-            <DialogFooter className='mt-6 pt-4'>
+            <DialogFooter className='mt-8 flex flex-col sm:flex-row gap-3 border-t pt-5'>
+              {/* TOMBOL HAPUS (Hanya muncul jika sedang edit barang) */}
+              {editItemId && (
+                <Button
+                  type='button'
+                  onClick={(e) => deleteInventaris(e)}
+                  variant='outline'
+                  className='w-full sm:w-auto font-bold text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300 h-11'
+                  disabled={isSubmitting}>
+                  <Trash2 className='size-4 mr-2' /> Hapus Alat
+                </Button>
+              )}
+
               <Button
                 type='submit'
-                className='w-full font-bold bg-purple-600 hover:bg-purple-700 text-base py-6'
+                className='w-full sm:flex-1 font-bold bg-purple-600 hover:bg-purple-700 text-base h-11'
                 disabled={isSubmitting}>
                 {isSubmitting
                   ? 'Menyimpan...'

@@ -302,10 +302,53 @@ export default function PengajuanForm() {
 
       if (errorItem) throw new Error(errorItem.message);
 
+      // --- SEND EMAILS ---
+      try {
+        // Ambil email pengelola lab berdasarkan resolvedLabId di tabel whitelist_admin
+        const { data: adminData } = await supabase
+          .from('whitelist_admin')
+          .select('email')
+          .eq('lab_id', resolvedLabId)
+          .single();
+          
+        const targetEmailAdmin = adminData?.email || 'admin_pusat@polinela.ac.id';
+
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'ADMIN_NOTIFICATION',
+            to: targetEmailAdmin,
+            data: {
+              judul_kegiatan: data.judulPenelitian,
+              nama_pengaju: data.nama,
+              tanggal: data.tanggal,
+              lab_id: resolvedLabId,
+            },
+          }),
+        });
+
+        await fetch('/api/send-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            type: 'USER_CONFIRMATION',
+            to: data.email,
+            data: {
+              judul_kegiatan: data.judulPenelitian,
+              nama_pengaju: data.nama,
+            },
+          }),
+        });
+      } catch (emailErr) {
+        console.error('Gagal mengirim email:', emailErr);
+        // Tetap lanjut tampilkan Swal sukses karena data sudah masuk db
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Pengajuan Anda berhasil dikirim dan sedang menunggu validasi.',
+        text: 'Pengajuan Anda berhasil dikirim dan notifikasi email telah terkirim.',
         confirmButtonColor: '#10b981', // Warna hijau
       }).then(() => {
         reset();

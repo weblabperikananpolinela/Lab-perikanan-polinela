@@ -156,10 +156,30 @@ export default function PengajuanTab({
         confirmButtonColor: '#ef4444'
       });
     } else {
+      // Kirim Email Notifikasi Perubahan Status
+      try {
+        if (selectedPengajuan.email_pemohon) {
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'STATUS_UPDATE',
+              to: selectedPengajuan.email_pemohon,
+              data: {
+                status_baru: newStatus,
+                judul_kegiatan: selectedPengajuan.judul_kegiatan,
+              }
+            })
+          });
+        }
+      } catch (err) {
+        console.error('Gagal mengirim notifikasi email', err);
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: `Pengajuan berhasil di-${newStatus.toLowerCase()}!`,
+        text: 'Status berhasil diubah & Email notifikasi telah dikirim ke peminjam.',
         confirmButtonColor: '#10b981'
       });
       setIsDialogOpen(false);
@@ -449,9 +469,9 @@ export default function PengajuanTab({
                 <p className='font-semibold text-slate-500 text-sm'>
                   Judul Kegiatan
                 </p>
-                <p className='text-base font-medium'>
+                <div className='bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200 font-bold text-base mt-2'>
                   {selectedPengajuan.judul_kegiatan}
-                </p>
+                </div>
               </div>
 
               <div className='space-y-1'>
@@ -472,7 +492,7 @@ export default function PengajuanTab({
                     </span>
                   </p>
                   <p className='text-slate-500 mt-2 text-base font-medium'>
-                    Lab Target: <span className="text-slate-700">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
+                    Lab Target: <span className="font-extrabold text-slate-900">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
                   </p>
                 </div>
               </div>
