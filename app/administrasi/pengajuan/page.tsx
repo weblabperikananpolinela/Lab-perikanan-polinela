@@ -25,7 +25,8 @@ import {
 const formSchema = z
   .object({
     nama: z.string().min(1, 'Nama wajib diisi'),
-    email: z.string().email('Format email tidak valid'),
+    // FIX: Email dibuat opsional di tingkat dasar
+    email: z.string().optional().or(z.literal('')),
     kategori_pemohon: z.enum(['Mahasiswa Polinela', 'Dosen Polinela', 'Umum'], {
       required_error: 'Kategori wajib dipilih',
     }),
@@ -48,6 +49,39 @@ const formSchema = z
       .min(1, 'Minimal pilih 1 alat'),
   })
   .superRefine((data, ctx) => {
+    // Validasi Dinamis untuk Email
+    if (data.kategori_pemohon === 'Umum') {
+      if (!data.email || data.email.trim() === '') {
+        ctx.addIssue({
+          code: z.ZodIssueCode.custom,
+          message: 'Email wajib diisi untuk kategori Umum',
+          path: ['email'],
+        });
+      } else {
+        const isEmail = z.string().email().safeParse(data.email).success;
+        if (!isEmail) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Format email tidak valid',
+            path: ['email'],
+          });
+        }
+      }
+    } else {
+      // Jika Dosen/Mahasiswa mengisi email (tidak kosong), pastikan formatnya benar
+      if (data.email && data.email.trim() !== '') {
+        const isEmail = z.string().email().safeParse(data.email).success;
+        if (!isEmail) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            message: 'Format email tidak valid',
+            path: ['email'],
+          });
+        }
+      }
+    }
+
+    // Validasi Identitas
     if (data.kategori_pemohon === 'Mahasiswa Polinela') {
       if (!data.npm_nip || data.npm_nip.trim() === '') {
         ctx.addIssue({
@@ -268,7 +302,7 @@ export default function PengajuanForm() {
       const peminjamanData = {
         kategori_pemohon: data.kategori_pemohon,
         nama_lengkap: data.nama,
-        email_pemohon: data.email,
+        email_pemohon: data.email || null, // FIX: simpan sebagai null jika kosong
         npm: data.kategori_pemohon !== 'Umum' ? data.npm_nip : null,
         nik: data.kategori_pemohon === 'Umum' ? data.nik : null,
         program_studi: data.programStudi || null,
@@ -310,9 +344,11 @@ export default function PengajuanForm() {
           .select('email')
           .eq('lab_id', resolvedLabId)
           .single();
-          
-        const targetEmailAdmin = adminData?.email || 'admin_pusat@polinela.ac.id';
 
+        const targetEmailAdmin =
+          adminData?.email || 'admin_pusat@polinela.ac.id';
+
+        // Email ke Admin (Selalu terkirim)
         await fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -328,27 +364,29 @@ export default function PengajuanForm() {
           }),
         });
 
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'USER_CONFIRMATION',
-            to: data.email,
-            data: {
-              judul_kegiatan: data.judulPenelitian,
-              nama_pengaju: data.nama,
-            },
-          }),
-        });
+        // FIX: Email ke Pemohon (Hanya jalan jika user mengisi email)
+        if (data.email && data.email.trim() !== '') {
+          await fetch('/api/send-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: 'USER_CONFIRMATION',
+              to: data.email,
+              data: {
+                judul_kegiatan: data.judulPenelitian,
+                nama_pengaju: data.nama,
+              },
+            }),
+          });
+        }
       } catch (emailErr) {
         console.error('Gagal mengirim email:', emailErr);
-        // Tetap lanjut tampilkan Swal sukses karena data sudah masuk db
       }
 
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Pengajuan Anda berhasil dikirim dan notifikasi email telah terkirim.',
+        text: 'Pengajuan Anda berhasil dikirim!',
         confirmButtonColor: '#10b981', // Warna hijau
       }).then(() => {
         reset();
@@ -409,8 +447,14 @@ export default function PengajuanForm() {
               )}
             </div>
             <div className='space-y-2'>
-              <Label className='md:text-base font-semibold'>
+              <Label className='md:text-base font-semibold flex items-center'>
                 Email address
+                {/* Menampilkan tag opsional jika bukan kategori UMUM */}
+                {kategoriPemohon !== 'Umum' && (
+                  <span className='text-sm font-normal text-slate-400 ml-1.5'>
+                    (Opsional)
+                  </span>
+                )}
               </Label>
               <Input
                 className='md:text-lg md:h-14'
@@ -671,8 +715,10 @@ export default function PengajuanForm() {
                 <Info className='size-5 text-amber-600 shrink-0 mt-0.5' />
                 <p className='text-sm text-amber-800 font-medium leading-relaxed'>
                   Pastikan Anda telah{' '}
+                  {/* FIX: Link diubah mengarah ke /jadwal */}
                   <Link
-                    href='/#jadwal'
+                    href='/jadwal'
+                    target='_blank'
                     className='underline font-bold hover:text-amber-900'>
                     melihat jadwal ketersediaan lab
                   </Link>{' '}

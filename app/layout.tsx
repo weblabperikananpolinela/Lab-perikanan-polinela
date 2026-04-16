@@ -12,23 +12,9 @@ export const metadata: Metadata = {
   title: 'Laboratorium Perikanan Polinela',
   description:
     'Laboratorium Perikanan Politeknik Negeri Lampung - Fasilitas pendidikan dan penelitian di bidang perikanan',
-  generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/logo_dolphin.png',
+    apple: '/logo_dolphin.png',
   },
 };
 
@@ -40,12 +26,9 @@ export default function RootLayout({
   return (
     <html lang='id'>
       <body className='font-sans antialiased bg-white'>
-        
         {/* Bungkus seluruh aplikasi dengan LayoutWrapper */}
-        <LayoutWrapper>
-          {children}
-        </LayoutWrapper>
-        
+        <LayoutWrapper>{children}</LayoutWrapper>
+
         {/* Vercel Trackers */}
         <Analytics />
         <SpeedInsights />

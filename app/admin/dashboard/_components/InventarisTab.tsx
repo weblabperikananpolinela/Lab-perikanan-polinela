@@ -257,6 +257,61 @@ export default function InventarisTab({
     }
   };
 
+  // FUNGSI HAPUS KATEGORI
+  const deleteKategori = async (e: React.MouseEvent, kat: Kategori) => {
+    e.stopPropagation();
+
+    // 1. Cek apakah ada barang
+    const { count, error: countError } = await supabase
+      .from('inventaris')
+      .select('*', { count: 'exact', head: true })
+      .eq('kategori_id', kat.id);
+
+    if (countError) {
+      Swal.fire({ text: 'Gagal memvalidasi kategori: ' + countError.message, icon: 'error', toast: true, position: 'top-end' });
+      return;
+    }
+
+    if (count && count > 0) {
+      Swal.fire({
+        title: 'Gagal!',
+        text: 'Kategori tidak bisa dihapus karena masih berisi barang. Hapus atau pindahkan barangnya terlebih dahulu.',
+        icon: 'error',
+        confirmButtonColor: '#ef4444'
+      });
+      return;
+    }
+
+    // 2. Jika kosong, tampilkan konfirmasi
+    const result = await Swal.fire({
+      title: `Yakin ingin menghapus kategori ${kat.nama_kategori}?`,
+      text: 'Kategori yang dihapus tidak dapat dikembalikan.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#d33',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Hapus!',
+      cancelButtonText: 'Batal',
+    });
+
+    if (result.isConfirmed) {
+      const { error } = await supabase
+        .from('kategori_inventaris')
+        .delete()
+        .eq('id', kat.id);
+
+      if (error) {
+        Swal.fire({ text: 'Gagal menghapus: ' + error.message, icon: 'error', toast: true, position: 'top-end' });
+      } else {
+        Swal.fire({ text: 'Kategori berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        if (activeKategoriId === kat.id) {
+          setActiveKategoriId(null);
+        }
+        fetchKategori();
+      }
+    }
+  };
+
   // FUNGSI HAPUS INVENTARIS
   const deleteInventaris = async (e: React.MouseEvent) => {
     e.preventDefault();
@@ -357,7 +412,7 @@ export default function InventarisTab({
             <button
               key={kat.id}
               onClick={() => setActiveKategoriId(kat.id)}
-              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 ${
+              className={`shrink-0 px-4 py-2 rounded-lg text-sm font-semibold transition-all border flex items-center gap-2 group ${
                 activeKategoriId === kat.id
                   ? 'bg-purple-600 text-white border-purple-600 shadow-md shadow-purple-200'
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300'
@@ -368,6 +423,15 @@ export default function InventarisTab({
                   className={`size-2 rounded-full ${activeKategoriId === kat.id ? 'bg-amber-300' : 'bg-amber-500'}`}
                   title='Stok Berkurang Otomatis (Bahan Habis Pakai)'
                 />
+              )}
+              {activeKategoriId === kat.id && (
+                <div
+                  onClick={(e) => deleteKategori(e, kat)}
+                  className="ml-1 p-1 rounded-md bg-red-500 hover:bg-red-600 text-white transition-colors"
+                  title="Hapus Kategori"
+                >
+                  <Trash2 className="size-3.5" />
+                </div>
               )}
             </button>
           ))}
