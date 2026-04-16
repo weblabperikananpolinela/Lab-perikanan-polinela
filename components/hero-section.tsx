@@ -50,11 +50,14 @@ export function HeroSection() {
       <div className='relative z-10 mx-auto max-w-4xl px-4 text-center'>
         <h1 className='text-balance text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl'>
           Digital Operational Laboratory for Harmonized Integrated Navigation
+          (DOLPHIN)
         </h1>
         <p className='mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-white/90 sm:text-xl'>
-          Fasilitas pendidikan dan penelitian terdepan di bidang perikanan.
-          Mendukung pengembangan ilmu perikanan dan kelautan untuk masa depan
-          yang berkelanjutan.
+          Pusat integrasi seluruh layanan laboratorium di Jurusan Perikanan dan
+          Kelautan dari berbagai program studi dalam satu sistem digital yang
+          efisien, terpercaya, serta menjadi solusi terdepan dalam mewujudkan
+          pengelolaan laboratorium yang terstruktur, transparan, dan berbasis
+          teknologi
         </p>
 
         <div className='mt-10 flex flex-col items-center justify-center gap-4 sm:flex-row'>
