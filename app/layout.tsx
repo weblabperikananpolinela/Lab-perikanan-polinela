@@ -9,13 +9,15 @@ const _geist = Geist({ subsets: ['latin'] });
 const _geistMono = Geist_Mono({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
-  title: 'Laboratorium Perikanan Polinela',
+  title:
+    'DOLPHIN | Digital Operational Laboratory for Harmonized Integrated Navigation',
   description:
-    'Laboratorium Perikanan Politeknik Negeri Lampung - Fasilitas pendidikan dan penelitian di bidang perikanan',
+    'Digital Operational Laboratory for Harmonized Integrated Navigation',
   icons: {
     icon: '/logo_dolphin.png',
     apple: '/logo_dolphin.png',
   },
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({

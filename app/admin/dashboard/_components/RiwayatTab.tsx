@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckSquare, Eye, Plus, PackageCheck, RotateCcw, XCircle } from 'lucide-react';
+import { CheckSquare, Eye, Plus, PackageCheck, RotateCcw, XCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -638,7 +638,7 @@ export default function RiwayatTab({
       {/* MODAL DETAIL + FORM PENGEMBALIAN                                 */}
       {/* ================================================================= */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className='sm:max-w-2xl max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] w-full h-[100dvh] sm:h-auto overflow-y-auto rounded-none sm:rounded-lg m-0 p-4 sm:p-6'>
           <DialogHeader>
             <DialogTitle className='text-xl font-bold'>
               Detail Pemakaian Lab
@@ -651,9 +651,10 @@ export default function RiwayatTab({
             )}
           </DialogHeader>
           {selectedRiwayat && (
-            <div className='space-y-5 mt-2'>
-              {/* --- Info Peminjaman --- */}
-              <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3'>
+            <div className='flex flex-col md:flex-row gap-6 mt-4'>
+              {/* SISI KIRI: Info Peminjaman & Pembayaran */}
+              <div className='flex-1 space-y-5'>
+                <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3'>
                 <div>
                   <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
                     Penanggung Jawab
@@ -731,6 +732,33 @@ export default function RiwayatTab({
                 </div>
               </div>
 
+              {/* --- Pembayaran Khusus Umum --- */}
+              {selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' && (
+                <div className='space-y-2 pt-2 border-t'>
+                  <p className='font-semibold text-slate-500 text-sm'>
+                    Informasi Pembayaran (Pemohon Umum)
+                  </p>
+                  <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
+                    <Label className='font-bold block mb-3 text-slate-800 text-base'>Bukti Transfer</Label>
+                    {selectedRiwayat.bukti_pembayaran ? (
+                      <Button variant='outline' className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors' asChild>
+                        <a href={selectedRiwayat.bukti_pembayaran} target="_blank" rel="noopener noreferrer">
+                          <span className="flex items-center gap-2 text-blue-700 font-semibold text-base"><ImageIcon className="size-5" /> Lihat Bukti Unggahan</span>
+                          <ExternalLink className="size-5 text-slate-400" />
+                        </a>
+                      </Button>
+                    ) : (
+                      <p className="text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic">
+                        Bukti transfer belum diunggah
+                      </p>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* SISI KANAN: Daftar Barang & Pengembalian */}
+            <div className='flex-1 space-y-5'>
               {/* --- Daftar Barang --- */}
               {loadingDetail ? (
                 <p className='text-slate-500 animate-pulse text-center py-4'>
@@ -1004,6 +1032,7 @@ export default function RiwayatTab({
                   </div>
                 </div>
               )}
+              </div>
             </div>
           )}
         </DialogContent>

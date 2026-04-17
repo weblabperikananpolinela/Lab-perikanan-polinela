@@ -4,7 +4,18 @@ import { useState, useEffect } from 'react';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { Trash, Plus, ChevronDown, ArrowLeft, Info } from 'lucide-react';
+import {
+  Trash,
+  Plus,
+  ChevronDown,
+  ArrowLeft,
+  Info,
+  UploadCloud,
+  FileText,
+  Loader2,
+  CheckCircle,
+} from 'lucide-react';
+import NotifButton from '@/app/_components/NotifButton';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -42,11 +53,12 @@ const formSchema = z
     items: z
       .array(
         z.object({
-          namaAlat: z.string().min(1, 'Nama alat wajib diisi'),
+          namaAlat: z.string().min(1, 'Nama alat wajib dipilih'),
           jumlah: z.string().min(1, 'Jumlah wajib diisi'),
         }),
       )
-      .min(1, 'Minimal pilih 1 alat'),
+      .optional()
+      .default([]),
   })
   .superRefine((data, ctx) => {
     // Validasi Dinamis untuk Email
@@ -182,9 +194,19 @@ const freeUmumLabs = [
   'Lab. Nutrisi',
 ];
 
+const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+const CLOUDINARY_UPLOAD_PRESET =
+  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_PAYMENT;
+
 export default function PengajuanForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isSuccess, setIsSuccess] = useState(false);
+  const [submittedEmail, setSubmittedEmail] = useState('');
+  const [paymentFile, setPaymentFile] = useState<File | null>(null);
+  const [isUploadingPayment, setIsUploadingPayment] = useState(false);
+  const [bankInfo, setBankInfo] = useState<any>(null);
+  const [isFetchingBank, setIsFetchingBank] = useState(false);
   const {
     register,
     control,
@@ -196,7 +218,7 @@ export default function PengajuanForm() {
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      items: [{ namaAlat: '', jumlah: '' }],
+      items: [],
     },
   });
 
@@ -254,9 +276,86 @@ export default function PengajuanForm() {
     fetchInventaris();
   }, [labTargetValue]);
 
+  useEffect(() => {
+    if (!labTargetValue) {
+      setBankInfo(null);
+      return;
+    }
+
+    const lab_id = labMap[labTargetValue as keyof typeof labMap];
+    if (!lab_id) return;
+
+    const fetchBankInfo = async () => {
+      setIsFetchingBank(true);
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('rekening_admin')
+        .select('*')
+        .eq('lab_id', lab_id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setBankInfo(data);
+      } else {
+        setBankInfo(null);
+      }
+      setIsFetchingBank(false);
+    };
+
+    fetchBankInfo();
+  }, [labTargetValue]);
+
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
+      if (data.kategori_pemohon === 'Umum' && !paymentFile) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Oops...',
+          text: 'Bukti pembayaran wajib diunggah!',
+          confirmButtonColor: '#ef4444',
+        });
+        setIsSubmitting(false);
+        return;
+      }
+
+      let finalPaymentUrl = null;
+      if (data.kategori_pemohon === 'Umum' && paymentFile) {
+        if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
+          Swal.fire({
+            text: 'Error Konfigurasi Cloudinary.',
+            icon: 'error',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+          });
+          setIsSubmitting(false);
+          return;
+        }
+
+        setIsUploadingPayment(true);
+        const formData = new FormData();
+        formData.append('file', paymentFile);
+        formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+
+        const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/auto/upload`;
+        const res = await fetch(cloudinaryUrl, {
+          method: 'POST',
+          body: formData,
+        });
+        const cloudData = await res.json();
+        setIsUploadingPayment(false);
+
+        if (!res.ok) {
+          throw new Error(
+            cloudData.error?.message || 'Gagal upload bukti pembayaran',
+          );
+        }
+
+        finalPaymentUrl = cloudData.secure_url;
+      }
+
       const supabase = createClient();
       const resolvedLabId = labMap[data.labTarget] || 1;
 
@@ -313,6 +412,7 @@ export default function PengajuanForm() {
         jam_mulai: data.jam_mulai,
         jam_selesai: data.jam_selesai,
         status: 'Menunggu validasi',
+        bukti_pembayaran: finalPaymentUrl,
       };
 
       const { data: insertedPeminjaman, error: errorPeminjaman } =
@@ -324,17 +424,19 @@ export default function PengajuanForm() {
 
       if (errorPeminjaman) throw new Error(errorPeminjaman.message);
 
-      const itemData = data.items.map((item) => ({
-        peminjaman_id: insertedPeminjaman.id,
-        nama_alat_bahan: item.namaAlat,
-        jumlah: parseInt(item.jumlah, 10),
-      }));
+      if (data.items && data.items.length > 0) {
+        const itemData = data.items.map((item) => ({
+          peminjaman_id: insertedPeminjaman.id,
+          nama_alat_bahan: item.namaAlat,
+          jumlah: parseInt(item.jumlah, 10),
+        }));
 
-      const { error: errorItem } = await supabase
-        .from('peminjaman_item')
-        .insert(itemData);
+        const { error: errorItem } = await supabase
+          .from('peminjaman_item')
+          .insert(itemData);
 
-      if (errorItem) throw new Error(errorItem.message);
+        if (errorItem) throw new Error(errorItem.message);
+      }
 
       // --- SEND EMAILS ---
       try {
@@ -360,6 +462,8 @@ export default function PengajuanForm() {
               nama_pengaju: data.nama,
               tanggal: data.tanggal,
               lab_id: resolvedLabId,
+              kategori_pemohon: data.kategori_pemohon,
+              is_berbayar: data.kategori_pemohon === 'Umum',
             },
           }),
         });
@@ -375,6 +479,8 @@ export default function PengajuanForm() {
               data: {
                 judul_kegiatan: data.judulPenelitian,
                 nama_pengaju: data.nama,
+                kategori_pemohon: data.kategori_pemohon,
+                is_berbayar: data.kategori_pemohon === 'Umum',
               },
             }),
           });
@@ -389,8 +495,8 @@ export default function PengajuanForm() {
         text: 'Pengajuan Anda berhasil dikirim!',
         confirmButtonColor: '#10b981', // Warna hijau
       }).then(() => {
-        reset();
-        router.push('/');
+        setSubmittedEmail(data.email || '');
+        setIsSuccess(true);
       });
     } catch (error: any) {
       console.error(error);
@@ -404,6 +510,29 @@ export default function PengajuanForm() {
       setIsSubmitting(false);
     }
   };
+
+  if (isSuccess) {
+    return (
+      <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center'>
+         <div className='bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-slate-100 animate-in zoom-in-95 duration-300'>
+            <div className='w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6'>
+               <CheckCircle size={32} />
+            </div>
+            <h2 className='text-2xl font-bold text-slate-800 mb-2'>Pengajuan Terkirim!</h2>
+            <p className='text-slate-600 mb-8 leading-relaxed'>
+              Terima kasih, pengajuan Anda sedang diproses. <br/><br/>
+              <strong>Aktifkan Notifikasi</strong> agar kami bisa memberitahu Anda secara real-time saat pengajuan ini disetujui!
+            </p>
+            <div className='flex justify-center mb-6'>
+               <NotifButton role="pemohon" userEmail={submittedEmail} />
+            </div>
+            <Button onClick={() => router.push('/')} variant='ghost' className='text-slate-500 hover:text-slate-700 w-full'>
+               Kembali ke Beranda
+            </Button>
+         </div>
+      </div>
+    );
+  }
 
   return (
     <div className='relative min-h-screen bg-gradient-to-br from-cyan-500 via-blue-600 to-blue-900 pt-20 md:pt-24 flex flex-col'>
@@ -446,7 +575,7 @@ export default function PengajuanForm() {
                 </span>
               )}
             </div>
-            <div className='space-y-2'>
+            <div className='space-y-1'>
               <Label className='md:text-base font-semibold flex items-center'>
                 Email address
                 {/* Menampilkan tag opsional jika bukan kategori UMUM */}
@@ -783,6 +912,17 @@ export default function PengajuanForm() {
             </div>
 
             <div className='space-y-4 mt-4'>
+              {fields.length === 0 && (
+                <div className='p-6 border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl text-center'>
+                  <p className='text-slate-500 font-medium md:text-lg'>
+                    Anda hanya meminjam ruangan.
+                  </p>
+                  <p className='text-sm text-slate-400 mt-1'>
+                    Klik tombol <b>Tambah Alat</b> di bawah jika Anda
+                    membutuhkan perlengkapan lab.
+                  </p>
+                </div>
+              )}
               {fields.map((field, index) => (
                 <div
                   key={field.id}
@@ -816,8 +956,7 @@ export default function PengajuanForm() {
                       variant='destructive'
                       size='icon'
                       className='md:h-14 md:w-14 shrink-0'
-                      onClick={() => remove(index)}
-                      disabled={fields.length === 1}>
+                      onClick={() => remove(index)}>
                       <Trash className='size-4 md:size-5' />
                     </Button>
                   </div>
@@ -834,13 +973,90 @@ export default function PengajuanForm() {
             </Button>
           </div>
 
+          {kategoriPemohon === 'Umum' && (
+            <div className='mt-8 p-6 bg-blue-50/80 border border-blue-200 rounded-xl space-y-4'>
+              <h3 className='text-lg font-bold text-blue-900'>
+                Informasi Pembayaran
+              </h3>
+              
+              {isFetchingBank ? (
+                 <p className="text-blue-800 text-sm flex items-center gap-2"><Loader2 className="size-4 animate-spin"/> Mengambil data rekening...</p>
+              ) : bankInfo ? (
+                <>
+                  <p className='text-sm text-blue-800'>
+                    Kategori Umum dikenakan tarif penggunaan laboratorium. Silakan
+                    transfer sesuai nominal tarif ke rekening di bawah ini:
+                  </p>
+                  <div className='bg-white p-4 rounded-lg border border-blue-200 inline-block font-mono text-lg font-bold text-slate-800 shadow-sm'>
+                    {bankInfo.nama_bank} {bankInfo.nomor_rekening} <br className='md:hidden' />{' '}
+                    <span className='text-sm font-normal text-slate-500 font-sans'>
+                      a.n. {bankInfo.atas_nama}
+                    </span>
+                  </div>
+                  <p className='text-sm text-blue-800'>
+                    <Link
+                      href='/#sop-prosedur'
+                      target='_blank'
+                      className='underline font-bold hover:text-blue-900 transition-colors'>
+                      Periksa detail tarif dan SOP penggunaan di sini
+                    </Link>
+                  </p>
+                </>
+              ) : (
+                <p className="text-amber-700 bg-amber-100 border border-amber-200 p-3 rounded-lg text-sm font-medium leading-relaxed">
+                  Informasi rekening untuk {labTargetValue || 'lab ini'} belum diatur. Silakan hubungi admin bersangkutan.
+                </p>
+              )}
+
+              <div className='pt-4'>
+                <Label className='font-semibold text-blue-900 mb-2 block'>
+                  Unggah Bukti Pembayaran{' '}
+                  <span className='text-red-500'>*</span>
+                </Label>
+                <div
+                  className={`border-2 border-dashed rounded-xl p-6 text-center group relative transition-colors ${paymentFile ? 'border-blue-500 bg-blue-100/50' : 'border-blue-300 hover:bg-blue-100 bg-white'}`}>
+                  <input
+                    type='file'
+                    onChange={(e) =>
+                      setPaymentFile(e.target.files?.[0] || null)
+                    }
+                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
+                    accept='image/*,.pdf'
+                  />
+                  {paymentFile ? (
+                    <div className='flex flex-col items-center'>
+                      <FileText className='size-8 text-blue-600 mb-2' />
+                      <p className='text-sm font-bold text-blue-700 truncate w-full px-2 max-w-[250px] mx-auto'>
+                        {paymentFile.name}
+                      </p>
+                    </div>
+                  ) : (
+                    <>
+                      <UploadCloud className='size-8 text-blue-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors' />
+                      <p className='text-sm text-blue-600 font-medium'>
+                        Klik atau seret file ke sini (*.jpg, *.png, *.pdf)
+                      </p>
+                    </>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div className='pt-8 flex justify-end'>
             <Button
               type='submit'
               size='lg'
-              disabled={isSubmitting}
+              disabled={isSubmitting || isUploadingPayment}
               className='w-full md:w-auto bg-blue-600 hover:bg-blue-700 md:text-lg md:h-14 font-bold md:px-10 shadow-lg shadow-blue-600/30'>
-              {isSubmitting ? 'Mengirim...' : 'Kirim Pengajuan'}
+              {isSubmitting || isUploadingPayment ? (
+                <span className='flex items-center gap-2'>
+                  <Loader2 className='size-5 animate-spin' />{' '}
+                  {isUploadingPayment ? 'Mengunggah...' : 'Mengirim...'}
+                </span>
+              ) : (
+                'Kirim Pengajuan'
+              )}
             </Button>
           </div>
         </form>

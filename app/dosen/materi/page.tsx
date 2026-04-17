@@ -6,16 +6,17 @@ import Swal from 'sweetalert2';
 import { createClient } from '@/lib/supabase/client';
 import {
   ArrowLeft,
-  UploadCloud,
   FileText,
   Link as LinkIcon,
-  QrCode,
-  Trash2,
   CheckCircle2,
-  FileUp,
   Loader2,
   ExternalLink,
+  LockKeyhole,
+  KeyRound,
+  QrCode,
+  Download,
 } from 'lucide-react';
+import { QRCodeCanvas } from 'qrcode.react';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -28,126 +29,163 @@ import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
 } from '@/components/ui/dialog';
-
-// --- KONFIGURASI CLOUDINARY DARI .ENV ---
-const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
-const CLOUDINARY_UPLOAD_PRESET =
-  process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
 export default function MateriDosenPage() {
   const [session, setSession] = useState<any>(null);
-  const [history, setHistory] = useState<any[]>([]);
+  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
-  // States Form
-  const [isUploading, setIsUploading] = useState(false);
-  const [isLoadingHistory, setIsLoadingHistory] = useState(true);
-  const [fileTitle, setFileTitle] = useState('');
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  // States Khusus Dosen / Pengunjung
+  const [pinInput, setPinInput] = useState('');
+  const [isUnlocking, setIsUnlocking] = useState(false);
+  const [unlockedCategories, setUnlockedCategories] = useState<any[]>([]);
 
   const [copiedId, setCopiedId] = useState<number | null>(null);
+  const [qrModalFile, setQrModalFile] = useState<any>(null);
   const supabase = createClient();
+
+  const downloadQR = () => {
+    const canvas = document.getElementById('qr-code-canvas') as HTMLCanvasElement;
+    if (!canvas) return;
+    const pngUrl = canvas.toDataURL('image/png').replace('image/png', 'image/octet-stream');
+    const downloadLink = document.createElement('a');
+    downloadLink.href = pngUrl;
+    downloadLink.download = `${qrModalFile?.title || 'materi'}-QR.png`;
+    document.body.appendChild(downloadLink);
+    downloadLink.click();
+    document.body.removeChild(downloadLink);
+  };
 
   useEffect(() => {
     const initData = async () => {
+      setIsLoadingAuth(true);
       const {
         data: { session },
       } = await supabase.auth.getSession();
-      setSession(session);
 
-      // PERBAIKAN: Cek spesifik apakah user dan emailnya ada
-      if (session?.user?.email) {
-        fetchHistory(session.user.email);
-      } else {
-        setIsLoadingHistory(false);
+      if (!session?.user?.email) {
+        setIsLoadingAuth(false);
+        return;
       }
+      setSession(session);
+      await fetchUnlockedCategories(session.user.email);
+      setIsLoadingAuth(false);
     };
     initData();
-  }, [supabase]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
-  // FUNGSI: Ambil data riwayat dari Supabase
-  const fetchHistory = async (email: string) => {
-    setIsLoadingHistory(true);
+  const fetchUnlockedCategories = async (email: string) => {
     const { data, error } = await supabase
-      .from('materi_dosen')
-      .select('*')
+      .from('akses_dosen_materi')
+      .select(
+        `
+        id,
+        kategori_materi (
+          id,
+          nama_kategori,
+          created_by,
+          materi_dosen (*)
+        )
+      `,
+      )
       .eq('dosen_email', email)
-      .order('created_at', { ascending: false });
+      .order('unlocked_at', { ascending: false });
 
     if (!error && data) {
-      setHistory(data);
+      const formatted = data
+        .map((d: any) => {
+          const kat = Array.isArray(d.kategori_materi)
+            ? d.kategori_materi[0]
+            : d.kategori_materi;
+          return {
+            akses_id: d.id,
+            ...kat,
+          };
+        })
+        .filter((item) => item && item.id);
+
+      setUnlockedCategories(formatted);
     }
-    setIsLoadingHistory(false);
   };
 
-  // FUNGSI: Upload ke Cloudinary -> Simpan ke Supabase
-  const handleUpload = async (e: React.FormEvent) => {
+  const handleUnlockPIN = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedFile || !session?.user?.email) return;
+    if (!pinInput.trim() || !session?.user?.email) return;
 
-    // Pastikan ENV sudah terbaca
-    if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
-      Swal.fire({ text: 'Error Konfigurasi: Variabel Cloudinary di .env belum diatur.', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+    if (pinInput.trim().length !== 6) {
+      Swal.fire({
+        text: 'PIN harus berjumlah 6 digit.',
+        icon: 'warning',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      });
       return;
     }
 
-    setIsUploading(true);
+    setIsUnlocking(true);
 
     try {
-      const formData = new FormData();
-      formData.append('file', selectedFile);
-      formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+      // 1. Cari kategori berdasarkan PIN
+      const { data: categoryData, error: pinError } = await supabase
+        .from('kategori_materi')
+        .select('*')
+        .eq('pin_akses', pinInput.trim())
+        .single();
 
-      // PERBAIKAN: Gunakan endpoint khusus "raw" agar link file dokumen (PDF/DOCX) tidak rusak
-      const cloudinaryUrl = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/raw/upload`;
+      if (pinError || !categoryData) {
+        throw new Error('PIN Salah / Tidak Ditemukan.');
+      }
 
-      const res = await fetch(cloudinaryUrl, {
-        method: 'POST',
-        body: formData,
+      // 2. Insert Hak Akses
+      const { error: insertError } = await supabase
+        .from('akses_dosen_materi')
+        .insert({
+          dosen_email: session.user.email,
+          kategori_id: categoryData.id,
+        });
+
+      if (insertError) {
+        if (insertError.code === '23505') {
+          throw new Error('Mata kuliah ini sudah pernah Anda buka sebelumnya.');
+        } else {
+          throw new Error('Terjadi kesalahan saat membuka akses.');
+        }
+      }
+
+      // 3. (PENTING!) Await fetch agar UI dijamin punya data terbaru
+      await fetchUnlockedCategories(session.user.email);
+
+      Swal.fire({
+        text: `Akses Mata Kuliah ${categoryData.nama_kategori} Terbuka!`,
+        icon: 'success',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 4000,
+        timerProgressBar: true,
       });
 
-      const cloudData = await res.json();
-
-      if (!res.ok)
-        throw new Error(
-          cloudData.error?.message || 'Gagal upload ke Cloudinary',
-        );
-
-      // Menggunakan secure_url dari respons Cloudinary
-      const fileUrl = cloudData.secure_url;
-
-      const fileExt =
-        selectedFile.name.split('.').pop()?.toUpperCase() || 'FILE';
-
-      // Simpan ke Supabase
-      const { error: dbError } = await supabase.from('materi_dosen').insert({
-        dosen_email: session.user.email,
-        title: fileTitle,
-        file_url: fileUrl,
-        file_type: fileExt,
-      });
-
-      if (dbError) throw dbError;
-
-      // Bersihkan form
-      setFileTitle('');
-      setSelectedFile(null);
-
-      const fileInput = document.getElementById(
-        'file-upload',
-      ) as HTMLInputElement;
-      if (fileInput) fileInput.value = '';
-
-      fetchHistory(session.user.email as string);
-      Swal.fire({ text: 'Materi berhasil diunggah dan disimpan!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      setPinInput(''); // Reset Form
     } catch (error: any) {
-      console.error(error);
-      Swal.fire({ text: `Terjadi kesalahan: ${error.message}`, icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
+      Swal.fire({
+        text: error.message,
+        icon: error.message.includes('sudah pernah') ? 'info' : 'error',
+        toast: true,
+        position: 'top-end',
+        showConfirmButton: false,
+        timer: 3000,
+      });
     } finally {
-      setIsUploading(false);
+      setIsUnlocking(false);
     }
   };
 
@@ -157,22 +195,18 @@ export default function MateriDosenPage() {
     setTimeout(() => setCopiedId(null), 2000);
   };
 
-  const deleteMateri = async (id: number) => {
-    if (!confirm('Yakin ingin menghapus riwayat materi ini?')) return;
-
-    const { error } = await supabase.from('materi_dosen').delete().eq('id', id);
-    if (!error) {
-      setHistory(history.filter((item) => item.id !== id));
-      Swal.fire({ text: 'Materi berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-    } else {
-      Swal.fire({ text: 'Gagal menghapus data.', icon: 'error', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000, timerProgressBar: true });
-    }
-  };
+  if (isLoadingAuth) {
+    return (
+      <div className='min-h-screen pt-32 flex justify-center items-start'>
+        <Loader2 className='size-8 text-blue-600 animate-spin' />
+      </div>
+    );
+  }
 
   return (
     <div className='min-h-screen bg-slate-50 pt-24 pb-20 px-4 md:px-8'>
       <div className='mx-auto max-w-6xl'>
-        {/* Header Section */}
+        {/* Header Global */}
         <div className='mb-8'>
           <Link
             href='/'
@@ -181,268 +215,228 @@ export default function MateriDosenPage() {
           </Link>
           <div className='flex items-center gap-4'>
             <div className='p-3 bg-blue-600 text-white rounded-xl shadow-md'>
-              <FileUp size={28} />
+              <LockKeyhole size={28} />
             </div>
             <div>
               <h1 className='text-2xl md:text-3xl font-extrabold text-slate-900'>
-                Manajemen Materi
+                Akses Materi Pribadi
               </h1>
               <p className='text-slate-500'>
-                Unggah dokumen perkuliahan dan bagikan tautan/QR ke mahasiswa.
+                Gunakan PIN 6-Digit dari Pengajar/Kepala Lab untuk membuka file pembelajaran.
               </p>
             </div>
           </div>
         </div>
 
         <div className='grid grid-cols-1 lg:grid-cols-12 gap-8'>
-          {/* KOLOM KIRI: Form Upload (Lebar: 4 Kolom) */}
-          <div className='lg:col-span-4'>
-            <Card className='border border-slate-200 shadow-xl shadow-slate-200/40 sticky top-28 overflow-hidden bg-white'>
-              {/* PERBAIKAN UI: Header bersih tanpa background hitam */}
-              <CardHeader className='border-b border-slate-100 bg-slate-50/50 pb-5'>
-                <CardTitle className='flex items-center gap-2 text-xl font-extrabold text-slate-800'>
-                  <UploadCloud className='size-5 text-blue-600' />
-                  Unggah Baru
-                </CardTitle>
-                <CardDescription className='text-slate-500 font-medium mt-1'>
-                  File akan tersimpan secara terpusat di Cloud.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='pt-6'>
-                <form onSubmit={handleUpload} className='space-y-6'>
-                  <div className='space-y-2'>
-                    <label className='text-sm font-bold text-slate-700'>
-                      Nama/Judul Materi
-                    </label>
-                    <Input
-                      placeholder='Contoh: Modul Pertemuan 1...'
-                      value={fileTitle}
-                      onChange={(e) => setFileTitle(e.target.value)}
-                      required
-                      className='bg-white shadow-sm focus-visible:ring-blue-600 border-slate-300'
-                    />
-                  </div>
-
-                  <div className='space-y-2'>
-                    <label className='text-sm font-bold text-slate-700'>
-                      Pilih File (PDF, PPTX, DOCX)
-                    </label>
-                    <div
-                      className={`border-2 border-dashed rounded-xl p-6 text-center transition-colors cursor-pointer group relative ${selectedFile ? 'border-blue-500 bg-blue-50' : 'border-slate-300 hover:bg-slate-50'}`}>
-                      <input
-                        id='file-upload'
-                        type='file'
-                        required
+            <div className='lg:col-span-4'>
+              <Card className='border-slate-200 shadow-xl shadow-slate-200/40 sticky top-28 bg-white'>
+                <CardHeader className='border-b border-slate-100 bg-slate-50/50 pb-5'>
+                  <CardTitle className='flex items-center gap-2 text-xl font-extrabold text-slate-800'>
+                    <KeyRound className='size-5 text-blue-600' /> Klaim Akses
+                    PIN
+                  </CardTitle>
+                  <CardDescription>
+                    Masukkan 6 Digit PIN yang diberikan oleh Admin/Kepala Lab.
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className='pt-6'>
+                  <form onSubmit={handleUnlockPIN} className='space-y-4'>
+                    <div className='space-y-2'>
+                      <Input
+                        placeholder='Contoh: 123456'
+                        value={pinInput}
                         onChange={(e) =>
-                          setSelectedFile(e.target.files?.[0] || null)
+                          setPinInput(
+                            e.target.value.replace(/\D/g, '').substring(0, 6),
+                          )
                         }
-                        className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
-                        accept='.pdf,.doc,.docx,.ppt,.pptx,.zip'
+                        required
+                        className='text-center text-2xl font-mono font-bold tracking-[0.5em] h-14 bg-slate-50 focus:bg-white'
+                        maxLength={6}
                       />
-
-                      {selectedFile ? (
-                        <div className='flex flex-col items-center'>
-                          <FileText className='size-8 text-blue-600 mb-2' />
-                          <p className='text-sm font-bold text-blue-700 truncate w-full px-4'>
-                            {selectedFile.name}
-                          </p>
-                          <p className='text-xs text-blue-500 mt-1'>
-                            {(selectedFile.size / 1024 / 1024).toFixed(2)} MB
-                          </p>
-                        </div>
-                      ) : (
-                        <>
-                          <UploadCloud className='size-8 text-slate-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors' />
-                          <p className='text-sm text-slate-600 font-medium'>
-                            Klik atau seret file ke sini
-                          </p>
-                          <p className='text-xs text-slate-400 mt-1'>
-                            Maksimal ukuran file: 10MB
-                          </p>
-                        </>
-                      )}
                     </div>
-                  </div>
+                    <Button
+                      type='submit'
+                      disabled={isUnlocking || pinInput.length !== 6}
+                      className='w-full bg-slate-900 hover:bg-slate-800 text-white font-bold h-12 shadow-md hover:shadow-lg transition-all'>
+                      {isUnlocking ? (
+                        <Loader2 className='mr-2 size-5 animate-spin' />
+                      ) : (
+                        'Buka Kunci Akses'
+                      )}
+                    </Button>
+                  </form>
+                </CardContent>
+              </Card>
+            </div>
 
-                  <Button
-                    type='submit'
-                    disabled={isUploading || !selectedFile}
-                    className='w-full bg-blue-600 hover:bg-blue-700 text-white font-bold h-12 shadow-md transition-all active:scale-[0.98]'>
-                    {isUploading ? (
-                      <>
-                        <Loader2 className='mr-2 size-5 animate-spin' />{' '}
-                        Mengunggah...
-                      </>
-                    ) : (
-                      'Unggah & Buat Tautan'
-                    )}
-                  </Button>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* KOLOM KANAN: Riwayat Materi (Lebar: 8 Kolom) */}
-          <div className='lg:col-span-8'>
-            <Card className='border border-slate-200 shadow-xl shadow-slate-200/40 bg-white'>
-              <CardHeader className='border-b border-slate-100 bg-slate-50/50 rounded-t-xl pb-5'>
-                <CardTitle className='text-xl font-extrabold text-slate-800'>
-                  Riwayat Unggahan Anda
-                </CardTitle>
-                <CardDescription className='text-slate-500 font-medium mt-1'>
-                  Materi yang ada di bawah ini dapat diakses publik melalui
-                  tautan.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className='p-0'>
-                {isLoadingHistory ? (
-                  <div className='p-12 text-center text-slate-500 flex flex-col items-center'>
-                    <Loader2 className='size-8 animate-spin text-blue-500 mb-4' />
-                    <p>Memuat riwayat materi...</p>
-                  </div>
-                ) : history.length === 0 ? (
-                  <div className='p-12 text-center text-slate-500'>
-                    <FileUp className='size-12 text-slate-300 mx-auto mb-4' />
-                    <p className='font-medium text-slate-600'>
-                      Belum ada materi yang diunggah.
-                    </p>
-                    <p className='text-sm mt-1'>
-                      Gunakan panel di sebelah kiri untuk mulai mengunggah file.
-                    </p>
-                  </div>
-                ) : (
-                  <div className='divide-y divide-slate-100'>
-                    {history.map((item) => {
-                      // Formatting Tanggal
-                      const dateObj = new Date(item.created_at);
-                      const formattedDate = dateObj.toLocaleDateString(
-                        'id-ID',
-                        { day: 'numeric', month: 'long', year: 'numeric' },
-                      );
-
-                      return (
-                        <div
-                          key={item.id}
-                          className='p-5 hover:bg-slate-50 transition-colors flex flex-col sm:flex-row sm:items-center justify-between gap-4 group'>
-                          {/* Info File */}
-                          <div className='flex items-start gap-4 flex-1 min-w-0'>
-                            <div className='size-12 rounded-xl bg-blue-50 border border-blue-100 flex items-center justify-center shrink-0 group-hover:bg-blue-600 group-hover:border-blue-600 transition-colors'>
-                              <FileText className='size-6 text-blue-600 group-hover:text-white transition-colors' />
-                            </div>
-                            <div className='min-w-0'>
-                              <h4 className='font-bold text-slate-800 text-base md:text-lg truncate'>
-                                {item.title}
-                              </h4>
-                              <div className='flex items-center gap-3 mt-1.5 text-xs font-semibold text-slate-500'>
-                                <span className='bg-slate-200 text-slate-700 px-2.5 py-0.5 rounded-md'>
-                                  {item.file_type}
-                                </span>
-                                <span>{formattedDate}</span>
-                              </div>
-                            </div>
-                          </div>
-
-                          {/* Action Buttons */}
-                          <div className='flex items-center gap-2 shrink-0 flex-wrap sm:flex-nowrap'>
-                            {/* Tombol Buka File (Baru ditambahkan) */}
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              asChild
-                              className='gap-2 h-9 font-medium text-slate-700 border-slate-300 hover:bg-slate-100'>
-                              <a
-                                href={item.file_url}
-                                target='_blank'
-                                rel='noopener noreferrer'>
-                                <ExternalLink className='size-4 text-slate-500' />
-                                <span className='hidden xl:inline'>Buka</span>
-                              </a>
-                            </Button>
-
-                            {/* Tombol Salin */}
-                            <Button
-                              variant='outline'
-                              size='sm'
-                              onClick={() =>
-                                copyToClipboard(item.file_url, item.id)
-                              }
-                              className={`gap-2 h-9 font-medium transition-all ${copiedId === item.id ? 'bg-emerald-50 text-emerald-600 border-emerald-300' : 'text-slate-700 border-slate-300 hover:bg-slate-100'}`}>
-                              {copiedId === item.id ? (
-                                <CheckCircle2 className='size-4' />
-                              ) : (
-                                <LinkIcon className='size-4 text-slate-500' />
-                              )}
-                              <span className='hidden sm:inline'>
-                                {copiedId === item.id ? 'Tersalin' : 'Salin'}
+            <div className='lg:col-span-8'>
+              <Card className='border-slate-200 shadow-xl shadow-slate-200/40 bg-white min-h-[500px]'>
+                <CardHeader className='border-b border-slate-100 bg-slate-50/50 rounded-t-xl'>
+                  <CardTitle className='text-lg font-bold text-slate-800'>
+                    Mata Kuliah Terbuka ({unlockedCategories.length})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className='p-6'>
+                  {unlockedCategories.length === 0 ? (
+                    <div className='text-center py-16 text-slate-500'>
+                      <LockKeyhole className='size-12 mx-auto text-slate-200 mb-3' />
+                      <p className='font-bold text-slate-700'>
+                        Belum Ada Akses
+                      </p>
+                      <p className='text-sm mt-1 max-w-sm mx-auto'>
+                        Klaim akses pertama Anda dengan memasukkan PIN di panel
+                        sebelah kiri.
+                      </p>
+                    </div>
+                  ) : (
+                    <Accordion
+                      type='single'
+                      collapsible
+                      className='w-full space-y-4'>
+                      {unlockedCategories.map((cat) => (
+                        <AccordionItem
+                          value={cat.id?.toString() || cat.akses_id.toString()}
+                          key={cat.akses_id}
+                          className='border border-slate-200 rounded-xl px-4 bg-white data-[state=open]:border-blue-500 data-[state=open]:ring-1 data-[state=open]:ring-blue-500 transition-all'>
+                          <AccordionTrigger className='hover:no-underline py-4'>
+                            <div className='flex flex-col text-left'>
+                              <span className='font-bold text-slate-800 text-lg'>
+                                {cat.nama_kategori}
                               </span>
-                            </Button>
-
-                            {/* Tombol QR */}
-                            <Dialog>
-                              <DialogTrigger asChild>
-                                <Button
-                                  variant='outline'
-                                  size='sm'
-                                  className='gap-2 h-9 font-medium text-blue-700 border-blue-200 hover:bg-blue-50 hover:border-blue-300 transition-all'>
-                                  <QrCode className='size-4 text-blue-500' />
-                                  <span className='hidden sm:inline'>
-                                    QR Code
-                                  </span>
-                                </Button>
-                              </DialogTrigger>
-                              <DialogContent className='sm:max-w-md text-center p-8'>
-                                <DialogHeader>
-                                  <DialogTitle className='text-center text-xl font-bold'>
-                                    QR Code Akses Materi
-                                  </DialogTitle>
-                                </DialogHeader>
-                                <div className='flex flex-col items-center justify-center pt-4'>
-                                  <div className='bg-white p-4 rounded-2xl shadow-md border border-slate-200 mb-6'>
-                                    <img
-                                      src={`https://api.qrserver.com/v1/create-qr-code/?size=250x250&data=${encodeURIComponent(item.file_url)}&margin=10`}
-                                      alt='QR Code'
-                                      className='w-52 h-52'
-                                    />
+                              <span className='text-xs font-normal text-slate-500'>
+                                Dibuat oleh: {cat.created_by?.split('@')[0]}
+                              </span>
+                            </div>
+                          </AccordionTrigger>
+                          <AccordionContent className='pt-2 pb-6 border-t border-slate-100 mt-2'>
+                            {!cat.materi_dosen ||
+                            cat.materi_dosen.length === 0 ? (
+                              <p className='text-sm text-center text-slate-400 p-4 bg-slate-50 rounded-lg'>
+                                Materi belum ditambahkan oleh Admin.
+                              </p>
+                            ) : (
+                              <div className='grid gap-3 pt-2'>
+                                {cat.materi_dosen.map((file: any) => (
+                                  <div
+                                    key={file.id}
+                                    className='group flex items-center justify-between p-3 border border-slate-100 bg-slate-50 hover:bg-blue-50/50 hover:border-blue-100 rounded-lg transition-colors'>
+                                    <div className='flex items-center gap-3 min-w-0'>
+                                      <div className='p-2 bg-white rounded shadow-sm border border-slate-200'>
+                                        <FileText className='size-4 text-blue-600' />
+                                      </div>
+                                      <div className='min-w-0'>
+                                        <p className='font-semibold text-slate-800 truncate text-sm'>
+                                          {file.title}
+                                        </p>
+                                        <p className='text-[10px] text-slate-500 font-bold'>
+                                          {file.file_type}
+                                        </p>
+                                      </div>
+                                    </div>
+                                    <div className='flex gap-2 flex-shrink-0'>
+                                      <Button
+                                        size='sm'
+                                        variant='outline'
+                                        className='h-8 w-8 p-0 text-slate-600 hover:text-blue-700 hover:bg-white'
+                                        onClick={() => setQrModalFile(file)}
+                                        title='Tampilkan QR Code'>
+                                        <QrCode className='size-4' />
+                                      </Button>
+                                      <Button
+                                        size='sm'
+                                        variant='outline'
+                                        className='h-8 w-8 md:w-auto p-0 md:px-3 text-slate-600 hover:text-blue-700 hover:bg-white'
+                                        onClick={() =>
+                                          copyToClipboard(
+                                            file.file_url,
+                                            file.id,
+                                          )
+                                        }>
+                                        {copiedId === file.id ? (
+                                          <CheckCircle2 className='size-4' />
+                                        ) : (
+                                          <LinkIcon className='size-4 md:mr-1.5' />
+                                        )}
+                                        <span className='hidden md:inline'>
+                                          {copiedId === file.id
+                                            ? 'Tersalin'
+                                            : 'Salin'}
+                                        </span>
+                                      </Button>
+                                      <Button
+                                        size='sm'
+                                        asChild
+                                        className='h-8 px-3 bg-blue-100 text-blue-700 hover:bg-blue-200'>
+                                        <a
+                                          href={file.file_url}
+                                          target='_blank'
+                                          rel='noreferrer'>
+                                          Buka{' '}
+                                          <ExternalLink className='size-3 ml-1.5' />
+                                        </a>
+                                      </Button>
+                                    </div>
                                   </div>
-                                  <p className='text-base font-bold text-slate-800 mb-2'>
-                                    {item.title}
-                                  </p>
-                                  <p className='text-sm text-slate-500 mb-8 px-4'>
-                                    Minta mahasiswa untuk memindai kode QR ini
-                                    menggunakan kamera ponsel mereka.
-                                  </p>
-
-                                  <Button
-                                    onClick={() =>
-                                      copyToClipboard(item.file_url, item.id)
-                                    }
-                                    className='w-full sm:w-auto bg-blue-600 hover:bg-blue-700 h-11 px-8 font-bold'>
-                                    {copiedId === item.id
-                                      ? 'Link Berhasil Disalin!'
-                                      : 'Salin Tautan Cadangan'}
-                                  </Button>
-                                </div>
-                              </DialogContent>
-                            </Dialog>
-
-                            <Button
-                              variant='ghost'
-                              size='icon'
-                              onClick={() => deleteMateri(item.id)}
-                              className='h-9 w-9 text-slate-400 hover:text-red-600 hover:bg-red-50 hover:border-red-100 border border-transparent transition-all'
-                              title='Hapus File'>
-                              <Trash2 className='size-4' />
-                            </Button>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                                ))}
+                              </div>
+                            )}
+                          </AccordionContent>
+                        </AccordionItem>
+                      ))}
+                    </Accordion>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
         </div>
+
+        {/* --- MODAL QR CODE --- */}
+        <Dialog open={!!qrModalFile} onOpenChange={(open) => !open && setQrModalFile(null)}>
+          <DialogContent className='max-w-[100vw] w-[100vw] h-[100vh] sm:max-w-xl sm:h-auto p-0 bg-white/95 backdrop-blur-md border-0 sm:border sm:rounded-2xl overflow-y-auto sm:overflow-hidden hidden-scrollbar'>
+            <div className='p-8 w-full h-full flex flex-col items-center justify-center min-h-[400px]'>
+              <div className='text-center mb-8 mt-12 sm:mt-0'>
+                <h3 className='text-2xl sm:text-3xl font-black text-slate-800 mb-2'>
+                  Scan untuk Mengunduh
+                </h3>
+                <p className='text-slate-500 font-medium line-clamp-2 max-w-sm mx-auto'>
+                  Arahkan kamera ke QR Code ini untuk membuka <strong className="text-slate-700">{qrModalFile?.title}</strong> di perangkat Anda.
+                </p>
+              </div>
+
+              {qrModalFile && (
+                <div className='p-6 bg-white rounded-3xl shadow-xl shadow-slate-200/50 border border-slate-100 flex justify-center w-full max-w-[300px]'>
+                  <QRCodeCanvas
+                    id="qr-code-canvas"
+                    value={qrModalFile.file_url}
+                    size={300}
+                    level={"H"}
+                    includeMargin={true}
+                    className="w-full h-auto object-contain aspect-square rounded-xl"
+                  />
+                </div>
+              )}
+
+              <div className='flex gap-4 mt-10 w-full max-w-sm'>
+                <Button 
+                   variant='outline' 
+                   className='flex-1 h-14 rounded-2xl font-bold bg-white hover:bg-slate-50 text-slate-700'
+                   onClick={() => setQrModalFile(null)}
+                >
+                  Tutup
+                </Button>
+                <Button 
+                   className='flex-1 h-14 rounded-2xl bg-slate-900 hover:bg-slate-800 text-white font-bold gap-2 shadow-lg shadow-slate-900/20'
+                   onClick={downloadQR}
+                >
+                  <Download className='size-5' />
+                  Unduh QR
+                </Button>
+              </div>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

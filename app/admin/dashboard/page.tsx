@@ -16,12 +16,19 @@ import {
   LogOut,
   Building2,
   ArrowRight,
+  Landmark,
+  CalendarDays,
+  FolderKanban,
 } from 'lucide-react';
 
 import OverviewTab from './_components/OverviewTab';
 import InventarisTab from './_components/InventarisTab';
 import RiwayatTab from './_components/RiwayatTab';
 import PengajuanTab from './_components/PengajuanTab';
+import SettingRekening from './_components/SettingRekening';
+import KelolaJadwal from './_components/KelolaJadwal';
+import MateriTab from './_components/MateriTab';
+import NotifButton from '@/app/_components/NotifButton';
 
 // --- CONFIG & HELPERS (UPDATED 18 LABS) ---
 const labMap: Record<number, string> = {
@@ -54,7 +61,7 @@ function DashboardContent() {
   const [initLoading, setInitLoading] = useState(true);
   const [adminProfiles, setAdminProfiles] = useState<any[]>([]);
   const [activeProfile, setActiveProfile] = useState<any>(null);
-  
+
   // States untuk UI
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
@@ -195,6 +202,14 @@ function DashboardContent() {
         return (
           <InventarisTab adminProfile={activeProfile} supabase={supabase} />
         );
+      case 'pengaturan':
+        return (
+          <SettingRekening adminProfile={activeProfile} supabase={supabase} />
+        );
+      case 'jadwal':
+        return <KelolaJadwal labId={activeProfile.lab_id} userEmail={activeProfile.email} />;
+      case 'materi':
+        return <MateriTab adminProfile={activeProfile} supabase={supabase} />;
       default:
         return <p>Modul dalam pengembangan.</p>;
     }
@@ -202,11 +217,10 @@ function DashboardContent() {
 
   return (
     <div className='min-h-screen flex bg-slate-50 relative'>
-      
       {/* Overlay Gelap untuk Mode Mobile */}
       {isMobileOpen && (
-        <div 
-          className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity"
+        <div
+          className='fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity'
           onClick={() => setIsMobileOpen(false)}
         />
       )}
@@ -216,7 +230,6 @@ function DashboardContent() {
         className={`fixed inset-y-0 left-0 z-50 transform flex flex-col bg-slate-900 border-r border-slate-800 shadow-xl transition-all duration-300 ease-in-out ${
           isMobileOpen ? 'translate-x-0' : '-translate-x-full'
         } md:relative md:translate-x-0 ${isSidebarCollapsed ? 'w-24' : 'w-72'}`}>
-        
         {/* Toggle Button (Hanya tampil di Desktop) */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -233,7 +246,7 @@ function DashboardContent() {
           {!isSidebarCollapsed ? (
             <>
               <h2 className='text-2xl font-bold text-white tracking-tight shrink-0'>
-                Admin<span className='text-blue-400'>Panel</span>
+                DOLPHIN<span className='text-blue-400'>Admin</span>
               </h2>
               <p className='text-slate-400 mt-2 font-medium text-sm leading-snug shrink-0'>
                 Sistem Administrasi Terpusat
@@ -282,6 +295,15 @@ function DashboardContent() {
             <FileStack className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Lihat Pengajuan</span>}
           </button>
+          
+          <button
+            onClick={() => handleTabChange('materi')}
+            title='Materi & Kelas'
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'materi' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <FolderKanban className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Manajemen Materi</span>}
+          </button>
+
           <button
             onClick={() => handleTabChange('riwayat')}
             title='Riwayat Pemakaian Lab'
@@ -295,6 +317,20 @@ function DashboardContent() {
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'inventaris' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
             <PackageSearch className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Inventaris Lab</span>}
+          </button>
+          <button
+            onClick={() => handleTabChange('pengaturan')}
+            title='Pengaturan Rekening'
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'pengaturan' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <Landmark className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Pengaturan Rekening</span>}
+          </button>
+          <button
+            onClick={() => handleTabChange('jadwal')}
+            title='Kelola Jadwal Lab'
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'jadwal' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <CalendarDays className='size-5 flex-shrink-0' />
+            {!isSidebarCollapsed && <span>Jadwal Lab</span>}
           </button>
         </nav>
 
@@ -315,25 +351,32 @@ function DashboardContent() {
 
       {/* Main Content Area */}
       <main className='flex-1 flex flex-col min-h-screen overflow-hidden relative w-full'>
-        
         {/* Header Mobile (Sekarang tombolnya aktif!) */}
         {/* Header Mobile (Diperbarui: Hamburger pindah ke Kiri) */}
         <header className='md:hidden flex items-center gap-4 p-5 bg-slate-900 border-b border-slate-800 shadow-sm z-20'>
-          <button 
+          <button
             onClick={() => setIsMobileOpen(true)}
-            className='p-2 bg-slate-800 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'
-          >
+            className='p-2 bg-slate-800 rounded-lg text-slate-300 hover:bg-slate-700 hover:text-white transition-colors'>
             <Menu className='size-6' />
           </button>
-          <h2 className='text-xl font-bold text-white tracking-tight'>AdminPanel</h2>
+          <h2 className='text-xl font-bold text-white tracking-tight'>
+            DHOLPIN
+          </h2>
         </header>
 
         <div className='flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 pb-20'>
           <div className='max-w-6xl mx-auto space-y-8 w-full'>
             <div className='pb-4 border-b border-slate-200 flex flex-col items-start'>
-              <div className='mb-3 inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 tracking-wide border border-emerald-200'>
-                <Circle className='size-2.5 fill-emerald-500 text-emerald-500 animate-pulse' />
-                Status Sistem: Online
+              <div className='flex items-center justify-between w-full mb-3'>
+                <div className='inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 tracking-wide border border-emerald-200'>
+                  <Circle className='size-2.5 fill-emerald-500 text-emerald-500 animate-pulse' />
+                  Status Sistem: Online
+                </div>
+                <NotifButton 
+                  userEmail={activeProfile?.email} 
+                  role="admin" 
+                  labId={activeProfile?.lab_id} 
+                />
               </div>
               <h1 className='text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight'>
                 {getDashboardTitle(activeProfile.lab_id)}

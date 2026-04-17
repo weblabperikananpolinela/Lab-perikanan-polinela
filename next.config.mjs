@@ -1,12 +1,29 @@
+import withPWAInit from '@ducanh2912/next-pwa';
+
+const withPWA = withPWAInit({
+  dest: 'public', // Lokasi file service worker akan dibuat
+  cacheOnFrontEndNav: true,
+  aggressiveFrontEndNavCaching: true,
+  reloadOnOnline: true,
+  swcMinify: true,
+  disable: process.env.NODE_ENV === 'development', // PWA dimatikan saat ngoding biar gak rewel, baru nyala saat di-build/production
+  customWorkerDir: 'worker',
+  workboxOptions: {
+    disableDevLogs: true,
+  },
+});
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  typescript: {
-    ignoreBuildErrors: true,
-  },
+  // Jika kamu punya konfigurasi bawaan sebelumnya (seperti images domains dll), taruh di dalam sini
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: '**',
+      },
+    ],
   },
-  allowedDevOrigins: ['192.168.1.7', '10.120.119.89', '10.50.177.239'],
 };
 
-export default nextConfig;
+export default withPWA(nextConfig);

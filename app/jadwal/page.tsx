@@ -1,28 +1,62 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
 import {
   CalendarDays,
-  Download,
-  Info,
   ArrowLeft,
   Maximize2,
+  CalendarX2,
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import {
-  Dialog,
-  DialogContent,
-  DialogTrigger,
-  DialogTitle, // <-- Ditambahkan untuk mengatasi Error Console
-} from '@/components/ui/dialog';
+
+// DAFTAR LAB BARU (Sesuai List)
+const labMap: Record<number, string> = {
+  1: 'Lab. Kesehatan Ikan',
+  2: 'Lab. Kualitas Air',
+  3: 'Lab. Pengolahan',
+  4: 'Bangsal Pakan Alami',
+  5: 'Lab. Perikanan (SFS)',
+  6: 'Lab. Pembenihan',
+  7: 'Lab. Ikan Hias',
+  8: 'Lab. Nutrisi',
+  9: 'Polyfeed',
+  10: 'Politeknik Ornamental Fish Farm (POFA)',
+  11: 'Galangan Kapal',
+  12: 'Alat Tangkap Ikan',
+  13: 'KJA',
+  14: 'FISHTECH',
+  15: 'FISH MARKET',
+  16: 'polyfish',
+  17: 'Lab Simulator',
+  18: 'Lab Radar',
+};
 
 export default function JadwalPage() {
+  const [jadwalData, setJadwalData] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchSemuaJadwal = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase.from('jadwal_lab').select('*');
+      if (!error && data) {
+        setJadwalData(data);
+      } else {
+        setJadwalData([]);
+      }
+      setLoading(false);
+    };
+
+    fetchSemuaJadwal();
+  }, []);
+
   return (
     <div className='min-h-screen bg-slate-50 pt-24 pb-20 px-4 md:px-8'>
-      <div className='mx-auto max-w-6xl'>
+      <div className='mx-auto max-w-7xl'>
         {/* Tombol Kembali & Header Section */}
         <div className='mb-12'>
           <Link
@@ -45,8 +79,8 @@ export default function JadwalPage() {
         </div>
 
         {/* Notifikasi / Helper Text */}
-        <div className='max-w-3xl mx-auto mb-8 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm'>
-          <Info className='size-5 text-blue-600 shrink-0 mt-0.5' />
+        <div className='max-w-3xl mx-auto mb-10 bg-blue-50 border border-blue-200 rounded-xl p-4 flex items-start gap-3 shadow-sm'>
+          <div className='size-5 text-blue-600 shrink-0 mt-0.5'>💡</div>
           <p className='text-sm md:text-base text-blue-800 leading-relaxed'>
             <strong className='font-bold'>Perhatian:</strong> Jika Anda
             berencana meminjam alat atau ruangan untuk penelitian mandiri,
@@ -59,151 +93,55 @@ export default function JadwalPage() {
           </p>
         </div>
 
-        {/* Tabs Section */}
-        <Tabs defaultValue='perikanan' className='w-full max-w-5xl mx-auto'>
-          <TabsList className='h-auto w-full grid grid-cols-2 p-1.5 bg-slate-200/60 rounded-xl mb-6'>
-            <TabsTrigger
-              value='perikanan'
-              className='rounded-lg text-sm md:text-base font-bold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-3'>
-              Lab. Perikanan
-            </TabsTrigger>
-            <TabsTrigger
-              value='tangkap'
-              className='rounded-lg text-sm md:text-base font-bold data-[state=active]:bg-white data-[state=active]:text-cyan-700 data-[state=active]:shadow-md transition-all duration-300 py-3'>
-              Lab. Tangkap
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Konten Tab Lab Perikanan */}
-          <TabsContent
-            value='perikanan'
-            className='mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-            <Card className='border-0 shadow-xl shadow-slate-200 overflow-hidden bg-white'>
-              <div className='p-4 border-b border-slate-100 flex items-center justify-between bg-white'>
-                <h3 className='text-slate-800 font-bold text-base md:text-lg truncate mr-2'>
-                  Jadwal Praktikum Lab. Perikanan
-                </h3>
-
-                {/* Tombol Aksi - Responsif HP = Ikon, PC = Ikon + Teks */}
-                <div className='flex gap-2 shrink-0'>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        className='text-slate-600 border-slate-200 hover:bg-slate-50 px-2.5 md:px-3'>
-                        <Maximize2 className='size-4 md:mr-2' />
-                        <span className='hidden md:inline'>Fullscreen</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] h-[90vh] p-0 border-none bg-transparent shadow-none [&>button]:bg-white [&>button]:text-red-600 [&>button]:opacity-100 [&>button]:p-2 [&>button]:rounded-full [&>button]:shadow-xl hover:[&>button]:bg-slate-100 [&>button]:right-4 [&>button]:top-4 md:[&>button]:right-6 md:[&>button]:top-6">
-                      {/* Judul tersembunyi ini yang akan menghilangkan Error dari Radix UI */}
-                      <DialogTitle className='sr-only'>
-                        Tampilan Penuh Jadwal Lab Perikanan
-                      </DialogTitle>
-
-                      <div className='relative w-full h-full flex items-center justify-center bg-black/90 rounded-lg overflow-hidden'>
-                        <Image
-                          src='/jadwal/jadwal-perikanan.jpg'
-                          alt='Fullscreen Jadwal Lab Perikanan'
-                          fill
-                          className='object-contain'
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    asChild
-                    className='text-blue-600 border-blue-200 hover:bg-blue-50 px-2.5 md:px-3'>
-                    <a href='/jadwal/jadwal-perikanan.jpg' download>
-                      <Download className='size-4 md:mr-2' />
-                      <span className='hidden md:inline'>Unduh</span>
-                    </a>
-                  </Button>
-                </div>
-              </div>
-
-              <CardContent className='p-0'>
-                <div className='relative w-full aspect-[4/3] md:aspect-[16/9] bg-slate-100 flex items-center justify-center overflow-hidden'>
-                  <Image
-                    src='/jadwal/jadwal-perikanan.jpg'
-                    alt='Jadwal Praktikum Lab Perikanan'
-                    fill
-                    className='object-contain p-2 md:p-4'
-                    priority
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          {/* Konten Tab Lab Perikanan Tangkap */}
-          <TabsContent
-            value='tangkap'
-            className='mt-0 animate-in fade-in slide-in-from-bottom-4 duration-500'>
-            <Card className='border-0 shadow-xl shadow-slate-200 overflow-hidden bg-white'>
-              <div className='p-4 border-b border-slate-100 flex items-center justify-between bg-white'>
-                <h3 className='text-slate-800 font-bold text-base md:text-lg truncate mr-2'>
-                  Jadwal Praktikum Lab. Tangkap
-                </h3>
-
-                {/* Tombol Aksi - Responsif HP = Ikon, PC = Ikon + Teks */}
-                <div className='flex gap-2 shrink-0'>
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button
-                        variant='outline'
-                        size='sm'
-                        className='text-slate-600 border-slate-200 hover:bg-slate-50 px-2.5 md:px-3'>
-                        <Maximize2 className='size-4 md:mr-2' />
-                        <span className='hidden md:inline'>Fullscreen</span>
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent className="max-w-[95vw] h-[90vh] p-0 border-none bg-transparent shadow-none [&>button]:bg-white [&>button]:text-red-600 [&>button]:opacity-100 [&>button]:p-2 [&>button]:rounded-full [&>button]:shadow-xl hover:[&>button]:bg-slate-100 [&>button]:right-4 [&>button]:top-4 md:[&>button]:right-6 md:[&>button]:top-6">
-                      {/* Judul tersembunyi ini yang akan menghilangkan Error dari Radix UI */}
-                      <DialogTitle className='sr-only'>
-                        Tampilan Penuh Jadwal Lab Tangkap
-                      </DialogTitle>
-
-                      <div className='relative w-full h-full flex items-center justify-center bg-black/90 rounded-lg overflow-hidden'>
-                        <Image
-                          src='/jadwal/jadwal-tangkap.jpg'
-                          alt='Fullscreen Jadwal Lab Perikanan Tangkap'
-                          fill
-                          className='object-contain'
-                        />
-                      </div>
-                    </DialogContent>
-                  </Dialog>
-
-                  <Button
-                    variant='outline'
-                    size='sm'
-                    asChild
-                    className='text-cyan-600 border-cyan-200 hover:bg-cyan-50 px-2.5 md:px-3'>
-                    <a href='/jadwal/jadwal-tangkap.jpg' download>
-                      <Download className='size-4 md:mr-2' />
-                      <span className='hidden md:inline'>Unduh</span>
-                    </a>
-                  </Button>
-                </div>
-              </div>
-              <CardContent className='p-0'>
-                <div className='relative w-full aspect-[4/3] md:aspect-[16/9] bg-slate-100 flex items-center justify-center overflow-hidden'>
-                  <Image
-                    src='/jadwal/jadwal-tangkap.jpg'
-                    alt='Jadwal Praktikum Lab Perikanan Tangkap'
-                    fill
-                    className='object-contain p-2 md:p-4'
-                  />
-                </div>
-              </CardContent>
-            </Card>
-          </TabsContent>
-        </Tabs>
+        {/* Render Jadwal Grid */}
+        {loading ? (
+           <div className="flex flex-col items-center justify-center p-20 gap-4">
+             <div className="size-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
+             <p className="text-slate-500 font-medium animate-pulse">Memuat data jadwal laboratorium...</p>
+           </div>
+        ) : (
+           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+             {Object.entries(labMap).map(([idStr, namaLab]) => {
+                const labId = parseInt(idStr);
+                const jadwalObj = jadwalData.find(j => j.lab_id === labId);
+                const hasJadwal = jadwalObj && jadwalObj.file_url;
+                
+                return (
+                  <Card key={labId} className="border-t-4 border-t-blue-500 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
+                     <CardContent className="p-6 flex flex-col h-full bg-white">
+                        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
+                          <h3 className="text-lg font-bold text-slate-800 min-h-[56px] flex items-center justify-center">
+                            {namaLab}
+                          </h3>
+                          
+                          {hasJadwal ? (
+                            <div className="w-full flex-1 flex flex-col items-center justify-center space-y-4">
+                               <div className="bg-blue-50 text-blue-700 font-bold p-4 rounded-full">
+                                 <CalendarDays className="size-10" />
+                               </div>
+                               <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 shadow-md h-12">
+                                 <a href={jadwalObj.file_url} target="_blank" rel="noopener noreferrer">
+                                   <Maximize2 className="size-5 mr-2" /> Lihat Jadwal
+                                 </a>
+                               </Button>
+                            </div>
+                          ) : (
+                            <div className="w-full flex-1 flex flex-col items-center justify-center space-y-4 py-2">
+                               <div className="bg-slate-50 text-slate-300 font-bold p-4 rounded-full border border-slate-100">
+                                 <CalendarX2 className="size-10" />
+                               </div>
+                               <p className="text-sm text-slate-500 font-medium leading-relaxed">
+                                 Jadwal belum tersedia.<br/>Silakan hubungi Admin.
+                               </p>
+                            </div>
+                          )}
+                        </div>
+                     </CardContent>
+                  </Card>
+                );
+             })}
+           </div>
+        )}
       </div>
     </div>
   );

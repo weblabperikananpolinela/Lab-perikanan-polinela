@@ -9,6 +9,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ClipboardList,
+  ExternalLink,
+  Image as ImageIcon,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -400,7 +402,7 @@ export default function PengajuanTab({
 
       {/* POP-UP DETAIL */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent className='sm:max-w-xl max-h-[90vh] overflow-y-auto'>
+        <DialogContent className='sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] w-full h-[100dvh] sm:h-auto overflow-y-auto rounded-none sm:rounded-lg m-0 p-4 sm:p-6'>
           <DialogHeader>
             <DialogTitle className='text-2xl font-bold'>
               Detail Pengajuan
@@ -412,154 +414,183 @@ export default function PengajuanTab({
           </DialogHeader>
 
           {selectedPengajuan && (
-            <div className='space-y-6 mt-4'>
-              <div className='grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100'>
-                <div className="col-span-2 md:col-span-1">
-                  <p className='font-semibold text-slate-500'>Nama Lengkap</p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedPengajuan.nama_lengkap}
-                  </p>
-                </div>
-                <div className="col-span-2 md:col-span-1">
-                  <p className='font-semibold text-slate-500'>Email</p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedPengajuan.email_pemohon || '-'}
-                  </p>
-                </div>
-                <div className="col-span-2 md:col-span-1">
-                  <p className='font-semibold text-slate-500'>Kategori</p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedPengajuan.kategori_pemohon}
-                  </p>
-                </div>
-
-                {selectedPengajuan.kategori_pemohon?.toLowerCase().includes('umum') || selectedPengajuan.kategori_pemohon?.toLowerCase().includes('eksternal') ? (
+            <div className='flex flex-col md:flex-row gap-6 mt-4'>
+              {/* SISI KIRI: Identitas & Kegiatan */}
+              <div className='flex-1 space-y-6'>
+                <div className='grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100'>
                   <div className="col-span-2 md:col-span-1">
-                    <p className='font-semibold text-slate-500'>NIK</p>
-                    <p className='font-bold text-slate-900'>
-                      {selectedPengajuan.nik || '-'}
+                    <p className='font-semibold text-slate-500'>Nama Lengkap</p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedPengajuan.nama_lengkap}
                     </p>
                   </div>
-                ) : (
-                  <>
+                  <div className="col-span-2 md:col-span-1">
+                    <p className='font-semibold text-slate-500'>Email</p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedPengajuan.email_pemohon || '-'}
+                    </p>
+                  </div>
+                  <div className="col-span-2 md:col-span-1">
+                    <p className='font-semibold text-slate-500'>Kategori</p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedPengajuan.kategori_pemohon}
+                    </p>
+                  </div>
+
+                  {selectedPengajuan.kategori_pemohon?.toLowerCase().includes('umum') || selectedPengajuan.kategori_pemohon?.toLowerCase().includes('eksternal') ? (
                     <div className="col-span-2 md:col-span-1">
-                      <p className='font-semibold text-slate-500'>NPM / NIP</p>
+                      <p className='font-semibold text-slate-500'>NIK</p>
                       <p className='font-bold text-slate-900'>
-                        {selectedPengajuan.npm || '-'}
+                        {selectedPengajuan.nik || '-'}
                       </p>
                     </div>
-                    <div className="col-span-2 md:col-span-1">
-                      <p className='font-semibold text-slate-500'>Program Studi</p>
-                      <p className='font-bold text-slate-900'>
-                        {selectedPengajuan.program_studi || '-'}
-                      </p>
-                    </div>
-                  </>
-                )}
-                
-                <div className="col-span-2 md:col-span-1">
-                  <p className='font-semibold text-slate-500'>Dosen / PIC</p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedPengajuan.dosen_pembimbing || '-'}
-                  </p>
-                </div>
-              </div>
-
-              <div className='space-y-1'>
-                <p className='font-semibold text-slate-500 text-sm'>
-                  Judul Kegiatan
-                </p>
-                <div className='bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200 font-bold text-base mt-2'>
-                  {selectedPengajuan.judul_kegiatan}
-                </div>
-              </div>
-
-              <div className='space-y-1'>
-                <p className='font-semibold text-slate-500 text-sm'>
-                  Waktu &amp; Tempat
-                </p>
-                <div className='bg-white border rounded-lg p-3'>
-                  <p className='font-medium text-base'>
-                    Tanggal:{' '}
-                    <span className='font-bold text-slate-800'>
-                      {selectedPengajuan.tanggal ? new Date(selectedPengajuan.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
-                    </span>
-                  </p>
-                  <p className='font-medium text-base mt-0.5'>
-                    Waktu:{' '}
-                    <span className='font-bold text-blue-700'>
-                      {selectedPengajuan.jam_mulai} - {selectedPengajuan.jam_selesai} WIB
-                    </span>
-                  </p>
-                  <p className='text-slate-500 mt-2 text-base font-medium'>
-                    Lab Target: <span className="font-extrabold text-slate-900">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
-                  </p>
-                </div>
-              </div>
-
-              <div className='space-y-1'>
-                <p className='font-semibold text-slate-500 text-sm'>
-                  Alat yang Dipinjam
-                </p>
-                <div className='border rounded-md'>
-                  <Table>
-                    <TableHeader className='bg-slate-50'>
-                      <TableRow>
-                        <TableHead className='h-8 py-1'>Nama Alat</TableHead>
-                        <TableHead className='h-8 py-1 text-center'>
-                          Jml
-                        </TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedItems.map((itm) => (
-                        <TableRow key={itm.id} className='h-8'>
-                          <TableCell className='py-2 text-sm font-medium'>
-                            {itm.nama_alat_bahan}
-                          </TableCell>
-                          <TableCell className='py-2 text-sm text-center'>
-                            {itm.jumlah}
-                          </TableCell>
-                        </TableRow>
-                      ))}
-                      {selectedItems.length === 0 && (
-                        <TableRow>
-                          <TableCell
-                            colSpan={2}
-                            className='text-center text-xs py-2'>
-                            Tidak ada data alat.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
-              </div>
-
-              {selectedPengajuan.status === 'Menunggu validasi' ? (
-                <div className='space-y-2 pt-2 border-t'>
-                  <Label htmlFor='pesanFeedback' className='text-base font-semibold'>
-                    Pesan Feedback / Alasan (Opsional)
-                  </Label>
-                  <Textarea
-                    id='pesanFeedback'
-                    placeholder='Misal: Harap kembalikan bersih, atau Alasan penolakan terperinci.'
-                    className='resize-none text-base'
-                    rows={3}
-                    value={pesanFeedback}
-                    onChange={(e) => setPesanFeedback(e.target.value)}
-                  />
-                </div>
-              ) : selectedPengajuan.pesan_feedback ? (
-                <div className='space-y-1 pt-2 border-t'>
-                  <p className='font-semibold text-slate-500 text-sm'>
-                    Pesan Feedback / Alasan
-                  </p>
-                  <div className="bg-slate-100 p-3 rounded-md text-base text-slate-800 font-medium">
-                     {selectedPengajuan.pesan_feedback}
+                  ) : (
+                    <>
+                      <div className="col-span-2 md:col-span-1">
+                        <p className='font-semibold text-slate-500'>NPM / NIP</p>
+                        <p className='font-bold text-slate-900'>
+                          {selectedPengajuan.npm || '-'}
+                        </p>
+                      </div>
+                      <div className="col-span-2 md:col-span-1">
+                        <p className='font-semibold text-slate-500'>Program Studi</p>
+                        <p className='font-bold text-slate-900'>
+                          {selectedPengajuan.program_studi || '-'}
+                        </p>
+                      </div>
+                    </>
+                  )}
+                  
+                  <div className="col-span-2 md:col-span-1">
+                    <p className='font-semibold text-slate-500'>Dosen / PIC</p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedPengajuan.dosen_pembimbing || '-'}
+                    </p>
                   </div>
                 </div>
-              ) : null}
+
+                <div className='space-y-1'>
+                  <p className='font-semibold text-slate-500 text-sm'>
+                    Judul Kegiatan
+                  </p>
+                  <div className='bg-blue-50 text-blue-800 p-3 rounded-lg border border-blue-200 font-bold text-base mt-2'>
+                    {selectedPengajuan.judul_kegiatan}
+                  </div>
+                </div>
+
+                <div className='space-y-1'>
+                  <p className='font-semibold text-slate-500 text-sm'>
+                    Waktu &amp; Tempat
+                  </p>
+                  <div className='bg-white border rounded-lg p-3'>
+                    <p className='font-medium text-base'>
+                      Tanggal:{' '}
+                      <span className='font-bold text-slate-800'>
+                        {selectedPengajuan.tanggal ? new Date(selectedPengajuan.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                      </span>
+                    </p>
+                    <p className='font-medium text-base mt-0.5'>
+                      Waktu:{' '}
+                      <span className='font-bold text-blue-700'>
+                        {selectedPengajuan.jam_mulai} - {selectedPengajuan.jam_selesai} WIB
+                      </span>
+                    </p>
+                    <p className='text-slate-500 mt-2 text-base font-medium'>
+                      Lab Target: <span className="font-extrabold text-slate-900">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* SISI KANAN: Alat & Feedback / Pembayaran */}
+              <div className='flex-1 space-y-6'>
+                <div className='space-y-1'>
+                  <p className='font-semibold text-slate-500 text-sm'>
+                    Alat yang Dipinjam
+                  </p>
+                  <div className='border rounded-md max-h-[250px] overflow-y-auto'>
+                    <Table>
+                      <TableHeader className='bg-slate-50 sticky top-0'>
+                        <TableRow>
+                          <TableHead className='h-8 py-1'>Nama Alat</TableHead>
+                          <TableHead className='h-8 py-1 text-center'>
+                            Jml
+                          </TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {selectedItems.map((itm) => (
+                          <TableRow key={itm.id} className='h-8'>
+                            <TableCell className='py-2 text-sm font-medium'>
+                              {itm.nama_alat_bahan}
+                            </TableCell>
+                            <TableCell className='py-2 text-sm text-center'>
+                              {itm.jumlah}
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                        {selectedItems.length === 0 && (
+                          <TableRow>
+                            <TableCell
+                              colSpan={2}
+                              className='text-center text-xs py-2'>
+                              Tidak ada data alat.
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
+                </div>
+
+                {selectedPengajuan.kategori_pemohon?.toLowerCase() === 'umum' && (
+                  <div className='space-y-2 pt-2 border-t'>
+                    <p className='font-semibold text-slate-500 text-sm'>
+                      Informasi Pembayaran (Pemohon Umum)
+                    </p>
+                    <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
+                      <Label className='font-bold block mb-3 text-slate-800 text-base'>Bukti Transfer (Pemohon Umum)</Label>
+                      {selectedPengajuan.bukti_pembayaran ? (
+                        <Button variant='outline' className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors' asChild>
+                          <a href={selectedPengajuan.bukti_pembayaran} target="_blank" rel="noopener noreferrer">
+                            <span className="flex items-center gap-2 text-blue-700 font-semibold text-base"><ImageIcon className="size-5" /> Lihat Bukti Unggahan</span>
+                            <ExternalLink className="size-5 text-slate-400" />
+                          </a>
+                        </Button>
+                      ) : (
+                        <p className="text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic">
+                          Bukti transfer belum diunggah
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {selectedPengajuan.status === 'Menunggu validasi' ? (
+                  <div className='space-y-2 pt-2 border-t'>
+                    <Label htmlFor='pesanFeedback' className='text-base font-semibold'>
+                      Pesan Feedback / Alasan (Opsional)
+                    </Label>
+                    <Textarea
+                      id='pesanFeedback'
+                      placeholder='Misal: Harap kembalikan bersih, atau Alasan penolakan terperinci.'
+                      className='resize-none text-base bg-white'
+                      rows={3}
+                      value={pesanFeedback}
+                      onChange={(e) => setPesanFeedback(e.target.value)}
+                    />
+                  </div>
+                ) : selectedPengajuan.pesan_feedback ? (
+                  <div className='space-y-1 pt-2 border-t'>
+                    <p className='font-semibold text-slate-500 text-sm'>
+                      Pesan Feedback / Alasan
+                    </p>
+                    <div className="bg-slate-100 p-3 rounded-md text-base text-slate-800 font-medium">
+                       {selectedPengajuan.pesan_feedback}
+                    </div>
+                  </div>
+                ) : null}
+              </div>
             </div>
           )}
 

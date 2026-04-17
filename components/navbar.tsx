@@ -19,6 +19,8 @@ import {
   Calendar,
   PackageSearch,
   FileUp, // <-- Icon untuk Upload Materi
+  FolderKanban,
+  LockKeyhole,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -142,7 +144,7 @@ export function Navbar() {
       position: 'top-end',
       showConfirmButton: false,
       timer: 3000,
-      timerProgressBar: true
+      timerProgressBar: true,
     });
     setUserRole(null);
     setAdminProfiles([]);
@@ -166,14 +168,14 @@ export function Navbar() {
       showConfirmButton: false,
       didOpen: () => {
         Swal.showLoading();
-      }
+      },
     });
-    
+
     await supabase.auth.signOut();
     setSession(null);
     setUserRole(null);
     setAdminProfiles([]);
-    
+
     Swal.fire({
       text: 'Logout Berhasil',
       icon: 'success',
@@ -181,7 +183,7 @@ export function Navbar() {
       position: 'top-end',
       showConfirmButton: false,
       timer: 1500,
-      timerProgressBar: true
+      timerProgressBar: true,
     }).then(() => {
       window.location.reload();
     });
@@ -414,12 +416,14 @@ export function Navbar() {
                   ))}
 
                 {/* Upload Materi (Untuk SEMUA Dosen & Admin) */}
-                {(userRole === 'admin_lab' || userRole === 'dosen') && (
+
+                {userRole === 'dosen' && (
                   <DropdownMenuItem
                     asChild
                     className='cursor-pointer py-2.5 rounded-md font-semibold text-blue-700 focus:text-blue-800 focus:bg-blue-50'>
                     <Link href={`/dosen/materi`}>
-                      <FileUp className='size-4 mr-2' /> Upload Materi
+                      <LockKeyhole className='size-4 mr-2' /> Akses Materi
+                      Kuliah
                     </Link>
                   </DropdownMenuItem>
                 )}
@@ -584,7 +588,8 @@ export function Navbar() {
                         ))}
 
                       {/* Menu Upload Materi (Semua Dosen & Admin) */}
-                      {(userRole === 'admin_lab' || userRole === 'dosen') && (
+
+                      {userRole === 'dosen' && (
                         <Button
                           asChild
                           variant='secondary'
@@ -592,8 +597,8 @@ export function Navbar() {
                           <Link
                             href={`/dosen/materi`}
                             onClick={() => setIsOpen(false)}>
-                            <FileUp className='size-4 mr-2 text-blue-500' />
-                            Upload Materi Perkuliahan
+                            <LockKeyhole className='size-4 mr-2 text-blue-500' />
+                            Akses Materi Kuliah
                           </Link>
                         </Button>
                       )}
