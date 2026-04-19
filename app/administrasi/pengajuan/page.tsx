@@ -155,7 +155,7 @@ const labMap: Record<string, number> = {
   KJA: 13,
   FISHTECH: 14,
   'FISH MARKET': 15,
-  polyfish: 16,
+  Polyfish: 16,
   'Lab Simulator': 17,
   'Lab Radar': 18,
 };
@@ -178,7 +178,7 @@ const labKategoriData = {
     { nama: 'KJA', jenis: 'TEFA' },
     { nama: 'FISHTECH', jenis: 'TEFA' },
     { nama: 'FISH MARKET', jenis: 'TEFA' },
-    { nama: 'polyfish', jenis: 'TEFA' },
+    { nama: 'Polyfish', jenis: 'TEFA' },
   ],
   'Lab Perikanan Tangkap': [
     { nama: 'Lab Simulator', jenis: 'TEFA' },
@@ -536,22 +536,29 @@ export default function PengajuanForm() {
   if (isSuccess) {
     return (
       <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center p-6 text-center'>
-         <div className='bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-slate-100 animate-in zoom-in-95 duration-300'>
-            <div className='w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6'>
-               <CheckCircle size={32} />
-            </div>
-            <h2 className='text-2xl font-bold text-slate-800 mb-2'>Pengajuan Terkirim!</h2>
-            <p className='text-slate-600 mb-8 leading-relaxed'>
-              Terima kasih, pengajuan Anda sedang diproses. <br/><br/>
-              <strong>Aktifkan Notifikasi</strong> agar kami bisa memberitahu Anda secara real-time saat pengajuan ini disetujui!
-            </p>
-            <div className='flex justify-center mb-6'>
-               <NotifButton role="pemohon" userEmail={submittedEmail} />
-            </div>
-            <Button onClick={() => router.push('/')} variant='ghost' className='text-slate-500 hover:text-slate-700 w-full'>
-               Kembali ke Beranda
-            </Button>
-         </div>
+        <div className='bg-white p-8 rounded-2xl shadow-xl max-w-md w-full border border-slate-100 animate-in zoom-in-95 duration-300'>
+          <div className='w-16 h-16 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center mx-auto mb-6'>
+            <CheckCircle size={32} />
+          </div>
+          <h2 className='text-2xl font-bold text-slate-800 mb-2'>
+            Pengajuan Terkirim!
+          </h2>
+          <p className='text-slate-600 mb-8 leading-relaxed'>
+            Terima kasih, pengajuan Anda sedang diproses. <br />
+            <br />
+            <strong>Aktifkan Notifikasi</strong> agar kami bisa memberitahu Anda
+            secara real-time saat pengajuan ini disetujui!
+          </p>
+          <div className='flex justify-center mb-6'>
+            <NotifButton role='pemohon' userEmail={submittedEmail} />
+          </div>
+          <Button
+            onClick={() => router.push('/')}
+            variant='ghost'
+            className='text-slate-500 hover:text-slate-700 w-full'>
+            Kembali ke Beranda
+          </Button>
+        </div>
       </div>
     );
   }
@@ -1000,17 +1007,22 @@ export default function PengajuanForm() {
               <h3 className='text-lg font-bold text-blue-900'>
                 Informasi Pembayaran
               </h3>
-              
+
               {isFetchingBank ? (
-                 <p className="text-blue-800 text-sm flex items-center gap-2"><Loader2 className="size-4 animate-spin"/> Mengambil data rekening...</p>
+                <p className='text-blue-800 text-sm flex items-center gap-2'>
+                  <Loader2 className='size-4 animate-spin' /> Mengambil data
+                  rekening...
+                </p>
               ) : bankInfo ? (
                 <>
                   <p className='text-sm text-blue-800'>
-                    Kategori Umum dikenakan tarif penggunaan laboratorium. Silakan
-                    transfer sesuai nominal tarif ke rekening di bawah ini:
+                    Kategori Umum dikenakan tarif penggunaan laboratorium.
+                    Silakan transfer sesuai nominal tarif ke rekening di bawah
+                    ini:
                   </p>
                   <div className='bg-white p-4 rounded-lg border border-blue-200 inline-block font-mono text-lg font-bold text-slate-800 shadow-sm'>
-                    {bankInfo.nama_bank} {bankInfo.nomor_rekening} <br className='md:hidden' />{' '}
+                    {bankInfo.nama_bank} {bankInfo.nomor_rekening}{' '}
+                    <br className='md:hidden' />{' '}
                     <span className='text-sm font-normal text-slate-500 font-sans'>
                       a.n. {bankInfo.atas_nama}
                     </span>
@@ -1025,8 +1037,9 @@ export default function PengajuanForm() {
                   </p>
                 </>
               ) : (
-                <p className="text-amber-700 bg-amber-100 border border-amber-200 p-3 rounded-lg text-sm font-medium leading-relaxed">
-                  Informasi rekening untuk {labTargetValue || 'lab ini'} belum diatur. Silakan hubungi admin bersangkutan.
+                <p className='text-amber-700 bg-amber-100 border border-amber-200 p-3 rounded-lg text-sm font-medium leading-relaxed'>
+                  Informasi rekening untuk {labTargetValue || 'lab ini'} belum
+                  diatur. Silakan hubungi admin bersangkutan.
                 </p>
               )}
 

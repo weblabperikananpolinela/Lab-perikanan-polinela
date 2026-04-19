@@ -47,7 +47,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };
@@ -207,7 +207,12 @@ function DashboardContent() {
           <SettingRekening adminProfile={activeProfile} supabase={supabase} />
         );
       case 'jadwal':
-        return <KelolaJadwal labId={activeProfile.lab_id} userEmail={activeProfile.email} />;
+        return (
+          <KelolaJadwal
+            labId={activeProfile.lab_id}
+            userEmail={activeProfile.email}
+          />
+        );
       case 'materi':
         return <MateriTab adminProfile={activeProfile} supabase={supabase} />;
       default:
@@ -295,7 +300,7 @@ function DashboardContent() {
             <FileStack className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Lihat Pengajuan</span>}
           </button>
-          
+
           <button
             onClick={() => handleTabChange('materi')}
             title='Materi & Kelas'
@@ -372,10 +377,10 @@ function DashboardContent() {
                   <Circle className='size-2.5 fill-emerald-500 text-emerald-500 animate-pulse' />
                   Status Sistem: Online
                 </div>
-                <NotifButton 
-                  userEmail={activeProfile?.email} 
-                  role="admin" 
-                  labId={activeProfile?.lab_id} 
+                <NotifButton
+                  userEmail={activeProfile?.email}
+                  role='admin'
+                  labId={activeProfile?.lab_id}
                 />
               </div>
               <h1 className='text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight'>

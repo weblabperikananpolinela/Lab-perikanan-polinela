@@ -50,7 +50,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };
@@ -268,7 +268,12 @@ export default function InventarisTab({
       .eq('kategori_id', kat.id);
 
     if (countError) {
-      Swal.fire({ text: 'Gagal memvalidasi kategori: ' + countError.message, icon: 'error', toast: true, position: 'top-end' });
+      Swal.fire({
+        text: 'Gagal memvalidasi kategori: ' + countError.message,
+        icon: 'error',
+        toast: true,
+        position: 'top-end',
+      });
       return;
     }
 
@@ -277,7 +282,7 @@ export default function InventarisTab({
         title: 'Gagal!',
         text: 'Kategori tidak bisa dihapus karena masih berisi barang. Hapus atau pindahkan barangnya terlebih dahulu.',
         icon: 'error',
-        confirmButtonColor: '#ef4444'
+        confirmButtonColor: '#ef4444',
       });
       return;
     }
@@ -301,9 +306,21 @@ export default function InventarisTab({
         .eq('id', kat.id);
 
       if (error) {
-        Swal.fire({ text: 'Gagal menghapus: ' + error.message, icon: 'error', toast: true, position: 'top-end' });
+        Swal.fire({
+          text: 'Gagal menghapus: ' + error.message,
+          icon: 'error',
+          toast: true,
+          position: 'top-end',
+        });
       } else {
-        Swal.fire({ text: 'Kategori berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+        Swal.fire({
+          text: 'Kategori berhasil dihapus!',
+          icon: 'success',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000,
+        });
         if (activeKategoriId === kat.id) {
           setActiveKategoriId(null);
         }
@@ -345,9 +362,21 @@ export default function InventarisTab({
         setIsSubmitting(false);
 
         if (error) {
-          Swal.fire({ text: 'Gagal menghapus: ' + error.message, icon: 'error', toast: true, position: 'top-end' });
+          Swal.fire({
+            text: 'Gagal menghapus: ' + error.message,
+            icon: 'error',
+            toast: true,
+            position: 'top-end',
+          });
         } else {
-          Swal.fire({ text: 'Data alat berhasil dihapus!', icon: 'success', toast: true, position: 'top-end', showConfirmButton: false, timer: 3000 });
+          Swal.fire({
+            text: 'Data alat berhasil dihapus!',
+            icon: 'success',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000,
+          });
           setEditItemId(null);
           fetchInventaris();
         }
@@ -427,10 +456,9 @@ export default function InventarisTab({
               {activeKategoriId === kat.id && (
                 <div
                   onClick={(e) => deleteKategori(e, kat)}
-                  className="ml-1 p-1 rounded-md bg-red-500 hover:bg-red-600 text-white transition-colors"
-                  title="Hapus Kategori"
-                >
-                  <Trash2 className="size-3.5" />
+                  className='ml-1 p-1 rounded-md bg-red-500 hover:bg-red-600 text-white transition-colors'
+                  title='Hapus Kategori'>
+                  <Trash2 className='size-3.5' />
                 </div>
               )}
             </button>
@@ -636,7 +664,12 @@ export default function InventarisTab({
             setIsFormOpen(false);
           } else setIsFormOpen(true);
         }}>
-        <DialogContent className='sm:max-w-lg max-h-[90vh] overflow-y-auto' onInteractOutside={(e) => { const isSwalOpen = document.querySelector('.swal2-container'); if (isSwalOpen) e.preventDefault(); }}>
+        <DialogContent
+          className='sm:max-w-lg max-h-[90vh] overflow-y-auto'
+          onInteractOutside={(e) => {
+            const isSwalOpen = document.querySelector('.swal2-container');
+            if (isSwalOpen) e.preventDefault();
+          }}>
           <DialogHeader>
             <DialogTitle className='text-xl'>
               {editItemId ? 'Edit Data Alat' : 'Tambah Alat Baru'}

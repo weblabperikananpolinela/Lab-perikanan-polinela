@@ -4,12 +4,7 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
-import {
-  CalendarDays,
-  ArrowLeft,
-  Maximize2,
-  CalendarX2,
-} from 'lucide-react';
+import { CalendarDays, ArrowLeft, Maximize2, CalendarX2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
@@ -30,7 +25,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };
@@ -95,52 +90,63 @@ export default function JadwalPage() {
 
         {/* Render Jadwal Grid */}
         {loading ? (
-           <div className="flex flex-col items-center justify-center p-20 gap-4">
-             <div className="size-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin" />
-             <p className="text-slate-500 font-medium animate-pulse">Memuat data jadwal laboratorium...</p>
-           </div>
+          <div className='flex flex-col items-center justify-center p-20 gap-4'>
+            <div className='size-10 border-4 border-slate-200 border-t-blue-600 rounded-full animate-spin' />
+            <p className='text-slate-500 font-medium animate-pulse'>
+              Memuat data jadwal laboratorium...
+            </p>
+          </div>
         ) : (
-           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-             {Object.entries(labMap).map(([idStr, namaLab]) => {
-                const labId = parseInt(idStr);
-                const jadwalObj = jadwalData.find(j => j.lab_id === labId);
-                const hasJadwal = jadwalObj && jadwalObj.file_url;
-                
-                return (
-                  <Card key={labId} className="border-t-4 border-t-blue-500 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1">
-                     <CardContent className="p-6 flex flex-col h-full bg-white">
-                        <div className="flex-1 flex flex-col items-center justify-center text-center space-y-4">
-                          <h3 className="text-lg font-bold text-slate-800 min-h-[56px] flex items-center justify-center">
-                            {namaLab}
-                          </h3>
-                          
-                          {hasJadwal ? (
-                            <div className="w-full flex-1 flex flex-col items-center justify-center space-y-4">
-                               <div className="bg-blue-50 text-blue-700 font-bold p-4 rounded-full">
-                                 <CalendarDays className="size-10" />
-                               </div>
-                               <Button asChild className="w-full bg-blue-600 hover:bg-blue-700 shadow-md h-12">
-                                 <a href={jadwalObj.file_url} target="_blank" rel="noopener noreferrer">
-                                   <Maximize2 className="size-5 mr-2" /> Lihat Jadwal
-                                 </a>
-                               </Button>
-                            </div>
-                          ) : (
-                            <div className="w-full flex-1 flex flex-col items-center justify-center space-y-4 py-2">
-                               <div className="bg-slate-50 text-slate-300 font-bold p-4 rounded-full border border-slate-100">
-                                 <CalendarX2 className="size-10" />
-                               </div>
-                               <p className="text-sm text-slate-500 font-medium leading-relaxed">
-                                 Jadwal belum tersedia.<br/>Silakan hubungi Admin.
-                               </p>
-                            </div>
-                          )}
+          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
+            {Object.entries(labMap).map(([idStr, namaLab]) => {
+              const labId = parseInt(idStr);
+              const jadwalObj = jadwalData.find((j) => j.lab_id === labId);
+              const hasJadwal = jadwalObj && jadwalObj.file_url;
+
+              return (
+                <Card
+                  key={labId}
+                  className='border-t-4 border-t-blue-500 hover:shadow-lg transition-all duration-300 transform hover:-translate-y-1'>
+                  <CardContent className='p-6 flex flex-col h-full bg-white'>
+                    <div className='flex-1 flex flex-col items-center justify-center text-center space-y-4'>
+                      <h3 className='text-lg font-bold text-slate-800 min-h-[56px] flex items-center justify-center'>
+                        {namaLab}
+                      </h3>
+
+                      {hasJadwal ? (
+                        <div className='w-full flex-1 flex flex-col items-center justify-center space-y-4'>
+                          <div className='bg-blue-50 text-blue-700 font-bold p-4 rounded-full'>
+                            <CalendarDays className='size-10' />
+                          </div>
+                          <Button
+                            asChild
+                            className='w-full bg-blue-600 hover:bg-blue-700 shadow-md h-12'>
+                            <a
+                              href={jadwalObj.file_url}
+                              target='_blank'
+                              rel='noopener noreferrer'>
+                              <Maximize2 className='size-5 mr-2' /> Lihat Jadwal
+                            </a>
+                          </Button>
                         </div>
-                     </CardContent>
-                  </Card>
-                );
-             })}
-           </div>
+                      ) : (
+                        <div className='w-full flex-1 flex flex-col items-center justify-center space-y-4 py-2'>
+                          <div className='bg-slate-50 text-slate-300 font-bold p-4 rounded-full border border-slate-100'>
+                            <CalendarX2 className='size-10' />
+                          </div>
+                          <p className='text-sm text-slate-500 font-medium leading-relaxed'>
+                            Jadwal belum tersedia.
+                            <br />
+                            Silakan hubungi Admin.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
         )}
       </div>
     </div>

@@ -66,7 +66,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };

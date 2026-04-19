@@ -1,7 +1,16 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { CheckSquare, Eye, Plus, PackageCheck, RotateCcw, XCircle, ExternalLink, Image as ImageIcon } from 'lucide-react';
+import {
+  CheckSquare,
+  Eye,
+  Plus,
+  PackageCheck,
+  RotateCcw,
+  XCircle,
+  ExternalLink,
+  Image as ImageIcon,
+} from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -51,7 +60,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };
@@ -209,25 +218,33 @@ export default function RiwayatTab({
       for (const item of returnForms) {
         const { data: invRows } = await supabase
           .from('inventaris')
-          .select('id, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat, kategori_inventaris(is_bisa_berkurang)')
+          .select(
+            'id, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat, kategori_inventaris(is_bisa_berkurang)',
+          )
           .eq('jenis_alat', item.nama_alat_bahan)
           .maybeSingle();
 
         if (invRows) {
           if (invRows.kategori_inventaris?.is_bisa_berkurang === false) {
             // LOGIKA ASET (Biarkan tetap seperti sebelumnya)
-            const selisihRusakAtauHilang = item.jumlah - item.jumlah_kembali_baik; 
+            const selisihRusakAtauHilang =
+              item.jumlah - item.jumlah_kembali_baik;
             const { error: invErr } = await supabase
               .from('inventaris')
               .update({
-                jumlah_baik: (invRows.jumlah_baik ?? 0) - selisihRusakAtauHilang, 
-                jumlah_rusak_ringan: (invRows.jumlah_rusak_ringan ?? 0) + item.jumlah_kembali_rusak_ringan,
-                jumlah_rusak_berat: (invRows.jumlah_rusak_berat ?? 0) + item.jumlah_kembali_rusak_berat,
+                jumlah_baik:
+                  (invRows.jumlah_baik ?? 0) - selisihRusakAtauHilang,
+                jumlah_rusak_ringan:
+                  (invRows.jumlah_rusak_ringan ?? 0) +
+                  item.jumlah_kembali_rusak_ringan,
+                jumlah_rusak_berat:
+                  (invRows.jumlah_rusak_berat ?? 0) +
+                  item.jumlah_kembali_rusak_berat,
               })
               .eq('id', invRows.id);
-            if (invErr) console.warn(`Gagal update inventaris aset:`, invErr.message);
-          } 
-          else if (invRows.kategori_inventaris?.is_bisa_berkurang === true) {
+            if (invErr)
+              console.warn(`Gagal update inventaris aset:`, invErr.message);
+          } else if (invRows.kategori_inventaris?.is_bisa_berkurang === true) {
             // LOGIKA BARU: BAHAN HABIS PAKAI (Pengembalian Sisa)
             // Jika ada yang dikembalikan dalam kondisi 'baik', berarti itu sisa yang tidak terpakai
             if (item.jumlah_kembali_baik > 0) {
@@ -235,10 +252,12 @@ export default function RiwayatTab({
                 .from('inventaris')
                 .update({
                   // Tambahkan kembali sisa bahan ke stok inventaris
-                  jumlah_baik: (invRows.jumlah_baik ?? 0) + item.jumlah_kembali_baik,
+                  jumlah_baik:
+                    (invRows.jumlah_baik ?? 0) + item.jumlah_kembali_baik,
                 })
                 .eq('id', invRows.id);
-              if (invErr) console.warn(`Gagal mengembalikan sisa bahan:`, invErr.message);
+              if (invErr)
+                console.warn(`Gagal mengembalikan sisa bahan:`, invErr.message);
             }
           }
         }
@@ -298,26 +317,36 @@ export default function RiwayatTab({
         cancelButtonText: 'Kembali',
         inputValidator: (value) => {
           if (!value) return 'Alasan pembatalan wajib diisi!';
-        }
+        },
       });
 
       if (isConfirmed) {
         setIsSubmittingReturn(true); // Manfaatkan state loading yang ada
         try {
           // A. Kembalikan Stok Konsumsi (Hanya jika is_bisa_berkurang === true)
-          const { data: items } = await supabase.from('peminjaman_item').select('*').eq('peminjaman_id', item.id);
+          const { data: items } = await supabase
+            .from('peminjaman_item')
+            .select('*')
+            .eq('peminjaman_id', item.id);
           if (items) {
             for (const pi of items) {
               const { data: invRows } = await supabase
                 .from('inventaris')
-                .select('id, jumlah_baik, kategori_inventaris(is_bisa_berkurang)')
+                .select(
+                  'id, jumlah_baik, kategori_inventaris(is_bisa_berkurang)',
+                )
                 .eq('jenis_alat', pi.nama_alat_bahan)
                 .maybeSingle();
 
-              if (invRows && invRows.kategori_inventaris?.is_bisa_berkurang === true) {
+              if (
+                invRows &&
+                invRows.kategori_inventaris?.is_bisa_berkurang === true
+              ) {
                 await supabase
                   .from('inventaris')
-                  .update({ jumlah_baik: (invRows.jumlah_baik ?? 0) + pi.jumlah })
+                  .update({
+                    jumlah_baik: (invRows.jumlah_baik ?? 0) + pi.jumlah,
+                  })
                   .eq('id', invRows.id);
               }
             }
@@ -328,7 +357,7 @@ export default function RiwayatTab({
             .from('peminjaman')
             .update({
               status: 'Dibatalkan',
-              pesan_pembatalan: alasan // Pastikan kolom ini sudah ada di database
+              pesan_pembatalan: alasan, // Pastikan kolom ini sudah ada di database
             })
             .eq('id', item.id);
 
@@ -341,7 +370,11 @@ export default function RiwayatTab({
             if (fallbackErr) throw new Error(cancelError.message);
           }
 
-          Swal.fire({ title: 'Dibatalkan!', text: 'Peminjaman telah dibatalkan.', icon: 'success' });
+          Swal.fire({
+            title: 'Dibatalkan!',
+            text: 'Peminjaman telah dibatalkan.',
+            icon: 'success',
+          });
           setSelectedRiwayat(null);
           fetchRiwayat();
         } catch (error: any) {
@@ -643,395 +676,423 @@ export default function RiwayatTab({
             <DialogTitle className='text-xl font-bold'>
               Detail Pemakaian Lab
             </DialogTitle>
-            {selectedRiwayat && !selectedRiwayat.is_dikembalikan && selectedRiwayat.status !== 'Dibatalkan' && (
-              <DialogDescription className='text-base'>
-                Barang belum dikembalikan. Isi form di bawah untuk mencatat
-                pengembalian.
-              </DialogDescription>
-            )}
+            {selectedRiwayat &&
+              !selectedRiwayat.is_dikembalikan &&
+              selectedRiwayat.status !== 'Dibatalkan' && (
+                <DialogDescription className='text-base'>
+                  Barang belum dikembalikan. Isi form di bawah untuk mencatat
+                  pengembalian.
+                </DialogDescription>
+              )}
           </DialogHeader>
           {selectedRiwayat && (
             <div className='flex flex-col md:flex-row gap-6 mt-4'>
               {/* SISI KIRI: Info Peminjaman & Pembayaran */}
               <div className='flex-1 space-y-5'>
                 <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3'>
-                <div>
-                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                    Penanggung Jawab
-                  </p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedRiwayat.nama_lengkap}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                    Kegiatan
-                  </p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {selectedRiwayat.judul_kegiatan}
-                  </p>
-                </div>
-                <div>
-                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                    Laboratorium
-                  </p>
-                  <p className='font-bold text-slate-900 text-base'>
-                    {labMap[selectedRiwayat.lab_id] ||
-                      `Lab ${selectedRiwayat.lab_id}`}
-                  </p>
-                </div>
-                <div className='grid grid-cols-2 gap-3'>
                   <div>
                     <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                      Tanggal
+                      Penanggung Jawab
                     </p>
-                    <p className='font-bold text-slate-900 text-sm'>
-                      {selectedRiwayat.tanggal
-                        ? new Date(selectedRiwayat.tanggal).toLocaleDateString(
-                            'id-ID',
-                            {
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedRiwayat.nama_lengkap}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                      Kegiatan
+                    </p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {selectedRiwayat.judul_kegiatan}
+                    </p>
+                  </div>
+                  <div>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                      Laboratorium
+                    </p>
+                    <p className='font-bold text-slate-900 text-base'>
+                      {labMap[selectedRiwayat.lab_id] ||
+                        `Lab ${selectedRiwayat.lab_id}`}
+                    </p>
+                  </div>
+                  <div className='grid grid-cols-2 gap-3'>
+                    <div>
+                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                        Tanggal
+                      </p>
+                      <p className='font-bold text-slate-900 text-sm'>
+                        {selectedRiwayat.tanggal
+                          ? new Date(
+                              selectedRiwayat.tanggal,
+                            ).toLocaleDateString('id-ID', {
                               weekday: 'long',
                               day: 'numeric',
                               month: 'long',
                               year: 'numeric',
-                            },
-                          )
-                        : '-'}
-                    </p>
-                  </div>
-                  <div>
-                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                      Waktu
-                    </p>
-                    <p className='font-bold text-slate-900 text-sm'>
-                      {selectedRiwayat.jam_mulai} -{' '}
-                      {selectedRiwayat.jam_selesai} WIB
-                    </p>
-                  </div>
-                </div>
-                <div className='flex items-center gap-2'>
-                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
-                    Status:
-                  </p>
-                  {selectedRiwayat.status === 'Dibatalkan' ? (
-                    <Badge className='bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100 font-semibold text-xs'>
-                      <XCircle className='size-3 mr-1' />
-                      Dibatalkan
-                    </Badge>
-                  ) : selectedRiwayat.is_dikembalikan ? (
-                    <Badge className='bg-green-100 text-green-700 border border-green-200 hover:bg-green-100 font-semibold text-xs'>
-                      <PackageCheck className='size-3 mr-1' />
-                      Sudah Dikembalikan
-                    </Badge>
-                  ) : (
-                    <Badge className='bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100 font-semibold text-xs'>
-                      <RotateCcw className='size-3 mr-1' />
-                      Masih Berjalan
-                    </Badge>
-                  )}
-                </div>
-              </div>
-
-              {/* --- Pembayaran Khusus Umum --- */}
-              {selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' && (
-                <div className='space-y-2 pt-2 border-t'>
-                  <p className='font-semibold text-slate-500 text-sm'>
-                    Informasi Pembayaran (Pemohon Umum)
-                  </p>
-                  <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
-                    <Label className='font-bold block mb-3 text-slate-800 text-base'>Bukti Transfer</Label>
-                    {selectedRiwayat.bukti_pembayaran ? (
-                      <Button variant='outline' className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors' asChild>
-                        <a href={selectedRiwayat.bukti_pembayaran} target="_blank" rel="noopener noreferrer">
-                          <span className="flex items-center gap-2 text-blue-700 font-semibold text-base"><ImageIcon className="size-5" /> Lihat Bukti Unggahan</span>
-                          <ExternalLink className="size-5 text-slate-400" />
-                        </a>
-                      </Button>
-                    ) : (
-                      <p className="text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic">
-                        Bukti transfer belum diunggah
+                            })
+                          : '-'}
                       </p>
+                    </div>
+                    <div>
+                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                        Waktu
+                      </p>
+                      <p className='font-bold text-slate-900 text-sm'>
+                        {selectedRiwayat.jam_mulai} -{' '}
+                        {selectedRiwayat.jam_selesai} WIB
+                      </p>
+                    </div>
+                  </div>
+                  <div className='flex items-center gap-2'>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                      Status:
+                    </p>
+                    {selectedRiwayat.status === 'Dibatalkan' ? (
+                      <Badge className='bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100 font-semibold text-xs'>
+                        <XCircle className='size-3 mr-1' />
+                        Dibatalkan
+                      </Badge>
+                    ) : selectedRiwayat.is_dikembalikan ? (
+                      <Badge className='bg-green-100 text-green-700 border border-green-200 hover:bg-green-100 font-semibold text-xs'>
+                        <PackageCheck className='size-3 mr-1' />
+                        Sudah Dikembalikan
+                      </Badge>
+                    ) : (
+                      <Badge className='bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100 font-semibold text-xs'>
+                        <RotateCcw className='size-3 mr-1' />
+                        Masih Berjalan
+                      </Badge>
                     )}
                   </div>
                 </div>
-              )}
-            </div>
 
-            {/* SISI KANAN: Daftar Barang & Pengembalian */}
-            <div className='flex-1 space-y-5'>
-              {/* --- Daftar Barang --- */}
-              {loadingDetail ? (
-                <p className='text-slate-500 animate-pulse text-center py-4'>
-                  Memuat data barang...
-                </p>
-              ) : detailItems.length === 0 ? (
-                <p className='text-slate-400 text-center py-4 text-sm'>
-                  Tidak ada data barang untuk peminjaman ini.
-                </p>
-              ) : selectedRiwayat.is_dikembalikan || selectedRiwayat.status === 'Dibatalkan' ? (
-                /* ==================== MODE READ-ONLY ==================== */
-                <div className='space-y-6'>
-                  {selectedRiwayat.status === 'Dibatalkan' && (
-                    <div className='bg-red-50 text-red-700 p-4 rounded-xl border border-red-200'>
-                      <p className='text-sm'>
-                        <strong>Peminjaman Dibatalkan:</strong> {selectedRiwayat.pesan_pembatalan || selectedRiwayat.pesan_feedback || '-'}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* BAGIAN 1: DAFTAR BARANG DIPINJAM */}
-                  <div className='space-y-3'>
-                    <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
-                      1. Daftar Barang Dipinjam
-                    </h3>
-                    <div className='rounded-md border overflow-x-auto'>
-                      <Table>
-                        <TableHeader className='bg-slate-50'>
-                          <TableRow>
-                            <TableHead className='text-xs font-semibold'>
-                              Nama Alat
-                            </TableHead>
-                            <TableHead className='text-xs font-semibold text-center'>
-                              Jumlah Awal (Qty)
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {detailItems.map((it: any) => (
-                            <TableRow key={`pinjam-${it.id}`}>
-                              <TableCell className='font-semibold text-sm text-slate-900'>
-                                {it.nama_alat_bahan}
-                              </TableCell>
-                              <TableCell className='text-center'>
-                                <Badge
-                                  variant='secondary'
-                                  className='text-xs font-bold'>
-                                  {it.jumlah ?? 0}
-                                </Badge>
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
+                {/* --- Pembayaran Khusus Umum --- */}
+                {selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' && (
+                  <div className='space-y-2 pt-2 border-t'>
+                    <p className='font-semibold text-slate-500 text-sm'>
+                      Informasi Pembayaran (Pemohon Umum)
+                    </p>
+                    <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
+                      <Label className='font-bold block mb-3 text-slate-800 text-base'>
+                        Bukti Transfer
+                      </Label>
+                      {selectedRiwayat.bukti_pembayaran ? (
+                        <Button
+                          variant='outline'
+                          className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors'
+                          asChild>
+                          <a
+                            href={selectedRiwayat.bukti_pembayaran}
+                            target='_blank'
+                            rel='noopener noreferrer'>
+                            <span className='flex items-center gap-2 text-blue-700 font-semibold text-base'>
+                              <ImageIcon className='size-5' /> Lihat Bukti
+                              Unggahan
+                            </span>
+                            <ExternalLink className='size-5 text-slate-400' />
+                          </a>
+                        </Button>
+                      ) : (
+                        <p className='text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic'>
+                          Bukti transfer belum diunggah
+                        </p>
+                      )}
                     </div>
                   </div>
+                )}
+              </div>
 
-                  {selectedRiwayat.status !== 'Dibatalkan' && (
-                    <>
-                      <hr className='my-6 border-slate-200' />
+              {/* SISI KANAN: Daftar Barang & Pengembalian */}
+              <div className='flex-1 space-y-5'>
+                {/* --- Daftar Barang --- */}
+                {loadingDetail ? (
+                  <p className='text-slate-500 animate-pulse text-center py-4'>
+                    Memuat data barang...
+                  </p>
+                ) : detailItems.length === 0 ? (
+                  <p className='text-slate-400 text-center py-4 text-sm'>
+                    Tidak ada data barang untuk peminjaman ini.
+                  </p>
+                ) : selectedRiwayat.is_dikembalikan ||
+                  selectedRiwayat.status === 'Dibatalkan' ? (
+                  /* ==================== MODE READ-ONLY ==================== */
+                  <div className='space-y-6'>
+                    {selectedRiwayat.status === 'Dibatalkan' && (
+                      <div className='bg-red-50 text-red-700 p-4 rounded-xl border border-red-200'>
+                        <p className='text-sm'>
+                          <strong>Peminjaman Dibatalkan:</strong>{' '}
+                          {selectedRiwayat.pesan_pembatalan ||
+                            selectedRiwayat.pesan_feedback ||
+                            '-'}
+                        </p>
+                      </div>
+                    )}
 
-                      {/* BAGIAN 2: DETAIL KONDISI PENGEMBALIAN */}
-                      <div className='space-y-3'>
-                    <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
-                      2. Detail Kondisi Pengembalian
-                    </h3>
-                    <div className='rounded-md border overflow-x-auto'>
-                      <Table>
-                        <TableHeader className='bg-slate-50'>
-                          <TableRow>
-                            <TableHead className='text-xs font-semibold'>
-                              Nama Alat
-                            </TableHead>
-                            <TableHead className='text-xs font-semibold text-center text-green-600'>
-                              Baik
-                            </TableHead>
-                            <TableHead className='text-xs font-semibold text-center text-amber-600'>
-                              R. Ringan
-                            </TableHead>
-                            <TableHead className='text-xs font-semibold text-center text-red-600'>
-                              R. Berat
-                            </TableHead>
-                            <TableHead className='text-xs font-semibold'>
-                              Catatan
-                            </TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {detailItems.map((it: any) => {
-                            const totalKembali =
-                              (it.jumlah_kembali_baik ?? 0) +
-                              (it.jumlah_kembali_rusak_ringan ?? 0) +
-                              (it.jumlah_kembali_rusak_berat ?? 0);
-                            const isSelisih = totalKembali !== (it.jumlah ?? 0);
-
-                            return (
-                              <TableRow
-                                key={`kembali-${it.id}`}
-                                className={isSelisih ? 'bg-red-50/50' : ''}>
-                                <TableCell
-                                  className={`font-semibold text-sm ${isSelisih ? 'text-red-600' : 'text-slate-900'}`}>
-                                  <div className='flex items-center gap-1'>
-                                    {it.nama_alat_bahan}
-                                    {isSelisih && (
-                                      <span
-                                        className='text-red-500 font-bold ml-1 text-sm'
-                                        title='Terdapat selisih jumlah barang'>
-                                        ⚠️
-                                      </span>
-                                    )}
-                                  </div>
+                    {/* BAGIAN 1: DAFTAR BARANG DIPINJAM */}
+                    <div className='space-y-3'>
+                      <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
+                        1. Daftar Barang Dipinjam
+                      </h3>
+                      <div className='rounded-md border overflow-x-auto'>
+                        <Table>
+                          <TableHeader className='bg-slate-50'>
+                            <TableRow>
+                              <TableHead className='text-xs font-semibold'>
+                                Nama Alat
+                              </TableHead>
+                              <TableHead className='text-xs font-semibold text-center'>
+                                Jumlah Awal (Qty)
+                              </TableHead>
+                            </TableRow>
+                          </TableHeader>
+                          <TableBody>
+                            {detailItems.map((it: any) => (
+                              <TableRow key={`pinjam-${it.id}`}>
+                                <TableCell className='font-semibold text-sm text-slate-900'>
+                                  {it.nama_alat_bahan}
                                 </TableCell>
                                 <TableCell className='text-center'>
                                   <Badge
-                                    variant='outline'
-                                    className='text-xs text-green-700 border-green-200 bg-green-50 font-bold'>
-                                    {it.jumlah_kembali_baik ?? 0}
+                                    variant='secondary'
+                                    className='text-xs font-bold'>
+                                    {it.jumlah ?? 0}
                                   </Badge>
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Badge
-                                    variant='outline'
-                                    className='text-xs text-amber-700 border-amber-200 bg-amber-50 font-bold'>
-                                    {it.jumlah_kembali_rusak_ringan ?? 0}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell className='text-center'>
-                                  <Badge
-                                    variant='outline'
-                                    className='text-xs text-red-700 border-red-200 bg-red-50 font-bold'>
-                                    {it.jumlah_kembali_rusak_berat ?? 0}
-                                  </Badge>
-                                </TableCell>
-                                <TableCell
-                                  className='text-xs text-slate-600 max-w-[150px] truncate'
-                                  title={it.catatan_pengembalian || ''}>
-                                  {it.catatan_pengembalian || '-'}
                                 </TableCell>
                               </TableRow>
-                            );
-                          })}
-                        </TableBody>
-                      </Table>
+                            ))}
+                          </TableBody>
+                        </Table>
+                      </div>
+                    </div>
+
+                    {selectedRiwayat.status !== 'Dibatalkan' && (
+                      <>
+                        <hr className='my-6 border-slate-200' />
+
+                        {/* BAGIAN 2: DETAIL KONDISI PENGEMBALIAN */}
+                        <div className='space-y-3'>
+                          <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
+                            2. Detail Kondisi Pengembalian
+                          </h3>
+                          <div className='rounded-md border overflow-x-auto'>
+                            <Table>
+                              <TableHeader className='bg-slate-50'>
+                                <TableRow>
+                                  <TableHead className='text-xs font-semibold'>
+                                    Nama Alat
+                                  </TableHead>
+                                  <TableHead className='text-xs font-semibold text-center text-green-600'>
+                                    Baik
+                                  </TableHead>
+                                  <TableHead className='text-xs font-semibold text-center text-amber-600'>
+                                    R. Ringan
+                                  </TableHead>
+                                  <TableHead className='text-xs font-semibold text-center text-red-600'>
+                                    R. Berat
+                                  </TableHead>
+                                  <TableHead className='text-xs font-semibold'>
+                                    Catatan
+                                  </TableHead>
+                                </TableRow>
+                              </TableHeader>
+                              <TableBody>
+                                {detailItems.map((it: any) => {
+                                  const totalKembali =
+                                    (it.jumlah_kembali_baik ?? 0) +
+                                    (it.jumlah_kembali_rusak_ringan ?? 0) +
+                                    (it.jumlah_kembali_rusak_berat ?? 0);
+                                  const isSelisih =
+                                    totalKembali !== (it.jumlah ?? 0);
+
+                                  return (
+                                    <TableRow
+                                      key={`kembali-${it.id}`}
+                                      className={
+                                        isSelisih ? 'bg-red-50/50' : ''
+                                      }>
+                                      <TableCell
+                                        className={`font-semibold text-sm ${isSelisih ? 'text-red-600' : 'text-slate-900'}`}>
+                                        <div className='flex items-center gap-1'>
+                                          {it.nama_alat_bahan}
+                                          {isSelisih && (
+                                            <span
+                                              className='text-red-500 font-bold ml-1 text-sm'
+                                              title='Terdapat selisih jumlah barang'>
+                                              ⚠️
+                                            </span>
+                                          )}
+                                        </div>
+                                      </TableCell>
+                                      <TableCell className='text-center'>
+                                        <Badge
+                                          variant='outline'
+                                          className='text-xs text-green-700 border-green-200 bg-green-50 font-bold'>
+                                          {it.jumlah_kembali_baik ?? 0}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className='text-center'>
+                                        <Badge
+                                          variant='outline'
+                                          className='text-xs text-amber-700 border-amber-200 bg-amber-50 font-bold'>
+                                          {it.jumlah_kembali_rusak_ringan ?? 0}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell className='text-center'>
+                                        <Badge
+                                          variant='outline'
+                                          className='text-xs text-red-700 border-red-200 bg-red-50 font-bold'>
+                                          {it.jumlah_kembali_rusak_berat ?? 0}
+                                        </Badge>
+                                      </TableCell>
+                                      <TableCell
+                                        className='text-xs text-slate-600 max-w-[150px] truncate'
+                                        title={it.catatan_pengembalian || ''}>
+                                        {it.catatan_pengembalian || '-'}
+                                      </TableCell>
+                                    </TableRow>
+                                  );
+                                })}
+                              </TableBody>
+                            </Table>
+                          </div>
+                        </div>
+                      </>
+                    )}
+                  </div>
+                ) : (
+                  /* ==================== MODE PENGEMBALIAN ==================== */
+                  <div className='space-y-4'>
+                    <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
+                      <RotateCcw className='size-4 text-amber-600' />
+                      Form Penerimaan Pengembalian
+                    </h3>
+                    <p className='text-xs text-slate-500'>
+                      Isi jumlah barang yang dikembalikan berdasarkan kondisi
+                      fisik saat diterima oleh Anda.
+                    </p>
+
+                    <p className='text-xs text-blue-600 bg-blue-50 border border-blue-200 p-2 rounded-md font-medium'>
+                      💡 Info: Untuk Bahan Habis Pakai, sisa bahan yang tidak
+                      termakan/digunakan dapat dikembalikan ke sistem dengan
+                      mengisinya pada kolom <strong>Kembali Baik</strong>.
+                    </p>
+
+                    <div className='space-y-4'>
+                      {returnForms.map((rf, index) => (
+                        <div
+                          key={rf.id}
+                          className='bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3'>
+                          {/* Header item */}
+                          <div className='flex items-center justify-between'>
+                            <p className='font-bold text-slate-900 text-sm'>
+                              {index + 1}. {rf.nama_alat_bahan}
+                            </p>
+                            <Badge
+                              variant='outline'
+                              className='text-xs font-medium'>
+                              Dipinjam: {rf.jumlah} unit
+                            </Badge>
+                          </div>
+
+                          {/* 3 Input Kondisi */}
+                          <div className='grid grid-cols-3 gap-2'>
+                            <div className='space-y-1'>
+                              <span className='text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full'>
+                                Kembali Baik
+                              </span>
+                              <Input
+                                type='number'
+                                min='0'
+                                value={rf.jumlah_kembali_baik}
+                                onChange={(e) =>
+                                  updateReturnForm(
+                                    index,
+                                    'jumlah_kembali_baik',
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className='h-9 text-sm text-center font-semibold'
+                              />
+                            </div>
+                            <div className='space-y-1'>
+                              <span className='text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full'>
+                                R. Ringan
+                              </span>
+                              <Input
+                                type='number'
+                                min='0'
+                                value={rf.jumlah_kembali_rusak_ringan}
+                                onChange={(e) =>
+                                  updateReturnForm(
+                                    index,
+                                    'jumlah_kembali_rusak_ringan',
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className='h-9 text-sm text-center font-semibold'
+                              />
+                            </div>
+                            <div className='space-y-1'>
+                              <span className='text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full'>
+                                R. Berat
+                              </span>
+                              <Input
+                                type='number'
+                                min='0'
+                                value={rf.jumlah_kembali_rusak_berat}
+                                onChange={(e) =>
+                                  updateReturnForm(
+                                    index,
+                                    'jumlah_kembali_rusak_berat',
+                                    parseInt(e.target.value) || 0,
+                                  )
+                                }
+                                className='h-9 text-sm text-center font-semibold'
+                              />
+                            </div>
+                          </div>
+
+                          {/* Catatan */}
+                          <Textarea
+                            placeholder='Catatan / feedback kondisi barang (opsional)'
+                            value={rf.catatan_pengembalian}
+                            onChange={(e) =>
+                              updateReturnForm(
+                                index,
+                                'catatan_pengembalian',
+                                e.target.value,
+                              )
+                            }
+                            className='text-sm resize-none'
+                            rows={2}
+                          />
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Tombol Submit Pengembalian */}
+                    <div className='space-y-3 mt-4'>
+                      <Button
+                        onClick={handleSelesaikanPeminjaman}
+                        disabled={isSubmittingReturn}
+                        className='w-full font-bold bg-green-600 hover:bg-green-700 text-white text-base py-6 shadow-lg'>
+                        <PackageCheck className='size-5 mr-2' />
+                        {isSubmittingReturn
+                          ? 'Memproses Pengembalian...'
+                          : 'Selesaikan Peminjaman'}
+                      </Button>
+
+                      <Button
+                        variant='destructive'
+                        onClick={() =>
+                          handleBatalkanPeminjaman(selectedRiwayat)
+                        }
+                        className='w-full mt-2 font-bold py-6'>
+                        Batalkan Peminjaman
+                      </Button>
                     </div>
                   </div>
-                    </>
-                  )}
-                </div>
-              ) : (
-                /* ==================== MODE PENGEMBALIAN ==================== */
-                <div className='space-y-4'>
-                  <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
-                    <RotateCcw className='size-4 text-amber-600' />
-                    Form Penerimaan Pengembalian
-                  </h3>
-                  <p className='text-xs text-slate-500'>
-                    Isi jumlah barang yang dikembalikan berdasarkan kondisi
-                    fisik saat diterima oleh Anda.
-                  </p>
-
-                  <p className='text-xs text-blue-600 bg-blue-50 border border-blue-200 p-2 rounded-md font-medium'>
-                    💡 Info: Untuk Bahan Habis Pakai, sisa bahan yang tidak termakan/digunakan dapat dikembalikan ke sistem dengan mengisinya pada kolom <strong>Kembali Baik</strong>.
-                  </p>
-
-                  <div className='space-y-4'>
-                    {returnForms.map((rf, index) => (
-                      <div
-                        key={rf.id}
-                        className='bg-slate-50 border border-slate-200 rounded-xl p-4 space-y-3'>
-                        {/* Header item */}
-                        <div className='flex items-center justify-between'>
-                          <p className='font-bold text-slate-900 text-sm'>
-                            {index + 1}. {rf.nama_alat_bahan}
-                          </p>
-                          <Badge
-                            variant='outline'
-                            className='text-xs font-medium'>
-                            Dipinjam: {rf.jumlah} unit
-                          </Badge>
-                        </div>
-
-                        {/* 3 Input Kondisi */}
-                        <div className='grid grid-cols-3 gap-2'>
-                          <div className='space-y-1'>
-                            <span className='text-[10px] font-semibold text-green-700 bg-green-50 border border-green-200 px-1.5 py-0.5 rounded-full'>
-                              Kembali Baik
-                            </span>
-                            <Input
-                              type='number'
-                              min='0'
-                              value={rf.jumlah_kembali_baik}
-                              onChange={(e) =>
-                                updateReturnForm(
-                                  index,
-                                  'jumlah_kembali_baik',
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              className='h-9 text-sm text-center font-semibold'
-                            />
-                          </div>
-                          <div className='space-y-1'>
-                            <span className='text-[10px] font-semibold text-amber-700 bg-amber-50 border border-amber-200 px-1.5 py-0.5 rounded-full'>
-                              R. Ringan
-                            </span>
-                            <Input
-                              type='number'
-                              min='0'
-                              value={rf.jumlah_kembali_rusak_ringan}
-                              onChange={(e) =>
-                                updateReturnForm(
-                                  index,
-                                  'jumlah_kembali_rusak_ringan',
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              className='h-9 text-sm text-center font-semibold'
-                            />
-                          </div>
-                          <div className='space-y-1'>
-                            <span className='text-[10px] font-semibold text-red-700 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full'>
-                              R. Berat
-                            </span>
-                            <Input
-                              type='number'
-                              min='0'
-                              value={rf.jumlah_kembali_rusak_berat}
-                              onChange={(e) =>
-                                updateReturnForm(
-                                  index,
-                                  'jumlah_kembali_rusak_berat',
-                                  parseInt(e.target.value) || 0,
-                                )
-                              }
-                              className='h-9 text-sm text-center font-semibold'
-                            />
-                          </div>
-                        </div>
-
-                        {/* Catatan */}
-                        <Textarea
-                          placeholder='Catatan / feedback kondisi barang (opsional)'
-                          value={rf.catatan_pengembalian}
-                          onChange={(e) =>
-                            updateReturnForm(
-                              index,
-                              'catatan_pengembalian',
-                              e.target.value,
-                            )
-                          }
-                          className='text-sm resize-none'
-                          rows={2}
-                        />
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* Tombol Submit Pengembalian */}
-                  <div className='space-y-3 mt-4'>
-                    <Button
-                      onClick={handleSelesaikanPeminjaman}
-                      disabled={isSubmittingReturn}
-                      className='w-full font-bold bg-green-600 hover:bg-green-700 text-white text-base py-6 shadow-lg'>
-                      <PackageCheck className='size-5 mr-2' />
-                      {isSubmittingReturn
-                        ? 'Memproses Pengembalian...'
-                        : 'Selesaikan Peminjaman'}
-                    </Button>
-
-                    <Button variant="destructive" onClick={() => handleBatalkanPeminjaman(selectedRiwayat)} className="w-full mt-2 font-bold py-6">Batalkan Peminjaman</Button>
-                  </div>
-                </div>
-              )}
+                )}
               </div>
             </div>
           )}

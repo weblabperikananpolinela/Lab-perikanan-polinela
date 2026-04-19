@@ -37,7 +37,7 @@ const labData = [
   { id: 13, nama: 'KJA', jenis: 'TEFA' },
   { id: 14, nama: 'FISHTECH', jenis: 'TEFA' },
   { id: 15, nama: 'FISH MARKET', jenis: 'TEFA' },
-  { id: 16, nama: 'polyfish', jenis: 'TEFA' },
+  { id: 16, nama: 'Polyfish', jenis: 'TEFA' },
   { id: 17, nama: 'Lab Simulator', jenis: 'TEFA' },
   { id: 18, nama: 'Lab Radar', jenis: 'TEFA' },
 ];

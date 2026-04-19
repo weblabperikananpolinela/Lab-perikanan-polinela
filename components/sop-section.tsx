@@ -194,7 +194,7 @@ const facilitiesData = [
   },
   {
     id: 'tefa-8',
-    name: 'polyfish',
+    name: 'Polyfish',
     type: 'perikanan',
     status: 'TEFA',
     services: [

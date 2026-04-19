@@ -60,7 +60,7 @@ const labMap: Record<number, string> = {
   13: 'KJA',
   14: 'FISHTECH',
   15: 'FISH MARKET',
-  16: 'polyfish',
+  16: 'Polyfish',
   17: 'Lab Simulator',
   18: 'Lab Radar',
 };
@@ -100,7 +100,7 @@ export default function PengajuanTab({
       .eq('status', 'Menunggu validasi')
       .eq('lab_id', adminProfile.lab_id)
       .order('created_at', { ascending: false });
-    
+
     if (res1) setDataMenunggu(res1);
 
     // Fetch All Riwayat (termasuk yang tidak menunggu, hanya untuk lab ini)
@@ -109,7 +109,7 @@ export default function PengajuanTab({
       .select('*')
       .eq('lab_id', adminProfile.lab_id)
       .order('created_at', { ascending: false });
-      
+
     if (res2) setDataRiwayat(res2);
 
     setLoading(false);
@@ -140,10 +140,10 @@ export default function PengajuanTab({
 
     const { error } = await supabase
       .from('peminjaman')
-      .update({ 
-        status: newStatus, 
+      .update({
+        status: newStatus,
         pesan_feedback: pesanFeedback,
-        admin_checker: adminProfile.email
+        admin_checker: adminProfile.email,
       })
       .eq('id', selectedPengajuan.id);
 
@@ -155,7 +155,7 @@ export default function PengajuanTab({
         icon: 'error',
         title: 'Oops...',
         text: 'Gagal memproses validasi pengajuan: ' + error.message,
-        confirmButtonColor: '#ef4444'
+        confirmButtonColor: '#ef4444',
       });
     } else {
       // Kirim Email Notifikasi Perubahan Status
@@ -170,8 +170,8 @@ export default function PengajuanTab({
               data: {
                 status_baru: newStatus,
                 judul_kegiatan: selectedPengajuan.judul_kegiatan,
-              }
-            })
+              },
+            }),
           });
         }
       } catch (err) {
@@ -180,7 +180,8 @@ export default function PengajuanTab({
 
       // --- PUSH NOTIFICATION KE PEMOHON ---
       try {
-        const pushIdentifier = selectedPengajuan.device_id || selectedPengajuan.email_pemohon;
+        const pushIdentifier =
+          selectedPengajuan.device_id || selectedPengajuan.email_pemohon;
         if (pushIdentifier) {
           await fetch('/api/send-notification', {
             method: 'POST',
@@ -201,7 +202,7 @@ export default function PengajuanTab({
         icon: 'success',
         title: 'Berhasil!',
         text: 'Status berhasil diubah & notifikasi telah dikirim ke peminjam.',
-        confirmButtonColor: '#10b981'
+        confirmButtonColor: '#10b981',
       });
       setIsDialogOpen(false);
       fetchPengajuan(); // Refresh
@@ -223,19 +224,25 @@ export default function PengajuanTab({
 
   return (
     <div className='space-y-8'>
-      <Tabs defaultValue="tindakan" className="w-full">
-        <TabsList className="h-auto w-full mb-6 grid lg:w-[500px] grid-cols-2 p-1.5 bg-slate-200/60 rounded-xl">
-          <TabsTrigger value="tindakan" className="rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4">
+      <Tabs defaultValue='tindakan' className='w-full'>
+        <TabsList className='h-auto w-full mb-6 grid lg:w-[500px] grid-cols-2 p-1.5 bg-slate-200/60 rounded-xl'>
+          <TabsTrigger
+            value='tindakan'
+            className='rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4'>
             Perlu Tindakan
           </TabsTrigger>
-          <TabsTrigger value="riwayat" className="rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4">
+          <TabsTrigger
+            value='riwayat'
+            className='rounded-lg text-base font-semibold data-[state=active]:bg-white data-[state=active]:text-blue-700 data-[state=active]:shadow-md transition-all duration-300 py-2.5 px-4'>
             Riwayat Pengajuan
           </TabsTrigger>
         </TabsList>
 
-        <div className="relative w-full min-h-[400px]">
+        <div className='relative w-full min-h-[400px]'>
           {/* BAGIAN ATAS: Menunggu Validasi */}
-          <TabsContent value="tindakan" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0">
+          <TabsContent
+            value='tindakan'
+            className='mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0'>
             <Card className='border-slate-200 shadow-sm border-t-4 border-t-amber-400'>
               <CardHeader>
                 <CardTitle className='text-xl flex items-center gap-2'>
@@ -243,8 +250,8 @@ export default function PengajuanTab({
                   Perlu Tindakan (Menunggu Validasi)
                 </CardTitle>
                 <CardDescription className='text-base text-slate-600'>
-                  Daftar pengajuan yang masuk dan memerlukan persetujuan dari lab
-                  Anda.
+                  Daftar pengajuan yang masuk dan memerlukan persetujuan dari
+                  lab Anda.
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -268,9 +275,20 @@ export default function PengajuanTab({
                     </TableHeader>
                     <TableBody>
                       {dataMenunggu.map((item) => (
-                        <TableRow key={item.id} className='hover:bg-slate-50/50'>
+                        <TableRow
+                          key={item.id}
+                          className='hover:bg-slate-50/50'>
                           <TableCell className='font-medium text-slate-600 text-base'>
-                            {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                            {item.tanggal
+                              ? new Date(item.tanggal).toLocaleDateString(
+                                  'id-ID',
+                                  {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  },
+                                )
+                              : '-'}
                           </TableCell>
                           <TableCell className='font-semibold text-slate-900 text-base'>
                             {item.nama_lengkap}
@@ -308,7 +326,9 @@ export default function PengajuanTab({
           </TabsContent>
 
           {/* BAGIAN BAWAH: Riwayat Lengkap */}
-          <TabsContent value="riwayat" className="mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0">
+          <TabsContent
+            value='riwayat'
+            className='mt-0 outline-none animate-in fade-in slide-in-from-bottom-4 duration-500 fill-mode-both focus-visible:ring-0'>
             <Card className='border-slate-200 shadow-sm'>
               <CardHeader>
                 <CardTitle className='text-xl flex items-center gap-2'>
@@ -348,7 +368,16 @@ export default function PengajuanTab({
                             {item.nama_lengkap}
                           </TableCell>
                           <TableCell className='text-slate-600 text-base'>
-                            {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                            {item.tanggal
+                              ? new Date(item.tanggal).toLocaleDateString(
+                                  'id-ID',
+                                  {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                  },
+                                )
+                              : '-'}
                           </TableCell>
                           <TableCell
                             className='text-slate-600 truncate max-w-[200px] text-base'
@@ -369,8 +398,11 @@ export default function PengajuanTab({
                             </Badge>
                           </TableCell>
                           <TableCell className='text-center'>
-                            <Button size='sm' variant='outline' onClick={() => openDetailModal(item)}>
-                              <Eye className="size-4 mr-1"/> Detail
+                            <Button
+                              size='sm'
+                              variant='outline'
+                              onClick={() => openDetailModal(item)}>
+                              <Eye className='size-4 mr-1' /> Detail
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -398,17 +430,17 @@ export default function PengajuanTab({
                       size='sm'
                       onClick={() => setPage((p) => Math.max(1, p - 1))}
                       disabled={page === 1}
-                      className="text-base"
-                    >
+                      className='text-base'>
                       <ChevronLeft className='size-4 mr-1' /> Prev
                     </Button>
                     <Button
                       variant='outline'
                       size='sm'
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={page === totalPages}
-                      className="text-base"
-                    >
+                      className='text-base'>
                       Next <ChevronRight className='size-4 ml-1' />
                     </Button>
                   </div>
@@ -437,27 +469,32 @@ export default function PengajuanTab({
               {/* SISI KIRI: Identitas & Kegiatan */}
               <div className='flex-1 space-y-6'>
                 <div className='grid grid-cols-2 gap-4 text-sm bg-slate-50 p-4 rounded-xl border border-slate-100'>
-                  <div className="col-span-2 md:col-span-1">
+                  <div className='col-span-2 md:col-span-1'>
                     <p className='font-semibold text-slate-500'>Nama Lengkap</p>
                     <p className='font-bold text-slate-900 text-base'>
                       {selectedPengajuan.nama_lengkap}
                     </p>
                   </div>
-                  <div className="col-span-2 md:col-span-1">
+                  <div className='col-span-2 md:col-span-1'>
                     <p className='font-semibold text-slate-500'>Email</p>
                     <p className='font-bold text-slate-900 text-base'>
                       {selectedPengajuan.email_pemohon || '-'}
                     </p>
                   </div>
-                  <div className="col-span-2 md:col-span-1">
+                  <div className='col-span-2 md:col-span-1'>
                     <p className='font-semibold text-slate-500'>Kategori</p>
                     <p className='font-bold text-slate-900 text-base'>
                       {selectedPengajuan.kategori_pemohon}
                     </p>
                   </div>
 
-                  {selectedPengajuan.kategori_pemohon?.toLowerCase().includes('umum') || selectedPengajuan.kategori_pemohon?.toLowerCase().includes('eksternal') ? (
-                    <div className="col-span-2 md:col-span-1">
+                  {selectedPengajuan.kategori_pemohon
+                    ?.toLowerCase()
+                    .includes('umum') ||
+                  selectedPengajuan.kategori_pemohon
+                    ?.toLowerCase()
+                    .includes('eksternal') ? (
+                    <div className='col-span-2 md:col-span-1'>
                       <p className='font-semibold text-slate-500'>NIK</p>
                       <p className='font-bold text-slate-900'>
                         {selectedPengajuan.nik || '-'}
@@ -465,22 +502,26 @@ export default function PengajuanTab({
                     </div>
                   ) : (
                     <>
-                      <div className="col-span-2 md:col-span-1">
-                        <p className='font-semibold text-slate-500'>NPM / NIP</p>
+                      <div className='col-span-2 md:col-span-1'>
+                        <p className='font-semibold text-slate-500'>
+                          NPM / NIP
+                        </p>
                         <p className='font-bold text-slate-900'>
                           {selectedPengajuan.npm || '-'}
                         </p>
                       </div>
-                      <div className="col-span-2 md:col-span-1">
-                        <p className='font-semibold text-slate-500'>Program Studi</p>
+                      <div className='col-span-2 md:col-span-1'>
+                        <p className='font-semibold text-slate-500'>
+                          Program Studi
+                        </p>
                         <p className='font-bold text-slate-900'>
                           {selectedPengajuan.program_studi || '-'}
                         </p>
                       </div>
                     </>
                   )}
-                  
-                  <div className="col-span-2 md:col-span-1">
+
+                  <div className='col-span-2 md:col-span-1'>
                     <p className='font-semibold text-slate-500'>Dosen / PIC</p>
                     <p className='font-bold text-slate-900 text-base'>
                       {selectedPengajuan.dosen_pembimbing || '-'}
@@ -505,17 +546,31 @@ export default function PengajuanTab({
                     <p className='font-medium text-base'>
                       Tanggal:{' '}
                       <span className='font-bold text-slate-800'>
-                        {selectedPengajuan.tanggal ? new Date(selectedPengajuan.tanggal).toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }) : '-'}
+                        {selectedPengajuan.tanggal
+                          ? new Date(
+                              selectedPengajuan.tanggal,
+                            ).toLocaleDateString('id-ID', {
+                              weekday: 'long',
+                              day: 'numeric',
+                              month: 'long',
+                              year: 'numeric',
+                            })
+                          : '-'}
                       </span>
                     </p>
                     <p className='font-medium text-base mt-0.5'>
                       Waktu:{' '}
                       <span className='font-bold text-blue-700'>
-                        {selectedPengajuan.jam_mulai} - {selectedPengajuan.jam_selesai} WIB
+                        {selectedPengajuan.jam_mulai} -{' '}
+                        {selectedPengajuan.jam_selesai} WIB
                       </span>
                     </p>
                     <p className='text-slate-500 mt-2 text-base font-medium'>
-                      Lab Target: <span className="font-extrabold text-slate-900">{labMap[selectedPengajuan.lab_id] || selectedPengajuan.lab_id}</span>
+                      Lab Target:{' '}
+                      <span className='font-extrabold text-slate-900'>
+                        {labMap[selectedPengajuan.lab_id] ||
+                          selectedPengajuan.lab_id}
+                      </span>
                     </p>
                   </div>
                 </div>
@@ -562,22 +617,34 @@ export default function PengajuanTab({
                   </div>
                 </div>
 
-                {selectedPengajuan.kategori_pemohon?.toLowerCase() === 'umum' && (
+                {selectedPengajuan.kategori_pemohon?.toLowerCase() ===
+                  'umum' && (
                   <div className='space-y-2 pt-2 border-t'>
                     <p className='font-semibold text-slate-500 text-sm'>
                       Informasi Pembayaran (Pemohon Umum)
                     </p>
                     <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
-                      <Label className='font-bold block mb-3 text-slate-800 text-base'>Bukti Transfer (Pemohon Umum)</Label>
+                      <Label className='font-bold block mb-3 text-slate-800 text-base'>
+                        Bukti Transfer (Pemohon Umum)
+                      </Label>
                       {selectedPengajuan.bukti_pembayaran ? (
-                        <Button variant='outline' className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors' asChild>
-                          <a href={selectedPengajuan.bukti_pembayaran} target="_blank" rel="noopener noreferrer">
-                            <span className="flex items-center gap-2 text-blue-700 font-semibold text-base"><ImageIcon className="size-5" /> Lihat Bukti Unggahan</span>
-                            <ExternalLink className="size-5 text-slate-400" />
+                        <Button
+                          variant='outline'
+                          className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors'
+                          asChild>
+                          <a
+                            href={selectedPengajuan.bukti_pembayaran}
+                            target='_blank'
+                            rel='noopener noreferrer'>
+                            <span className='flex items-center gap-2 text-blue-700 font-semibold text-base'>
+                              <ImageIcon className='size-5' /> Lihat Bukti
+                              Unggahan
+                            </span>
+                            <ExternalLink className='size-5 text-slate-400' />
                           </a>
                         </Button>
                       ) : (
-                        <p className="text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic">
+                        <p className='text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic'>
                           Bukti transfer belum diunggah
                         </p>
                       )}
@@ -587,7 +654,9 @@ export default function PengajuanTab({
 
                 {selectedPengajuan.status === 'Menunggu validasi' ? (
                   <div className='space-y-2 pt-2 border-t'>
-                    <Label htmlFor='pesanFeedback' className='text-base font-semibold'>
+                    <Label
+                      htmlFor='pesanFeedback'
+                      className='text-base font-semibold'>
                       Pesan Feedback / Alasan (Opsional)
                     </Label>
                     <Textarea
@@ -604,8 +673,8 @@ export default function PengajuanTab({
                     <p className='font-semibold text-slate-500 text-sm'>
                       Pesan Feedback / Alasan
                     </p>
-                    <div className="bg-slate-100 p-3 rounded-md text-base text-slate-800 font-medium">
-                       {selectedPengajuan.pesan_feedback}
+                    <div className='bg-slate-100 p-3 rounded-md text-base text-slate-800 font-medium'>
+                      {selectedPengajuan.pesan_feedback}
                     </div>
                   </div>
                 ) : null}
