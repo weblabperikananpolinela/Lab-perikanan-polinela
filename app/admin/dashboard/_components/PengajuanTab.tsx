@@ -178,10 +178,29 @@ export default function PengajuanTab({
         console.error('Gagal mengirim notifikasi email', err);
       }
 
+      // --- PUSH NOTIFICATION KE PEMOHON ---
+      try {
+        const pushIdentifier = selectedPengajuan.device_id || selectedPengajuan.email_pemohon;
+        if (pushIdentifier) {
+          await fetch('/api/send-notification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              identifier: pushIdentifier,
+              title: 'Update Pengajuan',
+              message: `Status pengajuan "${selectedPengajuan.judul_kegiatan}" telah diperbarui menjadi: ${newStatus}.`,
+              url: '/administrasi/status',
+            }),
+          });
+        }
+      } catch (pushErr) {
+        console.error('Gagal mengirim push notification ke pemohon:', pushErr);
+      }
+
       Swal.fire({
         icon: 'success',
         title: 'Berhasil!',
-        text: 'Status berhasil diubah & Email notifikasi telah dikirim ke peminjam.',
+        text: 'Status berhasil diubah & notifikasi telah dikirim ke peminjam.',
         confirmButtonColor: '#10b981'
       });
       setIsDialogOpen(false);

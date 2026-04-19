@@ -41,7 +41,20 @@ export async function subscribeToPushNotifications(
     throw new Error('Izin notifikasi ditolak.');
   }
 
-  const registration = await navigator.serviceWorker.ready;
+  console.log("1. Izin diberikan, mencari Service Worker...");
+
+  // KRUSIAL: Cek registrasi dulu, jika belum ada lakukan registrasi manual
+  let registration = await navigator.serviceWorker.getRegistration();
+
+  if (!registration) {
+    console.warn("Service Worker belum terdaftar! Melakukan registrasi manual...");
+    // Daftarkan manual dengan scope root
+    registration = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+  }
+
+  // Pastikan SW benar-benar ready sebelum lanjut
+  await navigator.serviceWorker.ready;
+  console.log("2. Service Worker ditemukan dan ready! Mendaftar ke PushManager...");
 
   const vapidPublicKey = process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY;
   if (!vapidPublicKey) {
@@ -62,34 +75,41 @@ export async function subscribeToPushNotifications(
   }
 
   const subscriptionJson = subscription.toJSON();
-  const endpoint = subscriptionJson.endpoint;
-  const p256dh = subscriptionJson.keys?.p256dh;
-  const auth = subscriptionJson.keys?.auth;
 
-  if (!endpoint || !p256dh || !auth) {
+  if (!subscriptionJson.endpoint || !subscriptionJson.keys?.p256dh || !subscriptionJson.keys?.auth) {
     throw new Error('Data langganan tidak valid.');
   }
 
+  console.log("3. PushManager sukses, mengirim ke Supabase...");
+
   const supabase = createClient();
 
-  // Memeriksa apakah endpoint ini sudah ada di database
-  const { data: existing } = await supabase
+  // Payload yang sesuai skema JSONB
+  const subscriptionPayload = {
+    identifier,
+    role,
+    lab_id: labId,
+    subscription: JSON.parse(JSON.stringify(subscriptionJson)), // Simpan seluruh objek ke kolom JSONB
+  };
+
+  // Memeriksa apakah endpoint ini sudah ada di database (query JSONB)
+  const { data: existing, error: selectError } = await supabase
     .from('push_subscriptions')
     .select('id')
-    .eq('endpoint', endpoint)
-    .single();
+    .eq('subscription->>endpoint', subscriptionJson.endpoint)
+    .maybeSingle();
+
+  if (selectError && selectError.code !== 'PGRST116') {
+    // PGRST116 = no rows found, yang memang expected
+    console.error('Error saat cek existing subscription:', selectError);
+    throw new Error('Gagal memeriksa data langganan: ' + selectError.message);
+  }
 
   if (existing) {
     // Update jika sudah ada
     const { error } = await supabase
       .from('push_subscriptions')
-      .update({
-        identifier,
-        role,
-        lab_id: labId,
-        p256dh,
-        auth,
-      })
+      .update(subscriptionPayload)
       .eq('id', existing.id);
 
     if (error) throw error;
@@ -97,17 +117,12 @@ export async function subscribeToPushNotifications(
     // Insert jika belum ada
     const { error } = await supabase
       .from('push_subscriptions')
-      .insert({
-        identifier,
-        role,
-        lab_id: labId,
-        endpoint,
-        p256dh,
-        auth,
-      });
+      .insert(subscriptionPayload);
 
     if (error) throw error;
   }
+
+  console.log("4. Sukses menyimpan ke Supabase!");
 
   return { success: true, isNewSubscription };
 }

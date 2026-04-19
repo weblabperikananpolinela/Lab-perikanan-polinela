@@ -8,6 +8,7 @@ const withPWA = withPWAInit({
   swcMinify: true,
   disable: process.env.NODE_ENV === 'development', // PWA dimatikan saat ngoding biar gak rewel, baru nyala saat di-build/production
   customWorkerDir: 'worker',
+  publicExcludes: ['!noprecache/**/*', '!dokumen/**/*'],
   workboxOptions: {
     disableDevLogs: true,
   },

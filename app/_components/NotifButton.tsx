@@ -1,10 +1,10 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { getOrCreateDeviceId, subscribeToPushNotifications } from '@/lib/push-utils';
 import Swal from 'sweetalert2';
-import { Bell } from 'lucide-react';
+import { Bell, BellRing } from 'lucide-react';
 
 interface NotifButtonProps {
   userEmail?: string;
@@ -18,6 +18,25 @@ export default function NotifButton({
   labId 
 }: NotifButtonProps) {
   const [loading, setLoading] = useState(false);
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  // Cek status langganan saat komponen mount
+  useEffect(() => {
+    const checkSubscription = async () => {
+      try {
+        if ('serviceWorker' in navigator && 'PushManager' in window) {
+          const registration = await navigator.serviceWorker.ready;
+          const existingSubscription = await registration.pushManager.getSubscription();
+          if (existingSubscription) {
+            setIsSubscribed(true);
+          }
+        }
+      } catch (error) {
+        console.error("Gagal mengecek status langganan:", error);
+      }
+    };
+    checkSubscription();
+  }, []);
 
   const handleSubscribe = async () => {
     try {
@@ -25,8 +44,11 @@ export default function NotifButton({
       
       // Gunakan email jika tersedia, jika tidak gunakan device ID generik
       const identifier = userEmail || getOrCreateDeviceId();
+      console.log('NotifButton: Memulai subscribe dengan identifier:', identifier, 'role:', role, 'labId:', labId);
 
       await subscribeToPushNotifications(identifier, role, labId);
+
+      setIsSubscribed(true);
 
       Swal.fire({
         icon: 'success',
@@ -35,7 +57,7 @@ export default function NotifButton({
         confirmButtonColor: '#0f172a',
       });
     } catch (error: any) {
-      console.error('Error subscribing to push notifications:', error);
+      console.error('Error Detail:', error);
       Swal.fire({
         icon: 'error',
         title: 'Gagal',
@@ -46,6 +68,19 @@ export default function NotifButton({
       setLoading(false);
     }
   };
+
+  if (isSubscribed) {
+    return (
+      <Button 
+        disabled 
+        variant="outline" 
+        className="gap-2 border-emerald-300 bg-emerald-50 text-emerald-700 cursor-default"
+      >
+        <BellRing className="w-4 h-4 fill-emerald-500" />
+        Notifikasi Aktif
+      </Button>
+    );
+  }
 
   return (
     <Button 

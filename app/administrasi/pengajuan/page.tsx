@@ -16,6 +16,7 @@ import {
   CheckCircle,
 } from 'lucide-react';
 import NotifButton from '@/app/_components/NotifButton';
+import { getOrCreateDeviceId } from '@/lib/push-utils';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
@@ -398,10 +399,14 @@ export default function PengajuanForm() {
       }
 
       // Pastikan NPM atau NIK masuk ke field yang tepat
+      // Ambil device_id dari localStorage untuk push notification nanti
+      const currentDeviceId = getOrCreateDeviceId();
+
       const peminjamanData = {
         kategori_pemohon: data.kategori_pemohon,
         nama_lengkap: data.nama,
         email_pemohon: data.email || null, // FIX: simpan sebagai null jika kosong
+        device_id: currentDeviceId || null, // Simpan device_id untuk push notification
         npm: data.kategori_pemohon !== 'Umum' ? data.npm_nip : null,
         nik: data.kategori_pemohon === 'Umum' ? data.nik : null,
         program_studi: data.programStudi || null,
@@ -487,6 +492,23 @@ export default function PengajuanForm() {
         }
       } catch (emailErr) {
         console.error('Gagal mengirim email:', emailErr);
+      }
+
+      // --- PUSH NOTIFICATION KE ADMIN LAB ---
+      try {
+        await fetch('/api/send-notification', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            targetRole: 'admin',
+            targetLabId: resolvedLabId,
+            title: 'Pengajuan Baru!',
+            message: `Ada pengajuan lab baru dari ${data.nama} yang menunggu persetujuan Anda.`,
+            url: `/admin/dashboard?lab_id=${resolvedLabId}`,
+          }),
+        });
+      } catch (pushErr) {
+        console.error('Gagal mengirim push notification ke admin:', pushErr);
       }
 
       Swal.fire({

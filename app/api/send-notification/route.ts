@@ -10,31 +10,52 @@ webpush.setVapidDetails(
 
 export async function POST(request: Request) {
   try {
-    const { identifier, title, message, url } = await request.json();
+    const { identifier, targetRole, targetLabId, title, message, url } = await request.json();
 
-    if (!identifier || !title || !message) {
+    if (!title || !message) {
       return NextResponse.json(
-        { error: 'Identifier, title, and message are required' },
+        { error: 'Title and message are required' },
+        { status: 400 }
+      );
+    }
+
+    // Harus ada salah satu: identifier ATAU (targetRole + targetLabId)
+    if (!identifier && !(targetRole && targetLabId)) {
+      return NextResponse.json(
+        { error: 'Either identifier or (targetRole + targetLabId) is required' },
         { status: 400 }
       );
     }
 
     const supabase = await createClient();
 
-    // Fetch subscriptions for the given identifier
-    const { data: subscriptions, error } = await supabase
-      .from('push_subscriptions')
-      .select('*')
-      .eq('identifier', identifier);
+    let subscriptions: any[] = [];
 
-    if (error) {
-      throw error;
+    if (targetRole && targetLabId) {
+      // Mode broadcast: kirim ke semua subscriber dengan role & lab_id tertentu
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .eq('role', targetRole)
+        .eq('lab_id', targetLabId);
+
+      if (error) throw error;
+      subscriptions = data || [];
+    } else if (identifier) {
+      // Mode direct: kirim ke subscriber dengan identifier tertentu
+      const { data, error } = await supabase
+        .from('push_subscriptions')
+        .select('*')
+        .eq('identifier', identifier);
+
+      if (error) throw error;
+      subscriptions = data || [];
     }
 
-    if (!subscriptions || subscriptions.length === 0) {
+    if (subscriptions.length === 0) {
       return NextResponse.json({
         success: true,
-        message: 'No subscriptions found for this identifier',
+        message: 'No subscriptions found for the given criteria',
       });
     }
 
@@ -46,14 +67,19 @@ export async function POST(request: Request) {
 
     const notifications = subscriptions.map(async (sub) => {
       try {
-        const subscription = {
-          endpoint: sub.endpoint,
+        // Ekstrak data dari kolom JSONB `subscription`
+        const subData = typeof sub.subscription === 'string'
+          ? JSON.parse(sub.subscription)
+          : sub.subscription;
+
+        const pushSubscription = {
+          endpoint: subData.endpoint,
           keys: {
-            p256dh: sub.p256dh,
-            auth: sub.auth,
+            p256dh: subData.keys.p256dh,
+            auth: subData.keys.auth,
           },
         };
-        await webpush.sendNotification(subscription, payload);
+        await webpush.sendNotification(pushSubscription, payload);
       } catch (error: any) {
         // If the subscription is no longer valid or gone, remove it from the database
         if (error.statusCode === 404 || error.statusCode === 410) {
