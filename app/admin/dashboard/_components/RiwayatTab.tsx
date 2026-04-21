@@ -407,6 +407,43 @@ export default function RiwayatTab({
   };
 
   // ===================================================================
+  //  HAPUS RIWAYAT (FITUR BARU)
+  // ===================================================================
+  const handleDelete = async (item: any) => {
+    const result = await Swal.fire({
+      title: 'Hapus Riwayat?',
+      text: 'Data riwayat ini akan dihapus secara permanen dari sistem.',
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#ef4444',
+      cancelButtonColor: '#64748b',
+      confirmButtonText: 'Ya, Hapus',
+      cancelButtonText: 'Batal',
+    });
+
+    if (result.isConfirmed) {
+      try {
+        const { error } = await supabase
+          .from('peminjaman')
+          .delete()
+          .eq('id', item.id);
+
+        if (error) throw error;
+
+        Swal.fire('Terhapus!', 'Data riwayat berhasil dihapus.', 'success');
+        // Hapus dari state agar tidak perlu memanggil fetchRiwayat lagi
+        setDataRiwayat((prev) => prev.filter((r) => r.id !== item.id));
+      } catch (error: any) {
+        Swal.fire(
+          'Error',
+          'Gagal menghapus riwayat: ' + error.message,
+          'error',
+        );
+      }
+    }
+  };
+
+  // ===================================================================
   //  SUBMIT MANUAL
   // ===================================================================
   const submitManual = async (e: React.FormEvent) => {
@@ -606,6 +643,10 @@ export default function RiwayatTab({
                 <TableHead className='font-semibold text-slate-800 text-center text-sm'>
                   Aksi
                 </TableHead>
+                {/* TAMBAHAN BARU: Kolom Hapus */}
+                <TableHead className='font-semibold text-slate-800 text-center text-sm'>
+                  Hapus
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -660,12 +701,22 @@ export default function RiwayatTab({
                       <Eye className='size-4 mr-1' /> Detail
                     </Button>
                   </TableCell>
+                  {/* TAMBAHAN BARU: Tombol Hapus */}
+                  <TableCell className='text-center'>
+                    <Button
+                      size='sm'
+                      variant='ghost'
+                      className='text-red-500 hover:text-red-700 hover:bg-red-50'
+                      onClick={() => handleDelete(item)}>
+                      <Trash2 className='size-4' />
+                    </Button>
+                  </TableCell>
                 </TableRow>
               ))}
               {dataRiwayat.length === 0 && (
                 <TableRow>
                   <TableCell
-                    colSpan={8}
+                    colSpan={9} // Diubah dari 8 menjadi 9 karena nambah 1 kolom
                     className='text-center py-10 text-slate-500 text-lg'>
                     Belum ada riwayat lab yang berjalan (status sah).
                   </TableCell>
@@ -695,7 +746,7 @@ export default function RiwayatTab({
 
           {selectedRiwayat && (
             <div className='flex flex-col md:flex-row gap-6 mt-4'>
-              {/* SISI KIRI: Info Peminjaman & Pembayaran (DI-BACKUP UTUH) */}
+              {/* SISI KIRI: Info Peminjaman & Pembayaran */}
               <div className='flex-1 space-y-5'>
                 <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3 h-fit'>
                   <div>
@@ -817,7 +868,7 @@ export default function RiwayatTab({
                     <>
                       {isSelesai(selectedRiwayat) ||
                       selectedRiwayat.status === 'Dibatalkan' ? (
-                        /* ==================== MODE READ-ONLY (LAMA) ==================== */
+                        /* ==================== MODE READ-ONLY ==================== */
                         <div className='space-y-6'>
                           {selectedRiwayat.status === 'Dibatalkan' && (
                             <div className='bg-red-50 text-red-700 p-4 rounded-xl border border-red-200'>
@@ -838,7 +889,7 @@ export default function RiwayatTab({
                                 Peminjaman Ruangan Saja (Tanpa Barang).
                               </p>
                             ) : (
-                              // FITUR BARU SCROLL
+                              // SCROLL LIST BARANG
                               <div className='rounded-md border overflow-x-auto max-h-[50vh] overflow-y-auto relative'>
                                 <Table>
                                   <TableHeader className='bg-slate-50 sticky top-0 z-10 shadow-sm'>
@@ -936,7 +987,7 @@ export default function RiwayatTab({
                           </div>
                         </div>
                       ) : (
-                        /* ==================== MODE PENGEMBALIAN (LAMA) ==================== */
+                        /* ==================== MODE PENGEMBALIAN ==================== */
                         <div className='space-y-4'>
                           <h3 className='font-bold text-slate-800 text-sm uppercase tracking-wider flex items-center gap-2'>
                             <RotateCcw className='size-4 text-amber-600' />{' '}
@@ -954,7 +1005,6 @@ export default function RiwayatTab({
                                 Isi jumlah barang yang dikembalikan berdasarkan
                                 kondisi fisik.
                               </p>
-                              {/* FITUR BARU SCROLL */}
                               <div className='space-y-4 max-h-[50vh] overflow-y-auto pr-2'>
                                 {returnForms.map((rf, index) => (
                                   <div
@@ -1057,10 +1107,7 @@ export default function RiwayatTab({
                   )}
                 </div>
 
-                {/* ==================== BLOK TOMBOL AKSI ==================== */}
-                {/* FITUR BARU: Terpisah 100% dari item rendering.
-                  Dijamin AKAN SELALU MUNCUL asal status 'Disetujui', walaupun pinjam ruangan kosong. 
-                */}
+                {/* BLOK TOMBOL AKSI */}
                 {selectedRiwayat.status === 'Disetujui' &&
                   !isSelesai(selectedRiwayat) && (
                     <div className='space-y-3 mt-4 pt-4 border-t border-slate-100'>
