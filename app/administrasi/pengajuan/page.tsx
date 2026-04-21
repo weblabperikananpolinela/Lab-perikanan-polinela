@@ -37,7 +37,6 @@ import {
 const formSchema = z
   .object({
     nama: z.string().min(1, 'Nama wajib diisi'),
-    // FIX: Email dibuat opsional di tingkat dasar
     email: z.string().optional().or(z.literal('')),
     kategori_pemohon: z.enum(['Mahasiswa Polinela', 'Dosen Polinela', 'Umum'], {
       required_error: 'Kategori wajib dipilih',
@@ -46,7 +45,7 @@ const formSchema = z
     programStudi: z.string().optional(),
     nik: z.string().regex(/^\d*$/, 'Hanya boleh berisi angka').optional(),
     judulPenelitian: z.string().min(1, 'Judul Kegiatan/Penelitian wajib diisi'),
-    dosenPembimbing: z.string().optional(), // Opsional karena Umum tidak selalu ada dosen
+    dosenPembimbing: z.string().optional(),
     labTarget: z.string().min(1, 'Lab target wajib dipilih'),
     tanggal: z.string().min(1, 'Tanggal peminjaman wajib diisi'),
     jam_mulai: z.string().min(1, 'Jam mulai wajib diisi'),
@@ -62,7 +61,6 @@ const formSchema = z
       .default([]),
   })
   .superRefine((data, ctx) => {
-    // Validasi Dinamis untuk Email
     if (data.kategori_pemohon === 'Umum') {
       if (!data.email || data.email.trim() === '') {
         ctx.addIssue({
@@ -81,7 +79,6 @@ const formSchema = z
         }
       }
     } else {
-      // Jika Dosen/Mahasiswa mengisi email (tidak kosong), pastikan formatnya benar
       if (data.email && data.email.trim() !== '') {
         const isEmail = z.string().email().safeParse(data.email).success;
         if (!isEmail) {
@@ -94,7 +91,6 @@ const formSchema = z
       }
     }
 
-    // Validasi Identitas
     if (data.kategori_pemohon === 'Mahasiswa Polinela') {
       if (!data.npm_nip || data.npm_nip.trim() === '') {
         ctx.addIssue({
@@ -138,7 +134,6 @@ const formSchema = z
 
 type FormData = z.infer<typeof formSchema>;
 
-// DAFTAR LAB BARU (Sesuai List)
 const labMap: Record<string, number> = {
   'Lab. Kesehatan Ikan': 1,
   'Lab. Kualitas Air': 2,
@@ -160,7 +155,6 @@ const labMap: Record<string, number> = {
   'Lab Radar': 18,
 };
 
-// Data terstruktur untuk Dropdown Lab
 const labKategoriData = {
   'Lab Perikanan': [
     { nama: 'Lab. Kesehatan Ikan', jenis: 'Laboratorium' },
@@ -186,7 +180,6 @@ const labKategoriData = {
   ],
 };
 
-// Lab yang bebas dipinjam oleh Umum
 const freeUmumLabs = [
   'Lab. Perikanan (SFS)',
   'Lab. Pengolahan',
@@ -234,13 +227,11 @@ export default function PengajuanForm() {
 
   const [availableItems, setAvailableItems] = useState<any[]>([]);
 
-  // Cek apakah Umum memilih lab yang di-restrict
   const isRestrictedUmum =
     kategoriPemohon === 'Umum' &&
     labTargetValue &&
     !freeUmumLabs.includes(labTargetValue);
 
-  // Reset text kegiatan jika berubah status restricted
   useEffect(() => {
     setValue('judulPenelitian', '', { shouldValidate: false });
   }, [isRestrictedUmum, setValue]);
@@ -256,9 +247,12 @@ export default function PengajuanForm() {
 
     const fetchInventaris = async () => {
       const supabase = createClient();
+      // FITUR BARU: Tambahkan spesifikasi dan keterangan ke dalam query select
       const { data, error } = await supabase
         .from('inventaris')
-        .select('jenis_alat, jumlah_baik, kategori_inventaris!inner(lab_id)')
+        .select(
+          'jenis_alat, jumlah_baik, spesifikasi, keterangan, kategori_inventaris!inner(lab_id)',
+        )
         .eq('kategori_inventaris.lab_id', lab_id);
 
       if (!error && data) {
@@ -267,6 +261,8 @@ export default function PengajuanForm() {
           .map((item: any) => ({
             jenis_alat: item.jenis_alat,
             jumlah: item.jumlah_baik ?? 0,
+            // Fallback ke keterangan jika spesifikasi kosong
+            spesifikasi: item.spesifikasi || item.keterangan || null,
           }));
         setAvailableItems(mapped);
       } else {
@@ -360,7 +356,6 @@ export default function PengajuanForm() {
       const supabase = createClient();
       const resolvedLabId = labMap[data.labTarget] || 1;
 
-      // --- Cek Jadwal Bentrok ---
       const { data: existingSchedules, error: existingError } = await supabase
         .from('peminjaman')
         .select('jam_mulai, jam_selesai, nama_lengkap')
@@ -398,15 +393,13 @@ export default function PengajuanForm() {
         return;
       }
 
-      // Pastikan NPM atau NIK masuk ke field yang tepat
-      // Ambil device_id dari localStorage untuk push notification nanti
       const currentDeviceId = getOrCreateDeviceId();
 
       const peminjamanData = {
         kategori_pemohon: data.kategori_pemohon,
         nama_lengkap: data.nama,
-        email_pemohon: data.email || null, // FIX: simpan sebagai null jika kosong
-        device_id: currentDeviceId || null, // Simpan device_id untuk push notification
+        email_pemohon: data.email || null,
+        device_id: currentDeviceId || null,
         npm: data.kategori_pemohon !== 'Umum' ? data.npm_nip : null,
         nik: data.kategori_pemohon === 'Umum' ? data.nik : null,
         program_studi: data.programStudi || null,
@@ -443,9 +436,7 @@ export default function PengajuanForm() {
         if (errorItem) throw new Error(errorItem.message);
       }
 
-      // --- SEND EMAILS ---
       try {
-        // Ambil email pengelola lab berdasarkan resolvedLabId di tabel whitelist_admin
         const { data: adminData } = await supabase
           .from('whitelist_admin')
           .select('email')
@@ -455,7 +446,6 @@ export default function PengajuanForm() {
         const targetEmailAdmin =
           adminData?.email || 'admin_pusat@polinela.ac.id';
 
-        // Email ke Admin (Selalu terkirim)
         await fetch('/api/send-email', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -473,7 +463,6 @@ export default function PengajuanForm() {
           }),
         });
 
-        // FIX: Email ke Pemohon (Hanya jalan jika user mengisi email)
         if (data.email && data.email.trim() !== '') {
           await fetch('/api/send-email', {
             method: 'POST',
@@ -494,7 +483,6 @@ export default function PengajuanForm() {
         console.error('Gagal mengirim email:', emailErr);
       }
 
-      // --- PUSH NOTIFICATION KE ADMIN LAB ---
       try {
         await fetch('/api/send-notification', {
           method: 'POST',
@@ -515,7 +503,7 @@ export default function PengajuanForm() {
         icon: 'success',
         title: 'Berhasil!',
         text: 'Pengajuan Anda berhasil dikirim!',
-        confirmButtonColor: '#10b981', // Warna hijau
+        confirmButtonColor: '#10b981',
       }).then(() => {
         setSubmittedEmail(data.email || '');
         setIsSuccess(true);
@@ -526,7 +514,7 @@ export default function PengajuanForm() {
         icon: 'error',
         title: 'Oops...',
         text: 'Gagal mengirim pengajuan: ' + error.message,
-        confirmButtonColor: '#ef4444', // Warna merah
+        confirmButtonColor: '#ef4444',
       });
     } finally {
       setIsSubmitting(false);
@@ -607,7 +595,6 @@ export default function PengajuanForm() {
             <div className='space-y-1'>
               <Label className='md:text-base font-semibold flex items-center'>
                 Email address
-                {/* Menampilkan tag opsional jika bukan kategori UMUM */}
                 {kategoriPemohon !== 'Umum' && (
                   <span className='text-sm font-normal text-slate-400 ml-1.5'>
                     (Opsional)
@@ -873,7 +860,6 @@ export default function PengajuanForm() {
                 <Info className='size-5 text-amber-600 shrink-0 mt-0.5' />
                 <p className='text-sm text-amber-800 font-medium leading-relaxed'>
                   Pastikan Anda telah{' '}
-                  {/* FIX: Link diubah mengarah ke /jadwal */}
                   <Link
                     href='/jadwal'
                     target='_blank'
@@ -957,8 +943,9 @@ export default function PengajuanForm() {
                   key={field.id}
                   className='flex flex-col md:flex-row gap-3 md:items-center'>
                   <div className='w-full md:flex-1'>
+                    {/* FITUR BARU: Dropdown menampikan Spesifikasi Alat */}
                     <select
-                      className='w-full h-10 md:h-14 md:text-lg rounded-md border border-slate-200 bg-transparent px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='w-full h-10 md:h-14 md:text-base rounded-md border border-slate-200 bg-transparent px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
                       {...register(`items.${index}.namaAlat`)}
                       defaultValue=''>
                       <option value='' disabled>
@@ -968,7 +955,9 @@ export default function PengajuanForm() {
                       </option>
                       {availableItems.map((item, i) => (
                         <option key={i} value={item.jenis_alat}>
-                          {item.jenis_alat} (Tersedia: {item.jumlah})
+                          {item.jenis_alat}{' '}
+                          {item.spesifikasi ? `— ${item.spesifikasi}` : ''}{' '}
+                          (Sisa: {item.jumlah})
                         </option>
                       ))}
                     </select>

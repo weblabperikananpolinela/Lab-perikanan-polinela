@@ -8,6 +8,7 @@ import {
   ArrowLeft,
   Clock,
   CheckCircle,
+  CheckCircle2,
   XCircle,
   Eye,
   MessageSquareWarning,
@@ -79,6 +80,12 @@ export default function StatusRiwayatPage() {
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case 'Selesai':
+        return (
+          <span className='flex items-center w-fit gap-1.5 text-white bg-emerald-600 border border-emerald-700 px-2.5 py-1 rounded-full text-xs font-bold shadow-sm'>
+            <CheckCircle2 size={14} /> Selesai
+          </span>
+        );
       case 'Disetujui':
         return (
           <span className='flex items-center w-fit gap-1 text-green-700 bg-green-100 border border-green-200 px-2.5 py-1 rounded-full text-xs font-semibold'>

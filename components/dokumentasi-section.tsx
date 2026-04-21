@@ -1,121 +1,111 @@
-'use client';
-
+import fs from 'fs';
+import path from 'path';
 import Image from 'next/image';
-import { useState } from 'react';
 import { cn } from '@/lib/utils';
 
-const galleryImages = [
-  {
-    id: 1,
-    src: '/dokumentasi/foto-1.jpg',
-    kegiatan: '',
-    lab: 'Lab. Pembenihan',
-    span: 'col-span-2 md:col-span-2 row-span-2',
-  },
-  {
-    id: 2,
-    src: '/dokumentasi/foto-2.jpg',
-    kegiatan: '',
-    lab: 'Lab. Kualitas Air',
-    span: 'col-span-2 md:col-span-2 row-span-1',
-  },
-  {
-    id: 3,
-    src: '/dokumentasi/foto-3.jpg',
-    kegiatan: '',
-    lab: 'Lab. Ikan Hias',
-    span: 'col-span-1 md:col-span-1 row-span-1',
-  },
-  {
-    id: 4,
-    src: '/dokumentasi/foto-4.jpg',
-    kegiatan: '',
-    lab: 'FISHTECH',
-    span: 'col-span-1 md:col-span-1 row-span-1',
-  },
-  {
-    id: 5,
-    src: '/dokumentasi/foto-5.jpg',
-    kegiatan: '',
-    lab: 'Lab Simulator',
-    span: 'col-span-2 md:col-span-2 row-span-1',
-  },
-  {
-    id: 6,
-    src: '/dokumentasi/foto-6.jpg',
-    kegiatan: '',
-    lab: 'KJA (Keramba Jaring Apung)',
-    span: 'col-span-2 md:col-span-2 row-span-2',
-  },
-  {
-    id: 7,
-    src: '/dokumentasi/foto-7.jpg',
-    kegiatan: 'Pengu',
-    lab: 'Lab. Nutrisi',
-    span: 'col-span-2 md:col-span-2 row-span-1',
-  },
-];
+export async function DokumentasiSection() {
+  // 1. Baca folder public/dokumentasi secara otomatis (Server Side)
+  let images: string[] = [];
+  try {
+    const dirPath = path.join(process.cwd(), 'public', 'dokumentasi');
+    const files = fs.readdirSync(dirPath);
 
-export function DokumentasiSection() {
-  const [loadedImages, setLoadedImages] = useState<Record<number, boolean>>({});
+    // Filter hanya mengambil file gambar
+    images = files
+      .filter((file) => /\.(jpg|jpeg|png|webp)$/i.test(file))
+      .map((file) => `/dokumentasi/${file}`);
+  } catch (error) {
+    console.error('Gagal membaca direktori dokumentasi:', error);
+  }
+
+  // Fallback jika folder kosong atau belum ada foto
+  if (images.length === 0) {
+    images = ['/dokumentasi/foto-1.jpg', '/dokumentasi/foto-2.jpg']; // Sesuaikan jika perlu
+  }
+
+  // 2. Gandakan array 4 kali agar bisa looping sempurna tanpa putus di layar lebar
+  const infiniteImages = [...images, ...images, ...images, ...images];
+
+  // Fungsi untuk ngasih gaya miring/ukuran acak supaya terkesan "unik"
+  const getStyles = (index: number) => {
+    const rotations = [
+      '-rotate-2',
+      'rotate-3',
+      '-rotate-1',
+      'rotate-2',
+      'rotate-0',
+      '-rotate-3',
+    ];
+    const aspects = [
+      'aspect-[4/3]',
+      'aspect-[3/4]',
+      'aspect-square',
+      'aspect-[5/4]',
+    ];
+    const margins = ['mt-0', 'mt-6', 'mt-[-10px]', 'mt-8', 'mt-2'];
+
+    return cn(
+      rotations[index % rotations.length],
+      aspects[index % aspects.length],
+      margins[index % margins.length],
+    );
+  };
 
   return (
-    <section className='bg-slate-50 py-20 lg:py-28'>
-      <div className='mx-auto max-w-6xl px-4 lg:px-8'>
+    <section className='bg-slate-50 py-20 lg:py-28 overflow-hidden'>
+      {/* Inject animasi CSS langsung tanpa perlu repot edit tailwind.config */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+        @keyframes marquee {
+          0% { transform: translateX(0); }
+          100% { transform: translateX(-50%); } /* Geser separuh jalan lalu reset */
+        }
+        .animate-marquee {
+          display: flex;
+          width: max-content;
+          animation: marquee 60s linear infinite; /* Ubah 60s untuk mengatur kecepatan */
+        }
+        .animate-marquee:hover {
+          animation-play-state: paused; /* Berhenti saat di-hover */
+        }
+      `,
+        }}
+      />
+
+      <div className='mx-auto max-w-7xl px-4 lg:px-8 mb-12'>
         <h2 className='text-center text-3xl font-bold text-slate-800 sm:text-4xl'>
           Dokumentasi Kegiatan
         </h2>
         <p className='mx-auto mt-4 max-w-2xl text-center text-slate-600'>
-          Berbagai kegiatan laboratorium, penelitian, dan praktikum yang telah
-          dilaksanakan
+          Galeri visual fasilitas dan aktivitas di lingkungan laboratorium kami
         </p>
+      </div>
 
-        <div className='mt-12 grid auto-rows-[180px] grid-cols-2 gap-4 sm:auto-rows-[200px] md:grid-cols-4'>
-          {galleryImages.map((image) => (
+      {/* Kontainer Utama Marquee */}
+      <div className='relative w-full py-8'>
+        {/* Efek gradien putih di ujung kiri dan kanan biar muncul/hilangnya smooth */}
+        <div className='pointer-events-none absolute inset-y-0 left-0 z-10 w-20 md:w-32 bg-gradient-to-r from-slate-50 to-transparent'></div>
+        <div className='pointer-events-none absolute inset-y-0 right-0 z-10 w-20 md:w-32 bg-gradient-to-l from-slate-50 to-transparent'></div>
+
+        {/* Track yang berjalan */}
+        <div className='animate-marquee items-center gap-4 px-4 sm:gap-6'>
+          {infiniteImages.map((src, index) => (
             <div
-              key={image.id}
+              key={`${index}-${src}`}
               className={cn(
-                'group relative overflow-hidden rounded-xl bg-slate-200',
-                image.span,
+                'group relative w-[220px] md:w-[280px] lg:w-[320px] flex-shrink-0 overflow-hidden rounded-2xl bg-slate-200 shadow-md transition-all duration-500 ease-out hover:z-20 hover:scale-110 hover:shadow-2xl cursor-pointer',
+                getStyles(index),
               )}>
               <Image
-                src={image.src}
-                alt={image.kegiatan}
-                fill
-                className={cn(
-                  'object-cover transition-all duration-700 group-hover:scale-110',
-                  loadedImages[image.id] ? 'opacity-100' : 'opacity-0',
-                )}
-                onLoad={() =>
-                  setLoadedImages((prev) => ({ ...prev, [image.id]: true }))
-                }
+                src={src}
+                alt={`Dokumentasi ${index}`}
+                width={400}
+                height={400}
+                className='h-full w-full object-cover transition-all duration-500 group-hover:brightness-110'
               />
-              {/* Fallback/Loading state */}
-              <div
-                className={cn(
-                  'absolute inset-0 flex items-center justify-center bg-gradient-to-br from-blue-100 to-blue-200 transition-opacity duration-300',
-                  loadedImages[image.id]
-                    ? 'opacity-0 pointer-events-none'
-                    : 'opacity-100',
-                )}>
-                <span className='text-sm text-blue-600 px-4 text-center font-medium'>
-                  {image.kegiatan}
-                </span>
-              </div>
-
-              {/* Hover overlay dengan info Kegiatan & Lab */}
-              <div className='absolute inset-0 bg-gradient-to-t from-slate-900/90 via-slate-900/40 to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100 flex flex-col justify-end p-5 md:p-6'>
-                <div className='translate-y-4 transition-transform duration-500 ease-out group-hover:translate-y-0'>
-                  <h3 className='text-lg md:text-xl font-bold text-white drop-shadow-md leading-snug'>
-                    {image.kegiatan}
-                  </h3>
-                  <div className='flex items-center gap-2 mt-2'>
-                    <span className='inline-flex items-center justify-center rounded-full bg-blue-600/90 px-3 py-1 text-xs font-semibold text-white backdrop-blur-sm border border-blue-400/30'>
-                      {image.lab}
-                    </span>
-                  </div>
-                </div>
-              </div>
+              {/* Overlay gelap tipis, akan hilang saat di hover biar fotonya "menyala" */}
+              <div className='absolute inset-0 bg-slate-900/10 transition-opacity duration-300 group-hover:opacity-0'></div>
             </div>
           ))}
         </div>

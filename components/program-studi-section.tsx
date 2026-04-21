@@ -12,13 +12,13 @@ const programs = [
     id: 1,
     title: 'D3 Budidaya Perikanan',
     description:
-      'Program ini merupakan wadah bagi para praktisi yang ingin menguasai perpaduan seni dan sains dalam memproduksi komoditas perikanan secara efisien. Mahasiswa akan dibekali kompetensi utama dalam mengelola ekosistem air yang kompleks, mulai dari pemahaman kimia air hingga manajemen nutrisi pakan. Selain mahir dalam teknik pembesaran berbagai komoditas unggul seperti udang, ikan air tawar, hingga komoditas laut sesuai standar industri, mahasiswa juga ditempa untuk memiliki ketelitian tinggi dalam monitoring, ketahanan fisik di lapangan, serta manajemen waktu yang presisi sesuai siklus hidup biota. Lulusan program ini dipersiapkan untuk mengisi posisi strategis seperti Supervisor Tambak dan Manajer Operasional Produksi, atau tampil mandiri sebagai pengusaha budidaya yang sukses. Sebagai teknisi handal, mereka diharapkan mampu mengubah keterbatasan lahan menjadi zona produksi protein yang melimpah demi mendukung ketahanan pangan nasional.',
+      'Program ini memanfaatkan laboratorium budidaya dan teaching factory sebagai sarana utama dalam pembelajaran berbasis praktik. Mahasiswa dibekali kompetensi mengelola ekosistem air secara menyeluruh, mulai dari pemahaman kimia air hingga manajemen nutrisi pakan. Mereka ditempa dengan ketelitian tinggi dalam monitoring, ketahanan fisik di lapangan, serta manajemen waktu yang presisi sesuai siklus hidup biota. Lulusan dipersiapkan mengisi posisi strategis seperti Supervisor Tambak dan Manajer Operasional Produksi, atau tampil mandiri sebagai pengusaha budidaya yang sukses.',
     quote:
-      "Dunia butuh lebih banyak 'koki ekosistem' yang mampu memberi makan ribuan orang dari satu pengelolaan kolam yang sempurna. Ayo!!! Jadi juragan muda yang visioner",
+      "Dunia butuh lebih banyak 'koki ekosistem' yang mampu memberi makan ribuan orang dari satu pengelolaan kolam yang sempurna. Ayo!!! Jadi juragan muda yang visioner.",
     logo: '/placeholder-logo.png', // Ganti dengan path logo prodi asli
     image: '/gallery-3.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 1, S.Pi., M.Si.',
+      name: 'Kaprodi D3 Budidaya Perikanan',
       image: '/placeholder-kaprodi.jpg', // Ganti dengan foto asli kaprodi
     },
   },
@@ -26,13 +26,13 @@ const programs = [
     id: 2,
     title: 'S1 Tr. Teknologi Pembenihan Ikan',
     description:
-      'Menyadari bahwa segala sesuatu yang besar dimulai dari benih yang kecil namun kuat, program studi ini berfokus pada fase paling krusial dalam siklus hidup perikanan. Fokus utamanya mencakup penguasaan teknologi reproduksi melalui induksi hormon, rekayasa genetika ikan, bioteknologi larva, hingga kultur pakan alami sebagai nutrisi utama. Dalam proses pembelajarannya, mahasiswa akan mengasah pola pikir analitis yang tajam, kesabaran dalam riset, serta standar ketelitian laboratorium yang sangat ketat melalui penerapan zero-defect mindset. Output dari program ini adalah lahirnya para Breeding Specialist, Manajer Unit Pembenihan (Hatchery), serta peneliti di lembaga ternama. Mereka dipersiapkan menjadi inovator yang mampu menciptakan varietas ikan baru yang lebih kuat, cepat tumbuh, dan tahan terhadap perubahan iklim ekstrem.',
+      'Program studi ini mengoptimalkan laboratorium pembenihan dan teaching factory hatchery sebagai pusat kegiatan pembelajaran dan riset. Fokus utamanya mencakup penguasaan teknologi reproduksi melalui induksi hormon, rekayasa genetika ikan, bioteknologi larva, hingga kultur pakan alami. Mahasiswa mengasah pola pikir analitis yang tajam, kesabaran dalam riset, serta standar ketelitian laboratorium yang ketat. Output program ini adalah para Breeding Specialist, Manajer Unit Pembenihan (Hatchery), serta peneliti inovatif yang mampu menciptakan varietas ikan unggul.',
     quote:
       'Masa depan perikanan dimulai dari mikroskop kami. Jika kamu mencintai sains dan ingin merancang kehidupan yang lebih baik sejak dari fase larva, laboratorium pembenihan kami adalah rumahmu!',
     logo: '/placeholder-logo.png',
     image: '/gallery-2.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 2, S.Pi., M.Si.',
+      name: 'Rio Yusufi Subhan, S.Pi., M.Si.',
       image: '/placeholder-kaprodi.jpg',
     },
   },
@@ -40,27 +40,27 @@ const programs = [
     id: 3,
     title: 'D3 Perikanan Tangkap',
     description:
-      'Program ini dirancang khusus bagi para pemberani yang ingin menaklukkan samudera luas dengan kecakapan profesional berstandar internasional. Mahasiswa akan dibekali keahlian teknis seperti navigasi elektronik menggunakan Radar, Sonar, dan GPS, pemahaman hukum laut internasional, teknik pengoperasian alat tangkap selektif, hingga manajemen stabilitas kapal. Lebih dari sekadar aspek teknis, program ini menempa jiwa kepemimpinan di bawah tekanan, kemampuan komunikasi tim yang solid di tengah laut, serta keberanian mengambil keputusan cepat dalam situasi darurat. Lulusan diproyeksikan menjadi Pengelola Pelabuhan dan ahli operasional alat tangkap yang bersertifikat global. Mereka tidak hanya ahli dalam navigasi, tetapi juga menjadi garda terdepan dalam menjaga kelestarian samudera dari praktik penangkapan yang merusak.',
+      'Kegiatan pembelajaran didukung oleh laboratorium navigasi, simulasi penangkapan, serta teaching factory berbasis operasional perikanan tangkap. Mahasiswa dibekali keahlian teknis navigasi elektronik (Radar, Sonar, GPS), hukum laut internasional, teknik pengoperasian alat tangkap selektif, dan manajemen stabilitas kapal. Program ini juga menempa jiwa kepemimpinan di bawah tekanan dan kemampuan mengambil keputusan cepat dalam situasi darurat di laut.',
     quote:
       'Samudera memanggil para pemimpin! Jadilah nahkoda masa depan yang menaklukkan ombak dengan kecerdasan navigasi, bukan sekadar keberuntungan. Siap untuk berlayar lebih jauh?',
     logo: '/placeholder-logo.png',
     image: '/gallery-4.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 3, S.Tr.Pi., M.Si.',
+      name: 'Fauzi Syahputra, S.Pi., M.Si.',
       image: '/placeholder-kaprodi.jpg',
     },
   },
   {
     id: 4,
-    title: 'S1 Tr. Teknologi Akuakultur (The System Engineers)',
+    title: 'S1 Tr. Teknologi Akuakultur',
     description:
-      'Sebagai level lanjutan dari budidaya konvensional, program ini mempertemukan aspek biologi dengan teknik mesin dan manajemen sistem. Kompetensi utama difokuskan pada perancangan dan pengoperasian sistem budidaya modern seperti Recirculating Aquaculture System (RAS) dan Bioflok, instalasi otomatisasi tambak, serta Analisis Dampak Lingkungan (AMDAL). Mahasiswa dilatih untuk memiliki kemampuan pemecahan masalah secara kreatif, kecakapan manajerial proyek besar, serta visi keberlanjutan lingkungan yang kuat. Lulusan diarahkan menjadi Manajer Akuakultur Industrial, Konsultan Lingkungan, hingga analis keberlanjutan di perusahaan multinasional. Mereka adalah pionir industri yang mampu menyeimbangkan keuntungan bisnis tinggi dengan kelestarian alam melalui pendekatan High-Tech.',
+      'Program ini mengintegrasikan laboratorium sistem budidaya modern dan teaching factory berbasis teknologi seperti RAS dan bioflok dalam proses pembelajaran. Kompetensi utama difokuskan pada perancangan sistem budidaya Recirculating Aquaculture System (RAS), instalasi otomatisasi tambak, dan Analisis Dampak Lingkungan (AMDAL). Mahasiswa dilatih memiliki kemampuan pemecahan masalah kreatif, kecakapan manajerial proyek besar, serta visi keberlanjutan lingkungan yang kuat.',
     quote:
       'Jangan cuma budidaya biasa, mari kita bangun industri yang canggih! Jadilah arsitek akuakultur modern yang mampu membuktikan bahwa industri dan alam bisa hidup berdampingan.',
     logo: '/placeholder-logo.png',
     image: '/gallery-6.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 4, S.Pi., M.T.',
+      name: 'Dr. Nur Indaryanti, S.P., M.Si.',
       image: '/placeholder-kaprodi.jpg',
     },
   },
@@ -68,13 +68,13 @@ const programs = [
     id: 5,
     title: 'S1 Tr. Teknologi Cerdas Penangkapan Ikan',
     description:
-      'Sebagai program studi paling futuristik, prodi ini menggabungkan kearifan bahari dengan kekuatan teknologi Digital 4.0. Mahasiswa akan mendalami implementasi Internet of Things (IoT) untuk sensor bawah air, pengolahan data citra satelit untuk mendeteksi lokasi ikan, hingga pemanfaatan Artificial Intelligence (AI) dalam sistem perikanan. Soft skills yang dikembangkan meliputi kelincahan digital, logika algoritma yang kuat, serta keberanian untuk mendisrupsi cara-cara lama melalui inovasi. Lulusannya akan mengisi peran sebagai Smart Fishing Engineer, Analis Data Kelautan, dan spesialis teknologi maritim. Program ini melahirkan generasi nelayan modern yang bekerja berbasiskan data, bukan sekadar insting, demi meningkatkan efisiensi dan akurasi hasil laut Indonesia.',
+      'Laboratorium teknologi digital kelautan dan teaching factory berbasis smart fishing menjadi pusat pembelajaran dalam program ini. Mahasiswa mendalami implementasi Internet of Things (IoT) untuk sensor bawah air, pengolahan data citra satelit untuk deteksi lokasi ikan, hingga pemanfaatan Artificial Intelligence (AI) dalam sistem perikanan. Lulusannya siap mengisi peran sebagai Smart Fishing Engineer dan Analis Data Kelautan yang bekerja berbasis data untuk meningkatkan efisiensi hasil laut Indonesia.',
     quote:
       "Bawa teknologi ke tengah laut! Ubah kodingmu menjadi jaring digital dan mari kita hack masa depan perikanan dunia dengan sensor dan data pintarmu. Let's make waves!",
     logo: '/placeholder-logo.png',
     image: '/gallery-1.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 5, S.Pi., M.Kom.',
+      name: 'Denta Tirtana, S.P., M.Si.',
       image: '/placeholder-kaprodi.jpg',
     },
   },
@@ -82,13 +82,13 @@ const programs = [
     id: 6,
     title: 'S1 Tr. Agribisnis Perikanan',
     description:
-      'Di program ini, ikan dipandang sebagai komoditas global bernilai ekonomi tinggi yang dikelola dengan strategi bisnis yang tepat. Mahasiswa akan menguasai strategi pemasaran internasional, manajemen rantai pasok dingin (cold chain management), sertifikasi ekspor, hingga analisis keuangan bisnis. Selain kompetensi teknis, mahasiswa diasah untuk memiliki kemampuan negosiasi yang tajam, komunikasi persuasif, mental pemenang (entrepreneurial mindset), serta kecerdasan finansial. Output yang dihasilkan adalah para Manajer Ekspor-Impor, Analis Bisnis, dan CEO Startup Perikanan yang siap mendunia. Lulusan diharapkan mampu memutus rantai pemasaran yang tidak efisien dan membawa produk perikanan lokal, khususnya dari Lampung, untuk menembus pasar elit internasional.',
+      'Program studi ini memanfaatkan laboratorium agribisnis dan teaching factory sebagai sarana simulasi dan praktik rantai nilai usaha perikanan. Mahasiswa menguasai strategi pemasaran internasional, manajemen rantai pasok dingin (cold chain management), sertifikasi ekspor, hingga analisis keuangan bisnis perikanan. Mereka diasah untuk memiliki kemampuan negosiasi tajam, komunikasi persuasif, dan entrepreneurial mindset untuk menjadi CEO Startup Perikanan yang siap mendunia.',
     quote:
       'Ikan adalah emas biru. Jika kamu memiliki jiwa bisnis dan ingin menguasai pasar dunia, mari bergabung dan jadilah arsitek ekonomi biru yang sukses. Join the hustle!',
     logo: '/placeholder-logo.png',
     image: '/gallery-5.jpg',
     kaprodi: {
-      name: 'Nama Kaprodi 6, S.E., M.Si.',
+      name: 'Kaprodi S1 Tr. Agribisnis Perikanan',
       image: '/placeholder-kaprodi.jpg',
     },
   },

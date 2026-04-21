@@ -11,6 +11,7 @@ import {
   ClipboardList,
   ExternalLink,
   Image as ImageIcon,
+  CheckCircle2,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -385,17 +386,24 @@ export default function PengajuanTab({
                             {item.judul_kegiatan}
                           </TableCell>
                           <TableCell className='text-right'>
-                            <Badge
-                              variant={
-                                item.status === 'Disetujui'
-                                  ? 'default'
-                                  : item.status === 'Ditolak'
-                                    ? 'destructive'
-                                    : 'secondary'
-                              }
-                              className='text-sm px-2 py-1'>
-                              {item.status || 'Menunggu validasi'}
-                            </Badge>
+                            {item.status === 'Selesai' ? (
+                              <Badge className='bg-emerald-600 text-white hover:bg-emerald-700 px-2.5 py-1 text-sm font-bold shadow-sm'>
+                                <CheckCircle2 className='size-3.5 mr-1.5' />
+                                Selesai
+                              </Badge>
+                            ) : (
+                              <Badge
+                                variant={
+                                  item.status === 'Disetujui'
+                                    ? 'default'
+                                    : item.status === 'Ditolak'
+                                      ? 'destructive'
+                                      : 'secondary'
+                                }
+                                className='text-sm px-2 py-1'>
+                                {item.status || 'Menunggu validasi'}
+                              </Badge>
+                            )}
                           </TableCell>
                           <TableCell className='text-center'>
                             <Button
