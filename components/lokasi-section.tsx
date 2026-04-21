@@ -44,14 +44,14 @@ export function LokasiSection() {
                     08:00 - 16:00 WIB
                   </span>
                 </div>
-                <div className='flex items-center justify-between'>
+                {/* <div className='flex items-center justify-between'>
                   <span>Sabtu</span>
                   <span className='font-medium text-slate-800'>
                     08:00 - 12:00 WIB
                   </span>
-                </div>
+                </div> */}
                 <div className='flex items-center justify-between'>
-                  <span>Minggu & Hari Libur</span>
+                  <span>Sabtu, Minggu & Hari Libur</span>
                   <span className='font-medium text-red-600'>Tutup</span>
                 </div>
               </div>

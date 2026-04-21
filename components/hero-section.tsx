@@ -48,9 +48,8 @@ export function HeroSection() {
 
       {/* Static Content */}
       <div className='relative z-10 mx-auto max-w-4xl px-4 text-center'>
-        <h1 className='text-balance text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl'>
+        <h1 className='text-balance text-3xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl'>
           Digital Operational Laboratory for Harmonized Integrated Navigation
-          (DOLPHIN)
         </h1>
         <p className='mx-auto mt-6 max-w-2xl text-pretty text-lg leading-relaxed text-white/90 sm:text-xl'>
           Pusat integrasi seluruh layanan laboratorium di Jurusan Perikanan dan

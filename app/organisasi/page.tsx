@@ -14,22 +14,22 @@ import { Card, CardContent } from '@/components/ui/card';
 
 const leaders = {
   kajur: {
-    name: 'Dr. Nama Kepala Jurusan, M.Si',
+    name: 'Pindo Witoko, S.Pi., M.P',
     role: 'Ketua Jurusan',
-    initials: 'KJ',
-    image: '/placeholder-kajur.jpg',
+    initials: 'PW',
+    image: '/foto-organisasi/organisasi-1.jpg',
   },
   kalabPerikanan: {
-    name: 'Nama Kalab Perikanan, S.Pi., M.Si',
+    name: 'Rahmadi Azis, S.Pi., M.Si',
     role: 'Kepala Lab. Perikanan',
-    initials: 'KP',
-    image: '/placeholder-kalab1.jpg',
+    initials: 'RA',
+    image: '/foto-organisasi/org-2.jpg',
   },
   kalabTangkap: {
-    name: 'Ari Setiawan, S.Tr.Pi.',
+    name: 'Dona Setya, S.Tr.Pi., M.Si',
     role: 'Kepala Lab. Perikanan Tangkap',
-    initials: 'AS',
-    image: '/placeholder-kalab2.jpg',
+    initials: 'DS',
+    image: '/foto-organisasi/org-4.jpeg',
   },
 };
 
@@ -41,7 +41,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'MS',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-10.jpeg',
   },
   {
     lab: 'Lab. Kualitas Air',
@@ -49,7 +49,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'CM',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-6.jpeg',
   },
   {
     lab: 'Lab. Pengolahan',
@@ -57,7 +57,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'RR',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-11.jpeg',
   },
   {
     lab: 'Bangsal Pakan Alami',
@@ -65,7 +65,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'NE',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-12.jpeg',
   },
   {
     lab: 'Lab. Perikanan (SFS)',
@@ -73,7 +73,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'AK',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-8.png',
   },
   {
     lab: 'Lab. Pembenihan',
@@ -81,7 +81,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'IH',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-5.png',
   },
   {
     lab: 'Lab. Ikan Hias',
@@ -89,7 +89,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'RA',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-7.png',
   },
   {
     lab: 'Lab. Nutrisi',
@@ -97,7 +97,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'LAB',
     initials: 'MI',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-9.png',
   },
   {
     lab: 'Polyfeed',
@@ -105,7 +105,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'DR',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-13.png',
   },
   {
     lab: 'POFA',
@@ -113,7 +113,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'PW',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/organisasi-1.jpg',
   },
   {
     lab: 'Galangan Kapal',
@@ -121,7 +121,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'DS',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-4.jpeg',
   },
   {
     lab: 'Alat Tangkap Ikan',
@@ -129,15 +129,15 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'DS',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-4.jpeg',
   },
   {
     lab: 'KJA',
-    name: 'Dona Setya & Harbani',
+    name: 'Dona Setya, S.Tr.Pi., M.Si.',
     type: 'perikanan',
     facility: 'TEFA',
-    initials: 'DH',
-    image: '/placeholder-coord.jpg',
+    initials: 'DS',
+    image: '/foto-organisasi/org-4.jpeg',
   },
   {
     lab: 'FISHTECH',
@@ -145,15 +145,15 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'EB',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-3.jpg',
   },
   {
     lab: 'FISH MARKET',
-    name: 'Rahmadiaziz',
+    name: 'Rahmadi Azis, S.Pi., M.Si',
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'R',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-2.jpg',
   },
   {
     lab: 'Polyfish',
@@ -161,7 +161,7 @@ const coordinators = [
     type: 'perikanan',
     facility: 'TEFA',
     initials: 'IH',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-5.png',
   },
   {
     lab: 'Lab Simulator',
@@ -169,7 +169,7 @@ const coordinators = [
     type: 'tangkap',
     facility: 'TEFA',
     initials: 'AS',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-14.jpeg',
   },
   {
     lab: 'Lab Radar',
@@ -177,7 +177,7 @@ const coordinators = [
     type: 'tangkap',
     facility: 'TEFA',
     initials: 'AS',
-    image: '/placeholder-coord.jpg',
+    image: '/foto-organisasi/org-14.jpeg',
   },
 ];
 
