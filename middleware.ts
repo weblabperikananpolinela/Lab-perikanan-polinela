@@ -5,7 +5,7 @@ export function middleware(request: NextRequest) {
   // GANTI VALUE INI:
   // true = Web mode maintenance (semua orang dialihkan ke halaman maintenance)
   // false = Web berjalan normal
-  const isMaintenanceMode = false;
+  const isMaintenanceMode = true;
 
   // Jika mode maintenance aktif, DAN user tidak sedang berada di halaman /maintenance
   if (isMaintenanceMode && request.nextUrl.pathname !== '/maintenance') {
