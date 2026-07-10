@@ -1,14 +1,22 @@
 import withPWAInit from '@ducanh2912/next-pwa';
 
 const withPWA = withPWAInit({
-  dest: 'public', // Lokasi file service worker akan dibuat
-  cacheOnFrontEndNav: true,
-  aggressiveFrontEndNavCaching: true,
+  dest: 'public',
+  // JURUS JITU 1: Matikan total cache navigasi agar halaman dinamis tidak disimpan di browser
+  cacheOnFrontEndNav: false,
+  aggressiveFrontEndNavCaching: false,
   reloadOnOnline: true,
   swcMinify: true,
-  disable: process.env.NODE_ENV === 'development', // PWA dimatikan saat ngoding biar gak rewel, baru nyala saat di-build/production
+  disable: process.env.NODE_ENV === 'development',
   customWorkerDir: 'worker',
-  publicExcludes: ['!noprecache/**/*', '!dokumen/**/*'],
+  // JURUS JITU 2: Blacklist folder admin, api, dan auth agar BENAR-BENAR bersih dari cache
+  publicExcludes: [
+    '!noprecache/**/*',
+    '!dokumen/**/*',
+    '!admin/**/*',
+    '!api/**/*',
+    '!auth/**/*',
+  ],
   workboxOptions: {
     disableDevLogs: true,
   },
@@ -16,7 +24,8 @@ const withPWA = withPWAInit({
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Jika kamu punya konfigurasi bawaan sebelumnya (seperti images domains dll), taruh di dalam sini
+  // TETAP AKTIFAKAN OUTPUT STANDALONE UNTUK DEPLOY DI PLESK CAMPUS
+  output: 'standalone',
   images: {
     remotePatterns: [
       {
