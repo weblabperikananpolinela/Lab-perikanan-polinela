@@ -36,12 +36,18 @@ export default function KelolaJadwal({
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [isDeleting, setIsDeleting] = useState(false);
   
   const supabase = createClient();
 
   const fetchJadwal = async () => {
     setLoading(true);
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress((old) => (old < 90 ? old + 15 : old));
+    }, 50);
+
     const { data } = await supabase
       .from('jadwal_lab')
       .select('*')
@@ -49,7 +55,11 @@ export default function KelolaJadwal({
       .maybeSingle();
 
     setCurrentSchedule(data);
-    setLoading(false);
+    clearInterval(interval);
+    setProgress(100);
+    setTimeout(() => {
+      setLoading(false);
+    }, 300);
   };
 
   useEffect(() => {
@@ -181,8 +191,10 @@ export default function KelolaJadwal({
 
   if (loading)
     return (
-      <div className='animate-pulse p-4 text-slate-500 font-medium'>
-        Memuat data jadwal...
+      <div className='flex flex-col items-center justify-center py-20 text-blue-600'>
+        <CalendarDays className='size-10 mb-4' />
+        <span className='text-2xl font-black'>{progress}%</span>
+        <p className='text-sm font-medium text-slate-500 mt-2'>Memuat data jadwal...</p>
       </div>
     );
 

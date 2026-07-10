@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 
 export default function SettingRekening({ adminProfile, supabase }: { adminProfile: any, supabase: any }) {
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
   const [saving, setSaving] = useState(false);
   
   const [formData, setFormData] = useState({
@@ -24,6 +25,11 @@ export default function SettingRekening({ adminProfile, supabase }: { adminProfi
   useEffect(() => {
     const fetchRekening = async () => {
       setLoading(true);
+      setProgress(0);
+      const interval = setInterval(() => {
+        setProgress((old) => (old < 90 ? old + 15 : old));
+      }, 50);
+
       const { data, error } = await supabase
         .from('rekening_admin')
         .select('*')
@@ -38,7 +44,11 @@ export default function SettingRekening({ adminProfile, supabase }: { adminProfi
           atas_nama: data.atas_nama || ''
         });
       }
-      setLoading(false);
+      clearInterval(interval);
+      setProgress(100);
+      setTimeout(() => {
+        setLoading(false);
+      }, 300);
     };
 
     fetchRekening();
@@ -95,7 +105,13 @@ export default function SettingRekening({ adminProfile, supabase }: { adminProfi
   };
 
   if (loading) {
-     return <div className="animate-pulse text-slate-500 font-medium">Memuat pengaturan rekening...</div>;
+    return (
+      <div className='flex flex-col items-center justify-center py-20 text-indigo-600'>
+        <Landmark className='size-10 mb-4' />
+        <span className='text-2xl font-black'>{progress}%</span>
+        <p className='text-sm font-medium text-slate-500 mt-2'>Memuat pengaturan rekening...</p>
+      </div>
+    );
   }
 
   return (

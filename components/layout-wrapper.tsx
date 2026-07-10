@@ -13,12 +13,12 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <>
       {/* Jika BUKAN halaman admin dashboard, tampilkan Navbar */}
-      {!isAdminDashboard || (isMaintenance && <Navbar />)}
+      {!isMaintenance && !isAdminDashboard && <Navbar />}
 
       <main className='min-h-screen'>{children}</main>
 
       {/* Jika BUKAN halaman admin dashboard, tampilkan Footer */}
-      {!isAdminDashboard || (isMaintenance && <Footer />)}
+      {!isMaintenance && !isAdminDashboard && <Footer />}
     </>
   );
 }

@@ -14,6 +14,9 @@ import {
   FileText,
   Loader2,
   CheckCircle,
+  FlaskConical,
+  CreditCard,
+  UserCircle,
 } from 'lucide-react';
 import NotifButton from '@/app/_components/NotifButton';
 import { getOrCreateDeviceId } from '@/lib/push-utils';
@@ -44,7 +47,7 @@ const formSchema = z
     npm_nip: z.string().regex(/^\d*$/, 'Hanya boleh berisi angka').optional(),
     programStudi: z.string().optional(),
     nik: z.string().regex(/^\d*$/, 'Hanya boleh berisi angka').optional(),
-    judulPenelitian: z.string().min(1, 'Judul Kegiatan/Penelitian wajib diisi'),
+    judulPenelitian: z.string().min(1, 'Judul Kegiatan wajib diisi'),
     dosenPembimbing: z.string().optional(),
     labTarget: z.string().min(1, 'Lab target wajib dipilih'),
     tanggal: z.string().min(1, 'Tanggal peminjaman wajib diisi'),
@@ -70,65 +73,58 @@ const formSchema = z
         });
       } else {
         const isEmail = z.string().email().safeParse(data.email).success;
-        if (!isEmail) {
+        if (!isEmail)
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'Format email tidak valid',
             path: ['email'],
           });
-        }
       }
     } else {
       if (data.email && data.email.trim() !== '') {
         const isEmail = z.string().email().safeParse(data.email).success;
-        if (!isEmail) {
+        if (!isEmail)
           ctx.addIssue({
             code: z.ZodIssueCode.custom,
             message: 'Format email tidak valid',
             path: ['email'],
           });
-        }
       }
     }
 
     if (data.kategori_pemohon === 'Mahasiswa Polinela') {
-      if (!data.npm_nip || data.npm_nip.trim() === '') {
+      if (!data.npm_nip || data.npm_nip.trim() === '')
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'NPM wajib diisi untuk Mahasiswa',
+          message: 'NPM wajib diisi',
           path: ['npm_nip'],
         });
-      }
-      if (!data.programStudi || data.programStudi.trim() === '') {
+      if (!data.programStudi || data.programStudi.trim() === '')
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'Program studi wajib diisi',
+          message: 'Prodi wajib diisi',
           path: ['programStudi'],
         });
-      }
-      if (!data.dosenPembimbing || data.dosenPembimbing.trim() === '') {
+      if (!data.dosenPembimbing || data.dosenPembimbing.trim() === '')
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
           message: 'Dosen Pembimbing wajib diisi',
           path: ['dosenPembimbing'],
         });
-      }
     } else if (data.kategori_pemohon === 'Dosen Polinela') {
-      if (!data.npm_nip || data.npm_nip.trim() === '') {
+      if (!data.npm_nip || data.npm_nip.trim() === '')
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'NIP wajib diisi untuk Dosen',
+          message: 'NIP wajib diisi',
           path: ['npm_nip'],
         });
-      }
     } else if (data.kategori_pemohon === 'Umum') {
-      if (!data.nik || data.nik.trim() === '') {
+      if (!data.nik || data.nik.trim() === '')
         ctx.addIssue({
           code: z.ZodIssueCode.custom,
-          message: 'NIK wajib diisi untuk Umum',
+          message: 'NIK wajib diisi',
           path: ['nik'],
         });
-      }
     }
   });
 
@@ -192,6 +188,14 @@ const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET =
   process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_PAYMENT;
 
+const formatRupiah = (angka: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(angka || 0);
+};
+
 export default function PengajuanForm() {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -211,26 +215,27 @@ export default function PengajuanForm() {
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(formSchema),
-    defaultValues: {
-      items: [],
-    },
+    defaultValues: { items: [] },
   });
 
-  const { fields, append, remove } = useFieldArray({
-    control,
-    name: 'items',
-  });
+  const { fields, append, remove } = useFieldArray({ control, name: 'items' });
 
   const kategoriPemohon = watch('kategori_pemohon');
   const labTargetValue = watch('labTarget');
   const judulPenelitianValue = watch('judulPenelitian');
 
   const [availableItems, setAvailableItems] = useState<any[]>([]);
+  const [availableLayanan, setAvailableLayanan] = useState<any[]>([]);
+  const [selectedLayanan, setSelectedLayanan] = useState<number[]>([]);
+  const [totalBiaya, setTotalBiaya] = useState<number>(0);
 
   const isRestrictedUmum =
     kategoriPemohon === 'Umum' &&
     labTargetValue &&
     !freeUmumLabs.includes(labTargetValue);
+
+  // LOGIKA BARU: Tentukan apakah user Wajib Bayar (Hanya muncul jika ada layanan uji yang dipilih)
+  const requirePayment = selectedLayanan.length > 0;
 
   useEffect(() => {
     setValue('judulPenelitian', '', { shouldValidate: false });
@@ -241,13 +246,11 @@ export default function PengajuanForm() {
       setAvailableItems([]);
       return;
     }
-
     const lab_id = labMap[labTargetValue];
     if (!lab_id) return;
 
     const fetchInventaris = async () => {
       const supabase = createClient();
-      // FITUR BARU: Tambahkan spesifikasi dan keterangan ke dalam query select
       const { data, error } = await supabase
         .from('inventaris')
         .select(
@@ -261,7 +264,6 @@ export default function PengajuanForm() {
           .map((item: any) => ({
             jenis_alat: item.jenis_alat,
             jumlah: item.jumlah_baik ?? 0,
-            // Fallback ke keterangan jika spesifikasi kosong
             spesifikasi: item.spesifikasi || item.keterangan || null,
           }));
         setAvailableItems(mapped);
@@ -269,7 +271,6 @@ export default function PengajuanForm() {
         setAvailableItems([]);
       }
     };
-
     fetchInventaris();
   }, [labTargetValue]);
 
@@ -278,7 +279,6 @@ export default function PengajuanForm() {
       setBankInfo(null);
       return;
     }
-
     const lab_id = labMap[labTargetValue as keyof typeof labMap];
     if (!lab_id) return;
 
@@ -290,22 +290,52 @@ export default function PengajuanForm() {
         .select('*')
         .eq('lab_id', lab_id)
         .maybeSingle();
-
-      if (!error && data) {
-        setBankInfo(data);
-      } else {
-        setBankInfo(null);
-      }
+      if (!error && data) setBankInfo(data);
+      else setBankInfo(null);
       setIsFetchingBank(false);
     };
-
     fetchBankInfo();
   }, [labTargetValue]);
+
+  useEffect(() => {
+    if (!labTargetValue) {
+      setAvailableLayanan([]);
+      setSelectedLayanan([]);
+      return;
+    }
+    const lab_id = labMap[labTargetValue as keyof typeof labMap];
+    if (!lab_id) return;
+
+    const fetchLayanan = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('layanan_lab')
+        .select('*')
+        .eq('lab_id', lab_id);
+      if (!error && data) setAvailableLayanan(data);
+      else setAvailableLayanan([]);
+      setSelectedLayanan([]);
+    };
+    fetchLayanan();
+  }, [labTargetValue]);
+
+  useEffect(() => {
+    let total = 0;
+    selectedLayanan.forEach((id) => {
+      const layanan = availableLayanan.find((s) => s.id === id);
+      if (layanan) {
+        if (kategoriPemohon === 'Umum') total += layanan.harga_eksternal || 0;
+        else total += layanan.harga_internal || 0;
+      }
+    });
+    setTotalBiaya(total);
+  }, [selectedLayanan, kategoriPemohon, availableLayanan]);
 
   const onSubmit = async (data: FormData) => {
     setIsSubmitting(true);
     try {
-      if (data.kategori_pemohon === 'Umum' && !paymentFile) {
+      // FIX LOGIKA PEMBAYARAN: Wajib file jika requirePayment = true
+      if (requirePayment && !paymentFile) {
         Swal.fire({
           icon: 'error',
           title: 'Oops...',
@@ -317,7 +347,7 @@ export default function PengajuanForm() {
       }
 
       let finalPaymentUrl = null;
-      if (data.kategori_pemohon === 'Umum' && paymentFile) {
+      if (requirePayment && paymentFile) {
         if (!CLOUDINARY_CLOUD_NAME || !CLOUDINARY_UPLOAD_PRESET) {
           Swal.fire({
             text: 'Error Konfigurasi Cloudinary.',
@@ -344,12 +374,10 @@ export default function PengajuanForm() {
         const cloudData = await res.json();
         setIsUploadingPayment(false);
 
-        if (!res.ok) {
+        if (!res.ok)
           throw new Error(
             cloudData.error?.message || 'Gagal upload bukti pembayaran',
           );
-        }
-
         finalPaymentUrl = cloudData.secure_url;
       }
 
@@ -363,19 +391,16 @@ export default function PengajuanForm() {
         .eq('tanggal', data.tanggal)
         .eq('status', 'Disetujui');
 
-      if (existingError) {
+      if (existingError)
         throw new Error('Gagal memeriksa jadwal: ' + existingError.message);
-      }
 
       let conflictFound = null;
       if (existingSchedules) {
-        const newMulai = data.jam_mulai;
-        const newSelesai = data.jam_selesai;
-
         for (const schedule of existingSchedules) {
-          const oldMulai = schedule.jam_mulai;
-          const oldSelesai = schedule.jam_selesai;
-          if (newMulai < oldSelesai && newSelesai > oldMulai) {
+          if (
+            data.jam_mulai < schedule.jam_selesai &&
+            data.jam_selesai > schedule.jam_mulai
+          ) {
             conflictFound = schedule;
             break;
           }
@@ -411,6 +436,13 @@ export default function PengajuanForm() {
         jam_selesai: data.jam_selesai,
         status: 'Menunggu validasi',
         bukti_pembayaran: finalPaymentUrl,
+        total_biaya: totalBiaya,
+        detail_layanan:
+          selectedLayanan.length > 0
+            ? selectedLayanan
+                .map((id) => availableLayanan.find((s) => s.id === id))
+                .filter(Boolean)
+            : null,
       };
 
       const { data: insertedPeminjaman, error: errorPeminjaman } =
@@ -419,7 +451,6 @@ export default function PengajuanForm() {
           .insert(peminjamanData)
           .select('id')
           .single();
-
       if (errorPeminjaman) throw new Error(errorPeminjaman.message);
 
       if (data.items && data.items.length > 0) {
@@ -428,21 +459,19 @@ export default function PengajuanForm() {
           nama_alat_bahan: item.namaAlat,
           jumlah: parseInt(item.jumlah, 10),
         }));
-
         const { error: errorItem } = await supabase
           .from('peminjaman_item')
           .insert(itemData);
-
         if (errorItem) throw new Error(errorItem.message);
       }
 
+      // --- SEND EMAILS ---
       try {
         const { data: adminData } = await supabase
           .from('whitelist_admin')
           .select('email')
           .eq('lab_id', resolvedLabId)
           .single();
-
         const targetEmailAdmin =
           adminData?.email || 'admin_pusat@polinela.ac.id';
 
@@ -458,7 +487,7 @@ export default function PengajuanForm() {
               tanggal: data.tanggal,
               lab_id: resolvedLabId,
               kategori_pemohon: data.kategori_pemohon,
-              is_berbayar: data.kategori_pemohon === 'Umum',
+              is_berbayar: requirePayment,
             },
           }),
         });
@@ -474,7 +503,7 @@ export default function PengajuanForm() {
                 judul_kegiatan: data.judulPenelitian,
                 nama_pengaju: data.nama,
                 kategori_pemohon: data.kategori_pemohon,
-                is_berbayar: data.kategori_pemohon === 'Umum',
+                is_berbayar: requirePayment,
               },
             }),
           });
@@ -496,7 +525,7 @@ export default function PengajuanForm() {
           }),
         });
       } catch (pushErr) {
-        console.error('Gagal mengirim push notification ke admin:', pushErr);
+        console.error('Gagal mengirim push notification:', pushErr);
       }
 
       Swal.fire({
@@ -552,400 +581,399 @@ export default function PengajuanForm() {
   }
 
   return (
-    <div className='relative min-h-screen bg-gradient-to-br from-cyan-500 via-blue-600 to-blue-900 pt-20 md:pt-24 flex flex-col'>
-      {/* Tombol Kembali */}
-      <div className='absolute top-6 left-6 md:top-10 md:left-10 z-10'>
+    <div className='relative min-h-screen bg-slate-100 pb-20'>
+      {/* Header Background */}
+      <div className='absolute top-0 left-0 w-full h-[40vh] bg-gradient-to-br from-cyan-600 to-blue-900 z-0' />
+
+      <div className='relative z-10 pt-20 px-4 md:px-8 max-w-5xl mx-auto'>
+        {/* Tombol Kembali */}
         <Link
           href='/'
-          className='flex items-center gap-2 text-white/80 hover:text-white transition-colors'>
+          className='inline-flex items-center gap-2 text-white/80 hover:text-white transition-colors mb-6'>
           <ArrowLeft size={20} />
-          <span className='font-medium text-sm md:text-base'>Kembali</span>
+          <span className='font-medium'>Kembali</span>
         </Link>
-      </div>
 
-      <div className='w-full flex-1'>
-        <div className='px-6 md:px-0 mb-6 text-white text-center md:text-left md:max-w-5xl md:mx-auto w-full'>
-          <h1 className='text-3xl md:text-4xl font-bold drop-shadow-md'>
-            Formulir Pengajuan
+        <div className='mb-8 text-white'>
+          <h1 className='text-3xl md:text-4xl font-extrabold tracking-tight drop-shadow-sm'>
+            Formulir Pengajuan Lab
           </h1>
-          <p className='mt-2 text-blue-50 font-medium drop-shadow-sm md:text-lg'>
-            Isi data identitas dan alat/bahan yang akan dipinjam untuk kebutuhan
-            laboratorium.
+          <p className='mt-2 text-blue-100 font-medium md:text-lg'>
+            Isi detail kegiatan dan kebutuhan alat/bahan Anda dengan lengkap.
           </p>
         </div>
 
         <form
           onSubmit={handleSubmit(onSubmit)}
-          className='space-y-8 w-full bg-white/95 backdrop-blur-md shadow-2xl rounded-t-[2rem] md:rounded-2xl md:max-w-5xl mx-auto p-6 md:p-8 min-h-[80vh] md:border md:border-white/20 md:mb-8 pb-12'>
-          <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
-            {/* Nama & Email */}
-            <div className='space-y-2'>
-              <Label className='md:text-base font-semibold'>Nama Lengkap</Label>
-              <Input
-                className='md:text-lg md:h-14'
-                placeholder='Masukkan nama lengkap'
-                {...register('nama')}
-              />
-              {errors.nama && (
-                <span className='text-sm text-red-500'>
-                  {errors.nama.message}
-                </span>
-              )}
-            </div>
-            <div className='space-y-1'>
-              <Label className='md:text-base font-semibold flex items-center'>
-                Email address
-                {kategoriPemohon !== 'Umum' && (
-                  <span className='text-sm font-normal text-slate-400 ml-1.5'>
-                    (Opsional)
-                  </span>
-                )}
-              </Label>
-              <Input
-                className='md:text-lg md:h-14'
-                type='email'
-                placeholder='contoh@email.com'
-                {...register('email')}
-              />
-              {errors.email && (
-                <span className='text-sm text-red-500'>
-                  {errors.email.message}
-                </span>
-              )}
+          className='bg-white shadow-2xl rounded-2xl md:rounded-3xl border border-slate-200 overflow-hidden'>
+          {/* SEKSI 1: IDENTITAS PEMOHON */}
+          <div className='p-6 md:p-10 border-b border-slate-100'>
+            <div className='flex items-center gap-3 mb-6 pb-2 border-b-2 border-blue-50'>
+              <UserCircle className='text-blue-600 size-6' />
+              <h2 className='text-xl font-bold text-slate-800'>
+                Informasi Pemohon
+              </h2>
             </div>
 
-            {/* Kategori Pemohon */}
-            <div className='space-y-2 col-span-1 md:col-span-2'>
-              <Label className='md:text-base font-semibold'>
-                Kategori Pemohon
-              </Label>
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className='w-full justify-between font-normal text-slate-700 md:text-lg md:h-14'>
-                    {kategoriPemohon || '-- Pilih Kategori Anda --'}
-                    <ChevronDown className='h-4 w-4 opacity-50' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className='w-[--radix-dropdown-menu-trigger-width]'
-                  align='start'>
-                  {['Mahasiswa Polinela', 'Dosen Polinela', 'Umum'].map(
-                    (kat) => (
-                      <DropdownMenuItem
-                        key={kat}
-                        className='md:text-base py-2.5 cursor-pointer'
-                        onClick={() =>
-                          setValue('kategori_pemohon', kat as any, {
-                            shouldValidate: true,
-                          })
-                        }>
-                        {kat}
-                      </DropdownMenuItem>
-                    ),
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {errors.kategori_pemohon && (
-                <span className='text-sm text-red-500'>
-                  {errors.kategori_pemohon.message}
-                </span>
-              )}
-            </div>
-
-            {/* Conditional Input Kategori */}
-            {(kategoriPemohon === 'Mahasiswa Polinela' ||
-              kategoriPemohon === 'Dosen Polinela') && (
-              <div className='space-y-2 animate-in fade-in slide-in-from-top-4 duration-300'>
-                <Label className='md:text-base font-semibold'>
-                  {kategoriPemohon === 'Mahasiswa Polinela' ? 'NPM' : 'NIP'}
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='space-y-2'>
+                <Label className='md:text-base font-semibold text-slate-700'>
+                  Kategori Pemohon
                 </Label>
-                <Input
-                  className='md:text-lg md:h-14'
-                  placeholder={`Masukkan ${kategoriPemohon === 'Mahasiswa Polinela' ? 'NPM' : 'NIP'} Anda`}
-                  {...register('npm_nip')}
-                />
-                {errors.npm_nip && (
-                  <span className='text-sm text-red-500'>
-                    {errors.npm_nip.message}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {kategoriPemohon === 'Mahasiswa Polinela' && (
-              <div className='space-y-2 animate-in fade-in slide-in-from-top-4 duration-300'>
-                <Label className='md:text-base font-semibold'>
-                  Program Studi
-                </Label>
-                <Input
-                  className='md:text-lg md:h-14'
-                  placeholder='Cth: Budidaya Perikanan'
-                  {...register('programStudi')}
-                />
-                {errors.programStudi && (
-                  <span className='text-sm text-red-500'>
-                    {errors.programStudi.message}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {kategoriPemohon === 'Umum' && (
-              <div className='space-y-2 col-span-1 md:col-span-2 animate-in fade-in slide-in-from-top-4 duration-300'>
-                <Label className='md:text-base font-semibold'>NIK KTP</Label>
-                <Input
-                  className='md:text-lg md:h-14'
-                  placeholder='Masukkan 16 digit NIK KTP'
-                  {...register('nik')}
-                />
-                {errors.nik && (
-                  <span className='text-sm text-red-500'>
-                    {errors.nik.message}
-                  </span>
-                )}
-              </div>
-            )}
-
-            {/* Lab Target dengan Grouping Baru & Badge Jenis */}
-            <div className='space-y-2 col-span-1 md:col-span-2 mt-2'>
-              <Label className='md:text-base font-semibold'>Lab Target</Label>
-              <DropdownMenu modal={false}>
-                <DropdownMenuTrigger asChild>
-                  <Button
-                    variant='outline'
-                    className='w-full justify-between font-normal text-slate-700 md:text-lg md:h-14'>
-                    {labTargetValue || 'Pilih laboratorium...'}
-                    <ChevronDown className='h-4 w-4 opacity-50' />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent
-                  className='w-[--radix-dropdown-menu-trigger-width] max-h-80 overflow-y-auto'
-                  align='start'>
-                  {/* Grup Lab Perikanan */}
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50'>
-                      Lab Perikanan
-                    </DropdownMenuLabel>
-                    {labKategoriData['Lab Perikanan'].map((lab) => (
-                      <DropdownMenuItem
-                        key={lab.nama}
-                        className='text-base md:text-sm py-2.5 cursor-pointer ml-1'
-                        onClick={() =>
-                          setValue('labTarget', lab.nama, {
-                            shouldValidate: true,
-                          })
-                        }>
-                        <div className='flex items-center justify-between w-full'>
-                          <span>{lab.nama}</span>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${
-                              lab.jenis === 'TEFA'
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-blue-100 text-blue-700'
-                            }`}>
-                            {lab.jenis}
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-
-                  {/* Grup Lab Perikanan Tangkap */}
-                  <DropdownMenuGroup>
-                    <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50 mt-2 border-t pt-2'>
-                      Lab Perikanan Tangkap
-                    </DropdownMenuLabel>
-                    {labKategoriData['Lab Perikanan Tangkap'].map((lab) => (
-                      <DropdownMenuItem
-                        key={lab.nama}
-                        className='text-base md:text-sm py-2.5 cursor-pointer ml-1'
-                        onClick={() =>
-                          setValue('labTarget', lab.nama, {
-                            shouldValidate: true,
-                          })
-                        }>
-                        <div className='flex items-center justify-between w-full'>
-                          <span>{lab.nama}</span>
-                          <span
-                            className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${
-                              lab.jenis === 'TEFA'
-                                ? 'bg-purple-100 text-purple-700'
-                                : 'bg-blue-100 text-blue-700'
-                            }`}>
-                            {lab.jenis}
-                          </span>
-                        </div>
-                      </DropdownMenuItem>
-                    ))}
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-              {errors.labTarget && (
-                <span className='text-sm text-red-500'>
-                  {errors.labTarget.message}
-                </span>
-              )}
-            </div>
-
-            {/* Judul Kegiatan (Dinamis untuk UMUM) */}
-            <div className='space-y-2 col-span-1 md:col-span-2'>
-              <Label className='md:text-base font-semibold'>
-                Kegiatan / Tujuan
-              </Label>
-              {isRestrictedUmum ? (
                 <DropdownMenu modal={false}>
                   <DropdownMenuTrigger asChild>
                     <Button
                       variant='outline'
-                      className='w-full justify-between font-normal text-slate-700 md:text-lg md:h-14'>
-                      {judulPenelitianValue || '-- Pilih Jenis Kegiatan --'}
+                      className='w-full justify-between font-normal text-slate-700 md:h-12 bg-slate-50'>
+                      {kategoriPemohon || '-- Pilih Kategori --'}
                       <ChevronDown className='h-4 w-4 opacity-50' />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     className='w-[--radix-dropdown-menu-trigger-width]'
                     align='start'>
-                    {['Kunjungan edukasi', 'PKL', 'Pelatihan'].map((keg) => (
-                      <DropdownMenuItem
-                        key={keg}
-                        className='md:text-base py-2.5 cursor-pointer'
-                        onClick={() =>
-                          setValue('judulPenelitian', keg, {
-                            shouldValidate: true,
-                          })
-                        }>
-                        {keg}
-                      </DropdownMenuItem>
-                    ))}
+                    {['Mahasiswa Polinela', 'Dosen Polinela', 'Umum'].map(
+                      (kat) => (
+                        <DropdownMenuItem
+                          key={kat}
+                          className='py-2.5 cursor-pointer'
+                          onClick={() =>
+                            setValue('kategori_pemohon', kat as any, {
+                              shouldValidate: true,
+                            })
+                          }>
+                          {kat}
+                        </DropdownMenuItem>
+                      ),
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
-              ) : (
-                <Input
-                  className='md:text-lg md:h-14'
-                  placeholder='Tuliskan detail kegiatan / judul penelitian...'
-                  {...register('judulPenelitian')}
-                />
-              )}
-              {errors.judulPenelitian && (
-                <span className='text-sm text-red-500'>
-                  {errors.judulPenelitian.message}
-                </span>
-              )}
-            </div>
-
-            {/* Dosen Pembimbing (Sembunyikan untuk UMUM) */}
-            {kategoriPemohon !== 'Umum' && (
-              <div className='space-y-2 col-span-1 md:col-span-2 animate-in fade-in'>
-                <Label className='md:text-base font-semibold'>
-                  Dosen Pembimbing / PIC
-                </Label>
-                <Input
-                  className='md:text-lg md:h-14'
-                  placeholder='Nama dosen pembimbing'
-                  {...register('dosenPembimbing')}
-                />
-                {errors.dosenPembimbing && (
+                {errors.kategori_pemohon && (
                   <span className='text-sm text-red-500'>
-                    {errors.dosenPembimbing.message}
+                    {errors.kategori_pemohon.message}
                   </span>
                 )}
               </div>
-            )}
 
-            {/* Waktu dengan Helper Text */}
-            <div className='col-span-1 md:col-span-2 mt-2 border border-amber-200 bg-amber-50 rounded-lg p-4'>
-              <div className='flex items-start gap-2 mb-4'>
-                <Info className='size-5 text-amber-600 shrink-0 mt-0.5' />
-                <p className='text-sm text-amber-800 font-medium leading-relaxed'>
-                  Pastikan Anda telah{' '}
-                  <Link
-                    href='/jadwal'
-                    target='_blank'
-                    className='underline font-bold hover:text-amber-900'>
-                    melihat jadwal ketersediaan lab
-                  </Link>{' '}
-                  terlebih dahulu sebelum menentukan waktu peminjaman untuk
-                  menghindari bentrok.
-                </p>
+              <div className='space-y-2'>
+                <Label className='md:text-base font-semibold text-slate-700'>
+                  Nama Lengkap
+                </Label>
+                <Input
+                  className='md:h-12 bg-slate-50'
+                  placeholder='Masukkan nama lengkap'
+                  {...register('nama')}
+                />
+                {errors.nama && (
+                  <span className='text-sm text-red-500'>
+                    {errors.nama.message}
+                  </span>
+                )}
               </div>
 
-              <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
-                <div className='space-y-2'>
-                  <Label className='md:text-base font-semibold text-slate-800'>
-                    Tanggal
+              <div className='space-y-1'>
+                <Label className='md:text-base font-semibold text-slate-700 flex items-center'>
+                  Alamat Email{' '}
+                  {kategoriPemohon !== 'Umum' && (
+                    <span className='text-sm font-normal text-slate-400 ml-1.5'>
+                      (Opsional)
+                    </span>
+                  )}
+                </Label>
+                <Input
+                  className='md:h-12 bg-slate-50'
+                  type='email'
+                  placeholder='contoh@email.com'
+                  {...register('email')}
+                />
+                {errors.email && (
+                  <span className='text-sm text-red-500'>
+                    {errors.email.message}
+                  </span>
+                )}
+              </div>
+
+              {(kategoriPemohon === 'Mahasiswa Polinela' ||
+                kategoriPemohon === 'Dosen Polinela') && (
+                <div className='space-y-2 animate-in fade-in'>
+                  <Label className='md:text-base font-semibold text-slate-700'>
+                    {kategoriPemohon === 'Mahasiswa Polinela' ? 'NPM' : 'NIP'}
                   </Label>
                   <Input
-                    className='md:text-lg md:h-14 bg-white'
-                    type='date'
-                    {...register('tanggal')}
+                    className='md:h-12 bg-slate-50'
+                    placeholder={`Masukkan ${kategoriPemohon === 'Mahasiswa Polinela' ? 'NPM' : 'NIP'} Anda`}
+                    {...register('npm_nip')}
                   />
+                  {errors.npm_nip && (
+                    <span className='text-sm text-red-500'>
+                      {errors.npm_nip.message}
+                    </span>
+                  )}
                 </div>
-                <div className='space-y-2'>
-                  <Label className='md:text-base font-semibold text-slate-800'>
-                    Mulai
+              )}
+
+              {kategoriPemohon === 'Mahasiswa Polinela' && (
+                <div className='space-y-2 animate-in fade-in'>
+                  <Label className='md:text-base font-semibold text-slate-700'>
+                    Program Studi
                   </Label>
                   <Input
-                    className='md:text-lg md:h-14 bg-white'
-                    type='time'
-                    {...register('jam_mulai')}
+                    className='md:h-12 bg-slate-50'
+                    placeholder='Cth: Budidaya Perikanan'
+                    {...register('programStudi')}
                   />
+                  {errors.programStudi && (
+                    <span className='text-sm text-red-500'>
+                      {errors.programStudi.message}
+                    </span>
+                  )}
                 </div>
-                <div className='space-y-2'>
-                  <Label className='md:text-base font-semibold text-slate-800'>
-                    Selesai
+              )}
+
+              {kategoriPemohon === 'Umum' && (
+                <div className='space-y-2 animate-in fade-in'>
+                  <Label className='md:text-base font-semibold text-slate-700'>
+                    NIK KTP
                   </Label>
                   <Input
-                    className='md:text-lg md:h-14 bg-white'
-                    type='time'
-                    {...register('jam_selesai')}
+                    className='md:h-12 bg-slate-50'
+                    placeholder='Masukkan 16 digit NIK'
+                    {...register('nik')}
                   />
+                  {errors.nik && (
+                    <span className='text-sm text-red-500'>
+                      {errors.nik.message}
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* SEKSI 2: DETAIL KEGIATAN & WAKTU */}
+          <div className='p-6 md:p-10 border-b border-slate-100 bg-slate-50/50'>
+            <div className='flex items-center gap-3 mb-6 pb-2 border-b-2 border-blue-50'>
+              <FileText className='text-blue-600 size-6' />
+              <h2 className='text-xl font-bold text-slate-800'>
+                Detail Kegiatan
+              </h2>
+            </div>
+
+            <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+              <div className='space-y-2 col-span-1 md:col-span-2'>
+                <Label className='md:text-base font-semibold text-slate-700'>
+                  Lab Target
+                </Label>
+                <DropdownMenu modal={false}>
+                  <DropdownMenuTrigger asChild>
+                    <Button
+                      variant='outline'
+                      className='w-full justify-between font-normal text-slate-700 md:h-12 bg-white'>
+                      {labTargetValue || 'Pilih laboratorium...'}
+                      <ChevronDown className='h-4 w-4 opacity-50' />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent
+                    className='w-[--radix-dropdown-menu-trigger-width] max-h-80 overflow-y-auto'
+                    align='start'>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50'>
+                        Lab Perikanan
+                      </DropdownMenuLabel>
+                      {labKategoriData['Lab Perikanan'].map((lab) => (
+                        <DropdownMenuItem
+                          key={lab.nama}
+                          className='py-2.5 cursor-pointer ml-1'
+                          onClick={() =>
+                            setValue('labTarget', lab.nama, {
+                              shouldValidate: true,
+                            })
+                          }>
+                          <div className='flex items-center justify-between w-full'>
+                            <span>{lab.nama}</span>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${lab.jenis === 'TEFA' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {lab.jenis}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                    <DropdownMenuGroup>
+                      <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50 mt-2 border-t pt-2'>
+                        Lab Perikanan Tangkap
+                      </DropdownMenuLabel>
+                      {labKategoriData['Lab Perikanan Tangkap'].map((lab) => (
+                        <DropdownMenuItem
+                          key={lab.nama}
+                          className='py-2.5 cursor-pointer ml-1'
+                          onClick={() =>
+                            setValue('labTarget', lab.nama, {
+                              shouldValidate: true,
+                            })
+                          }>
+                          <div className='flex items-center justify-between w-full'>
+                            <span>{lab.nama}</span>
+                            <span
+                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${lab.jenis === 'TEFA' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                              {lab.jenis}
+                            </span>
+                          </div>
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuGroup>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+                {errors.labTarget && (
+                  <span className='text-sm text-red-500'>
+                    {errors.labTarget.message}
+                  </span>
+                )}
+              </div>
+
+              <div className='space-y-2 col-span-1 md:col-span-2'>
+                <Label className='md:text-base font-semibold text-slate-700'>
+                  Kegiatan / Tujuan
+                </Label>
+                {isRestrictedUmum ? (
+                  <DropdownMenu modal={false}>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant='outline'
+                        className='w-full justify-between font-normal text-slate-700 md:h-12 bg-white'>
+                        {judulPenelitianValue || '-- Pilih Jenis Kegiatan --'}
+                        <ChevronDown className='h-4 w-4 opacity-50' />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className='w-[--radix-dropdown-menu-trigger-width]'
+                      align='start'>
+                      {['Kunjungan edukasi', 'PKL', 'Pelatihan'].map((keg) => (
+                        <DropdownMenuItem
+                          key={keg}
+                          className='py-2.5 cursor-pointer'
+                          onClick={() =>
+                            setValue('judulPenelitian', keg, {
+                              shouldValidate: true,
+                            })
+                          }>
+                          {keg}
+                        </DropdownMenuItem>
+                      ))}
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                ) : (
+                  <Input
+                    className='md:h-12 bg-white'
+                    placeholder='Tuliskan detail kegiatan...'
+                    {...register('judulPenelitian')}
+                  />
+                )}
+                {errors.judulPenelitian && (
+                  <span className='text-sm text-red-500'>
+                    {errors.judulPenelitian.message}
+                  </span>
+                )}
+              </div>
+
+              {kategoriPemohon !== 'Umum' && (
+                <div className='space-y-2 col-span-1 md:col-span-2'>
+                  <Label className='md:text-base font-semibold text-slate-700'>
+                    Dosen Pembimbing / PIC
+                  </Label>
+                  <Input
+                    className='md:h-12 bg-white'
+                    placeholder='Nama dosen'
+                    {...register('dosenPembimbing')}
+                  />
+                  {errors.dosenPembimbing && (
+                    <span className='text-sm text-red-500'>
+                      {errors.dosenPembimbing.message}
+                    </span>
+                  )}
+                </div>
+              )}
+
+              <div className='col-span-1 md:col-span-2 mt-2 bg-blue-50/50 border border-blue-100 rounded-xl p-5'>
+                <div className='flex items-start gap-3 mb-5'>
+                  <Info className='size-5 text-blue-600 shrink-0 mt-0.5' />
+                  <p className='text-sm text-blue-800 font-medium leading-relaxed'>
+                    Pastikan Anda telah{' '}
+                    <Link
+                      href='/jadwal'
+                      target='_blank'
+                      className='underline font-bold hover:text-blue-900'>
+                      melihat jadwal ketersediaan lab
+                    </Link>{' '}
+                    terlebih dahulu untuk menghindari bentrok jadwal.
+                  </p>
+                </div>
+                <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+                  <div className='space-y-2'>
+                    <Label className='text-slate-700 font-semibold'>
+                      Tanggal
+                    </Label>
+                    <Input
+                      className='md:h-12 bg-white'
+                      type='date'
+                      {...register('tanggal')}
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label className='text-slate-700 font-semibold'>
+                      Jam Mulai
+                    </Label>
+                    <Input
+                      className='md:h-12 bg-white'
+                      type='time'
+                      {...register('jam_mulai')}
+                    />
+                  </div>
+                  <div className='space-y-2'>
+                    <Label className='text-slate-700 font-semibold'>
+                      Jam Selesai
+                    </Label>
+                    <Input
+                      className='md:h-12 bg-white'
+                      type='time'
+                      {...register('jam_selesai')}
+                    />
+                  </div>
                 </div>
               </div>
             </div>
           </div>
 
-          <hr className='border-slate-200 my-8' />
-
-          {/* Item Inventaris dengan Helper Text */}
-          <div className='space-y-4'>
-            <div>
-              <h2 className='text-xl md:text-2xl font-semibold text-slate-900'>
-                Alat dan bahan
+          {/* SEKSI 3: KEBUTUHAN ALAT & LAYANAN */}
+          <div className='p-6 md:p-10'>
+            <div className='flex items-center gap-3 mb-6 pb-2 border-b-2 border-blue-50'>
+              <FlaskConical className='text-blue-600 size-6' />
+              <h2 className='text-xl font-bold text-slate-800'>
+                Kebutuhan Logistik & Uji Lab
               </h2>
-              <p className='text-sm md:text-base text-slate-500 mt-1'>
-                Pilih dari inventaris yang tersedia di lab tujuan.{' '}
-                <Link
-                  href='/inventaris'
-                  target='_blank'
-                  className='text-blue-600 font-medium hover:underline underline-offset-2 inline-flex items-center'>
-                  Sebaiknya periksa daftar ketersediaan di Katalog Inventaris
-                  terlebih dahulu.
-                </Link>
-              </p>
             </div>
 
-            <div className='space-y-4 mt-4'>
+            <div className='space-y-4'>
+              <Label className='md:text-base font-semibold text-slate-700'>
+                Daftar Alat & Bahan
+              </Label>
               {fields.length === 0 && (
-                <div className='p-6 border-2 border-dashed border-slate-200 bg-slate-50 rounded-xl text-center'>
-                  <p className='text-slate-500 font-medium md:text-lg'>
+                <div className='p-8 border-2 border-dashed border-slate-200 bg-slate-50/50 rounded-xl text-center transition-colors hover:bg-slate-50'>
+                  <p className='text-slate-600 font-medium md:text-lg'>
                     Anda hanya meminjam ruangan.
                   </p>
                   <p className='text-sm text-slate-400 mt-1'>
-                    Klik tombol <b>Tambah Alat</b> di bawah jika Anda
-                    membutuhkan perlengkapan lab.
+                    Klik tombol di bawah jika Anda membutuhkan perlengkapan lab.
                   </p>
                 </div>
               )}
               {fields.map((field, index) => (
                 <div
                   key={field.id}
-                  className='flex flex-col md:flex-row gap-3 md:items-center'>
+                  className='flex flex-col md:flex-row gap-3 bg-slate-50 p-3 rounded-xl border border-slate-100'>
                   <div className='w-full md:flex-1'>
-                    {/* FITUR BARU: Dropdown menampikan Spesifikasi Alat */}
                     <select
-                      className='w-full h-10 md:h-14 md:text-base rounded-md border border-slate-200 bg-transparent px-3 py-2 text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500'
+                      className='w-full h-12 rounded-lg border border-slate-300 bg-white px-3 text-slate-700 focus:ring-2 focus:ring-blue-500'
                       {...register(`items.${index}.namaAlat`)}
                       defaultValue=''>
                       <option value='' disabled>
@@ -962,9 +990,9 @@ export default function PengajuanForm() {
                       ))}
                     </select>
                   </div>
-                  <div className='w-full grid grid-cols-[1fr_auto] md:flex md:w-auto gap-3'>
+                  <div className='w-full flex md:w-auto gap-3'>
                     <Input
-                      className='w-full md:w-24 md:text-lg md:h-14'
+                      className='w-full md:w-24 h-12 bg-white'
                       type='number'
                       placeholder='Qty'
                       {...register(`items.${index}.jumlah`)}
@@ -972,114 +1000,208 @@ export default function PengajuanForm() {
                     <Button
                       type='button'
                       variant='destructive'
-                      size='icon'
-                      className='md:h-14 md:w-14 shrink-0'
+                      className='h-12 w-12 shrink-0'
                       onClick={() => remove(index)}>
-                      <Trash className='size-4 md:size-5' />
+                      <Trash className='size-5' />
                     </Button>
                   </div>
                 </div>
               ))}
+              <Button
+                type='button'
+                variant='outline'
+                className='w-full border-dashed border-2 h-12 mt-2 text-blue-600 border-blue-200 hover:bg-blue-50'
+                onClick={() => append({ namaAlat: '', jumlah: '' })}>
+                <Plus className='size-5 mr-2' /> Tambah Alat
+              </Button>
             </div>
 
-            <Button
-              type='button'
-              variant='outline'
-              className='w-full border-dashed border-2 md:text-lg md:h-14 mt-2'
-              onClick={() => append({ namaAlat: '', jumlah: '' })}>
-              <Plus className='size-4 mr-2 md:size-5 md:mr-3' /> Tambah Alat
-            </Button>
+            {/* SEKSI LAYANAN UJI LAB */}
+            <div className='mt-10 pt-6 border-t border-slate-100'>
+              <Label className='md:text-base font-semibold text-slate-700'>
+                Layanan Uji Lab (Opsional)
+              </Label>
+              <div className='mt-4'>
+                {availableLayanan.length === 0 ? (
+                  <p className='text-sm text-slate-500 italic bg-slate-50 p-4 rounded-xl text-center border border-slate-100'>
+                    Tidak ada layanan uji khusus terdaftar untuk lab ini.
+                  </p>
+                ) : (
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-4'>
+                    {availableLayanan.map((layanan) => {
+                      const price =
+                        kategoriPemohon === 'Umum'
+                          ? layanan.harga_eksternal
+                          : layanan.harga_internal;
+                      const isSelected = selectedLayanan.includes(layanan.id);
+                      return (
+                        <label
+                          key={layanan.id}
+                          className={`flex items-start gap-3 p-4 border rounded-xl cursor-pointer transition-all duration-200 shadow-sm ${isSelected ? 'bg-blue-50 border-blue-400 shadow-blue-100' : 'bg-white hover:bg-slate-50 hover:border-slate-300'}`}>
+                          <input
+                            type='checkbox'
+                            className='mt-1 size-5 rounded border-slate-300 text-blue-600 focus:ring-blue-500'
+                            checked={isSelected}
+                            onChange={(e) => {
+                              if (e.target.checked)
+                                setSelectedLayanan([
+                                  ...selectedLayanan,
+                                  layanan.id,
+                                ]);
+                              else
+                                setSelectedLayanan(
+                                  selectedLayanan.filter(
+                                    (id) => id !== layanan.id,
+                                  ),
+                                );
+                            }}
+                          />
+                          <div className='flex flex-col'>
+                            <span className='font-bold text-slate-800 text-base leading-tight'>
+                              {layanan.nama_layanan}
+                            </span>
+                            <span className='text-sm text-blue-700 font-bold mt-1.5 bg-blue-100/50 w-fit px-2 py-0.5 rounded-md'>
+                              {formatRupiah(price)}
+                            </span>
+                          </div>
+                        </label>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
 
-          {kategoriPemohon === 'Umum' && (
-            <div className='mt-8 p-6 bg-blue-50/80 border border-blue-200 rounded-xl space-y-4'>
-              <h3 className='text-lg font-bold text-blue-900'>
-                Informasi Pembayaran
-              </h3>
+          {/* SEKSI 4: PEMBAYARAN (MUNCUL JIKA UMUM ATAU ADA TAGIHAN) */}
+          {requirePayment && (
+            <div className='p-6 md:p-10 bg-slate-50/50 border-t border-slate-100'>
+              <div className='flex items-center gap-3 mb-6 pb-2 border-b-2 border-blue-50'>
+                <CreditCard className='text-blue-600 size-6' />
+                <h2 className='text-xl font-bold text-slate-800'>
+                  Pembayaran Administrasi
+                </h2>
+              </div>
 
-              {isFetchingBank ? (
-                <p className='text-blue-800 text-sm flex items-center gap-2'>
-                  <Loader2 className='size-4 animate-spin' /> Mengambil data
-                  rekening...
-                </p>
-              ) : bankInfo ? (
-                <>
-                  <p className='text-sm text-blue-800'>
-                    Kategori Umum dikenakan tarif penggunaan laboratorium.
-                    Silakan transfer sesuai nominal tarif ke rekening di bawah
-                    ini:
-                  </p>
-                  <div className='bg-white p-4 rounded-lg border border-blue-200 inline-block font-mono text-lg font-bold text-slate-800 shadow-sm'>
-                    {bankInfo.nama_bank} {bankInfo.nomor_rekening}{' '}
-                    <br className='md:hidden' />{' '}
-                    <span className='text-sm font-normal text-slate-500 font-sans'>
-                      a.n. {bankInfo.atas_nama}
-                    </span>
-                  </div>
-                  <p className='text-sm text-blue-800'>
-                    <Link
-                      href='/#sop-prosedur'
-                      target='_blank'
-                      className='underline font-bold hover:text-blue-900 transition-colors'>
-                      Periksa detail tarif dan SOP penggunaan di sini
-                    </Link>
-                  </p>
-                </>
-              ) : (
-                <p className='text-amber-700 bg-amber-100 border border-amber-200 p-3 rounded-lg text-sm font-medium leading-relaxed'>
-                  Informasi rekening untuk {labTargetValue || 'lab ini'} belum
-                  diatur. Silakan hubungi admin bersangkutan.
-                </p>
-              )}
-
-              <div className='pt-4'>
-                <Label className='font-semibold text-blue-900 mb-2 block'>
-                  Unggah Bukti Pembayaran{' '}
-                  <span className='text-red-500'>*</span>
-                </Label>
-                <div
-                  className={`border-2 border-dashed rounded-xl p-6 text-center group relative transition-colors ${paymentFile ? 'border-blue-500 bg-blue-100/50' : 'border-blue-300 hover:bg-blue-100 bg-white'}`}>
-                  <input
-                    type='file'
-                    onChange={(e) =>
-                      setPaymentFile(e.target.files?.[0] || null)
-                    }
-                    className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
-                    accept='image/*,.pdf'
-                  />
-                  {paymentFile ? (
-                    <div className='flex flex-col items-center'>
-                      <FileText className='size-8 text-blue-600 mb-2' />
-                      <p className='text-sm font-bold text-blue-700 truncate w-full px-2 max-w-[250px] mx-auto'>
-                        {paymentFile.name}
+              {totalBiaya > 0 && (
+                <div className='mb-8 bg-gradient-to-r from-blue-600 to-indigo-700 p-6 rounded-2xl shadow-lg shadow-blue-900/20 text-white'>
+                  <div className='flex flex-col md:flex-row justify-between items-start md:items-center'>
+                    <div>
+                      <h3 className='text-lg font-bold text-blue-50'>
+                        Total Tagihan
+                      </h3>
+                      <p className='text-sm text-blue-200 mt-1'>
+                        Akumulasi biaya layanan/uji lab yang Anda pilih.
                       </p>
                     </div>
-                  ) : (
-                    <>
-                      <UploadCloud className='size-8 text-blue-400 mx-auto mb-2 group-hover:text-blue-500 transition-colors' />
-                      <p className='text-sm text-blue-600 font-medium'>
-                        Klik atau seret file ke sini (*.jpg, *.png, *.pdf)
-                      </p>
-                    </>
-                  )}
+                    <div className='mt-4 md:mt-0 text-3xl md:text-4xl font-black drop-shadow-md'>
+                      {formatRupiah(totalBiaya)}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <div className='bg-white p-6 md:p-8 border border-slate-200 rounded-2xl shadow-sm space-y-6'>
+                {isFetchingBank ? (
+                  <div className='flex justify-center p-6'>
+                    <Loader2 className='size-6 animate-spin text-blue-500' />
+                  </div>
+                ) : bankInfo ? (
+                  <div>
+                    <Label className='font-bold text-slate-700 text-base mb-3 block'>
+                      Tujuan Transfer Bank
+                    </Label>
+                    <div className='bg-slate-50 p-5 rounded-xl border border-slate-200 font-mono text-xl md:text-2xl font-bold text-slate-800 tracking-wider flex flex-col md:flex-row md:items-center justify-between gap-4'>
+                      <div>
+                        <span className='text-blue-600 mr-3'>
+                          {bankInfo.nama_bank}
+                        </span>
+                        {bankInfo.nomor_rekening}
+                        <div className='text-sm font-normal text-slate-500 font-sans tracking-normal mt-2'>
+                          a.n. {bankInfo.atas_nama}
+                        </div>
+                      </div>
+                    </div>
+                    <p className='text-sm text-slate-500 mt-4'>
+                      Silakan transfer sejumlah nominal tagihan atau sesuai
+                      ketentuan SOP ke rekening di atas.{' '}
+                      <Link
+                        href='/#sop-prosedur'
+                        target='_blank'
+                        className='text-blue-600 font-bold hover:underline'>
+                        Lihat Panduan & SOP
+                      </Link>
+                      .
+                    </p>
+                  </div>
+                ) : (
+                  <p className='text-amber-700 bg-amber-50 p-4 rounded-xl text-sm font-medium border border-amber-200'>
+                    Informasi rekening untuk lab ini belum diatur. Silakan
+                    berkoordinasi dengan admin.
+                  </p>
+                )}
+
+                <div className='pt-6 border-t border-slate-100'>
+                  <Label className='font-bold text-slate-700 text-base mb-3 block'>
+                    Unggah Bukti Pembayaran{' '}
+                    <span className='text-red-500'>*</span>
+                  </Label>
+                  <div
+                    className={`border-2 border-dashed rounded-xl p-8 text-center transition-all duration-300 ${paymentFile ? 'border-emerald-500 bg-emerald-50' : 'border-slate-300 hover:bg-slate-50 bg-white'}`}>
+                    <div className='relative'>
+                      <input
+                        type='file'
+                        onChange={(e) =>
+                          setPaymentFile(e.target.files?.[0] || null)
+                        }
+                        className='absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10'
+                        accept='image/*,.pdf'
+                      />
+                      {paymentFile ? (
+                        <div className='flex flex-col items-center animate-in zoom-in-95'>
+                          <div className='size-12 bg-emerald-100 rounded-full flex items-center justify-center mb-3'>
+                            <CheckCircle className='size-6 text-emerald-600' />
+                          </div>
+                          <p className='text-sm font-bold text-emerald-800 truncate w-full px-2 max-w-[250px]'>
+                            {paymentFile.name}
+                          </p>
+                          <p className='text-xs text-emerald-600 mt-1'>
+                            File siap diunggah
+                          </p>
+                        </div>
+                      ) : (
+                        <div className='flex flex-col items-center'>
+                          <div className='size-12 bg-blue-50 rounded-full flex items-center justify-center mb-3 group-hover:bg-blue-100 transition-colors'>
+                            <UploadCloud className='size-6 text-blue-600' />
+                          </div>
+                          <p className='text-sm text-slate-600 font-semibold'>
+                            Klik atau seret struk transfer ke sini
+                          </p>
+                          <p className='text-xs text-slate-400 mt-1'>
+                            Format yang didukung: JPG, PNG, PDF
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </div>
           )}
 
-          <div className='pt-8 flex justify-end'>
+          {/* TOMBOL SUBMIT FINAL */}
+          <div className='p-6 md:p-10 pt-4 bg-white flex justify-end border-t border-slate-100'>
             <Button
               type='submit'
               size='lg'
               disabled={isSubmitting || isUploadingPayment}
-              className='w-full md:w-auto bg-blue-600 hover:bg-blue-700 md:text-lg md:h-14 font-bold md:px-10 shadow-lg shadow-blue-600/30'>
+              className='w-full md:w-auto h-14 bg-slate-900 hover:bg-blue-700 text-white md:text-lg font-bold md:px-12 rounded-xl shadow-xl shadow-slate-900/20 transition-all hover:-translate-y-1'>
               {isSubmitting || isUploadingPayment ? (
                 <span className='flex items-center gap-2'>
-                  <Loader2 className='size-5 animate-spin' />{' '}
-                  {isUploadingPayment ? 'Mengunggah...' : 'Mengirim...'}
+                  <Loader2 className='size-5 animate-spin' /> Memproses...
                 </span>
               ) : (
-                'Kirim Pengajuan'
+                'Kirim Pengajuan Sekarang'
               )}
             </Button>
           </div>

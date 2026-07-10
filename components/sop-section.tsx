@@ -1,236 +1,102 @@
 'use client';
 
-import { FlaskConical, Anchor, CheckCircle2, Activity } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import {
+  FlaskConical,
+  Anchor,
+  CheckCircle2,
+  Activity,
+  Loader2,
+  Mail,
+} from 'lucide-react';
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { createClient } from '@/lib/supabase/client';
 
-// ==============================================================================
-// DATA LAYANAN / UJI LAB & TEFA
-// ==============================================================================
-const facilitiesData = [
+// Fungsi Format Rupiah
+const formatRupiah = (angka: number) => {
+  return new Intl.NumberFormat('id-ID', {
+    style: 'currency',
+    currency: 'IDR',
+    minimumFractionDigits: 0,
+  }).format(angka || 0);
+};
+
+// Data Master Lab Polinela
+const BASE_LABS = [
+  { id: 1, name: 'Lab. Kesehatan Ikan', type: 'perikanan', status: 'LAB' },
+  { id: 2, name: 'Lab. Kualitas Air', type: 'perikanan', status: 'LAB' },
+  { id: 3, name: 'Lab. Pengolahan', type: 'perikanan', status: 'LAB' },
+  { id: 4, name: 'Bangsal Pakan Alami', type: 'perikanan', status: 'LAB' },
+  { id: 5, name: 'Lab. Perikanan (SFS)', type: 'perikanan', status: 'LAB' },
+  { id: 6, name: 'Lab. Pembenihan', type: 'perikanan', status: 'LAB' },
+  { id: 7, name: 'Lab. Ikan Hias', type: 'perikanan', status: 'LAB' },
+  { id: 8, name: 'Lab. Nutrisi', type: 'perikanan', status: 'LAB' },
+  { id: 9, name: 'Polyfeed', type: 'perikanan', status: 'TEFA' },
   {
-    id: 'lab-1',
-    name: 'Lab. Kesehatan Ikan',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Uji deteksi dan identifikasi parasit ikan',
-      'Uji mikrobiologi (Bakteri dan Jamur patogen)',
-      'Pemeriksaan hematologi / kualitas darah ikan',
-      'Nekropsi dan bedah anatomi ikan',
-    ],
-  },
-  {
-    id: 'lab-2',
-    name: 'Lab. Kualitas Air',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Uji parameter fisik air (Suhu, Kekeruhan, TSS)',
-      'Uji parameter kimia air (pH, DO, Salinitas, Amonia, Nitrat)',
-      'Analisis kelimpahan plankton (Fitoplankton & Zooplankton)',
-      'Pengukuran Total Organic Matter (TOM)',
-    ],
-  },
-  {
-    id: 'lab-3',
-    name: 'Lab. Pengolahan',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Uji organoleptik dan sensori produk perikanan',
-      'Pengembangan formulasi produk olahan ikan',
-      'Analisis proksimat dasar (kadar air, abu, protein)',
-      'Pengemasan dan uji umur simpan (Shelf-life)',
-    ],
-  },
-  {
-    id: 'lab-4',
-    name: 'Bangsal Pakan Alami',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Kultur murni fitoplankton (Tetraselmis, Nannochloropsis)',
-      'Kultur massal zooplankton (Artemia, Daphnia, Moina)',
-      'Uji kepadatan dan laju pertumbuhan pakan alami',
-      'Penyediaan starter pakan alami untuk pembenihan',
-    ],
-  },
-  {
-    id: 'lab-5',
-    name: 'Lab. Perikanan (SFS)',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Simulasi Smart Farming System (SFS)',
-      'Pengujian otomatisasi kualitas air berbasis IoT',
-      'Manajemen data budidaya perikanan presisi',
-      'Riset efisiensi energi pada sistem akuakultur',
-    ],
-  },
-  {
-    id: 'lab-6',
-    name: 'Lab. Pembenihan',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Teknik induksi hormon pemijahan buatan',
-      'Pengamatan perkembangan embrio dan larva',
-      'Manajemen kualitas air sistem resirkulasi tertutup (RAS)',
-      'Uji sintasan (Survival Rate) benih ikan',
-    ],
-  },
-  {
-    id: 'lab-7',
-    name: 'Lab. Ikan Hias',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Teknik rekayasa warna dan genetik ikan hias',
-      'Manajemen akuarium dan aquascape',
-      'Pemeliharaan indukan dan benih ikan hias endemik',
-      'Uji adaptasi stres lingkungan ikan hias',
-    ],
-  },
-  {
-    id: 'lab-8',
-    name: 'Lab. Nutrisi',
-    type: 'perikanan',
-    status: 'LAB',
-    services: [
-      'Formulasi dan formulasi pakan buatan',
-      'Uji daya apung dan kestabilan pakan dalam air (Water Stability)',
-      'Analisis nilai cerna (Digestibility) pakan',
-      'Uji efisiensi pakan (FCR dan SGR) pada ikan',
-    ],
-  },
-  {
-    id: 'tefa-1',
-    name: 'Polyfeed',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Produksi massal pakan ikan komersial',
-      'Uji coba bahan baku lokal untuk pakan alternatif',
-      'Pelatihan operasional mesin extruder dan pelletizer',
-      'Layanan maklon pembuatan pakan skala menengah',
-    ],
-  },
-  {
-    id: 'tefa-2',
+    id: 10,
     name: 'Politeknik Ornamental Fish Farm (POFA)',
     type: 'perikanan',
     status: 'TEFA',
-    services: [
-      'Produksi dan komersialisasi ikan hias ekspor',
-      'Pelatihan bisnis dan manajemen budidaya ikan hias',
-      'Karantina dan sertifikasi kesehatan ikan hias',
-      'Pengembangan galur murni ikan hias unggulan',
-    ],
   },
-  {
-    id: 'tefa-3',
-    name: 'Galangan Kapal',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Desain dan pembuatan kapal perikanan (Fiberglass/Kayu)',
-      'Reparasi dan pemeliharaan lambung kapal',
-      'Uji kelayakan dan stabilitas kapal (Inclining Test)',
-      'Pelatihan laminasi dan konstruksi perkapalan',
-    ],
-  },
-  {
-    id: 'tefa-4',
-    name: 'Alat Tangkap Ikan',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Rancang bangun jaring, bubu, dan pancing',
-      'Uji kekuatan tarik benang dan material jaring (Breaking Strength)',
-      'Simulasi pengoperasian alat tangkap pasif',
-      'Perbaikan dan perakitan alat tangkap ramah lingkungan',
-    ],
-  },
-  {
-    id: 'tefa-5',
-    name: 'KJA (Keramba Jaring Apung)',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Praktik budidaya pembesaran ikan laut/tawar sistem KJA',
-      'Manajemen pakan dan sampling ikan di perairan terbuka',
-      'Perawatan jaring dan konstruksi keramba',
-      'Uji daya dukung perairan untuk budidaya lepas pantai',
-    ],
-  },
-  {
-    id: 'tefa-6',
-    name: 'FISHTECH',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Inkubasi teknologi perikanan tepat guna',
-      'Prototyping alat bantu budidaya dan tangkap',
-      'Pengembangan aplikasi dan platform digital perikanan',
-      'Layanan konsultasi engineering akuakultur',
-    ],
-  },
-  {
-    id: 'tefa-7',
-    name: 'FISH MARKET',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Manajemen rantai pasok dingin (Cold Chain) hasil perikanan',
-      'Praktik pemasaran dan ritel produk perikanan segar',
-      'Pelatihan display dan grading mutu ikan',
-      'Layanan distribusi hasil tangkap dan panen budidaya',
-    ],
-  },
-  {
-    id: 'tefa-8',
-    name: 'Polyfish',
-    type: 'perikanan',
-    status: 'TEFA',
-    services: [
-      'Produksi massal ikan konsumsi (Lele, Nila, Patin)',
-      'Praktik manajemen panen dan pasca panen budidaya',
-      'Layanan distribusi benih dan ikan ukuran konsumsi',
-      'Pusat pelatihan teknis budidaya perikanan terpadu',
-    ],
-  },
-  {
-    id: 'tefa-9',
-    name: 'Lab Simulator',
-    type: 'tangkap',
-    status: 'TEFA',
-    services: [
-      'Simulasi navigasi dan olah gerak kapal penangkap ikan',
-      'Pelatihan komunikasi radio maritim (GMDSS)',
-      'Simulasi penanganan keadaan darurat di laut',
-      'Sertifikasi kompetensi pelaut kapal penangkap ikan',
-    ],
-  },
-  {
-    id: 'tefa-10',
-    name: 'Lab Radar',
-    type: 'tangkap',
-    status: 'TEFA',
-    services: [
-      'Pelatihan pengoperasian RADAR dan ARPA',
-      'Simulasi plotting target dan penghindaran tubrukan',
-      'Interpretasi instrumen pendeteksi ikan (Fish Finder & Sonar)',
-      'Pemetaan area penangkapan ikan elektronik',
-    ],
-  },
+  { id: 11, name: 'Galangan Kapal', type: 'perikanan', status: 'TEFA' },
+  { id: 12, name: 'Alat Tangkap Ikan', type: 'perikanan', status: 'TEFA' },
+  { id: 13, name: 'KJA', type: 'perikanan', status: 'TEFA' },
+  { id: 14, name: 'FISHTECH', type: 'perikanan', status: 'TEFA' },
+  { id: 15, name: 'FISH MARKET', type: 'perikanan', status: 'TEFA' },
+  { id: 16, name: 'Polyfish', type: 'perikanan', status: 'TEFA' },
+  { id: 17, name: 'Lab Simulator', type: 'tangkap', status: 'TEFA' },
+  { id: 18, name: 'Lab Radar', type: 'tangkap', status: 'TEFA' },
 ];
 
 export function SopSection() {
+  const [isMounted, setIsMounted] = useState(false);
+  const [facilitiesData, setFacilitiesData] = useState<any[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    // Memberitahu React bahwa komponen sudah di-mount di Client (Mencegah Hydration Error)
+    setIsMounted(true);
+
+    const fetchLayanan = async () => {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('layanan_lab')
+        .select('*')
+        .order('created_at', { ascending: true });
+
+      if (!error && data) {
+        // Gabungkan data layanan ke Lab masing-masing
+        const grouped = BASE_LABS.map((lab) => {
+          const services = data.filter((d) => d.lab_id === lab.id);
+          return { ...lab, services };
+        }).filter((lab) => lab.services.length > 0); // FILTER: Hanya tampilkan Lab yang PUNYA layanan
+
+        setFacilitiesData(grouped);
+      }
+      setIsLoading(false);
+    };
+
+    fetchLayanan();
+  }, []);
+
+  // HYDRATION FIX: Cegah render isi sebelum client siap
+  if (!isMounted) {
+    return (
+      <section
+        id='layanan-uji'
+        className='w-full bg-gradient-to-br from-blue-900 via-blue-800 to-slate-900 py-20 lg:py-28 relative overflow-hidden min-h-[600px]'>
+        {/* Render shell kosong agar server dan client 100% cocok */}
+      </section>
+    );
+  }
+
   // Membelah data menjadi dua kolom yang independen
   const midPoint = Math.ceil(facilitiesData.length / 2);
   const leftColumnData = facilitiesData.slice(0, midPoint);
@@ -240,8 +106,8 @@ export function SopSection() {
   const renderAccordionItems = (data: typeof facilitiesData) => {
     return data.map((facility) => (
       <AccordionItem
-        key={facility.id}
-        value={facility.id}
+        key={`lab-${facility.id}`}
+        value={`lab-${facility.id}`}
         className='bg-white/10 border border-white/10 rounded-2xl px-5 transition-all duration-300 hover:bg-white/[0.15] data-[state=open]:bg-white/[0.15] data-[state=open]:border-blue-400/50 backdrop-blur-sm shadow-xl shadow-black/10'>
         <AccordionTrigger className='text-white hover:no-underline py-5 text-left'>
           <div className='flex items-center gap-4 flex-1 pr-4'>
@@ -268,22 +134,23 @@ export function SopSection() {
             </div>
           </div>
         </AccordionTrigger>
+
         <AccordionContent className='pb-5 pt-1'>
-          <div className='pl-14'>
-            <ul className='space-y-3'>
-              {facility.services.map((service, index) => (
+          <div className='pl-2 md:pl-14'>
+            <ul className='space-y-4'>
+              {facility.services.map((service: any) => (
                 <li
-                  key={index}
-                  className='flex items-start gap-3 text-blue-50/90 text-sm md:text-base leading-relaxed font-medium'>
-                  <CheckCircle2 className='size-5 text-cyan-400 shrink-0 mt-0.5' />
-                  {service}
+                  key={service.id}
+                  className='flex flex-col gap-2.5 p-4 bg-black/20 rounded-xl border border-white/5 shadow-inner'>
+                  <div className='flex items-start gap-3'>
+                    <CheckCircle2 className='size-5 text-cyan-400 shrink-0 mt-0.5' />
+                    <span className='text-blue-50/90 text-sm md:text-base leading-relaxed font-semibold'>
+                      {service.nama_layanan}
+                    </span>
+                  </div>
+
                 </li>
               ))}
-              {facility.services.length === 0 && (
-                <li className='text-slate-400 italic text-sm'>
-                  Data layanan belum ditambahkan.
-                </li>
-              )}
             </ul>
           </div>
         </AccordionContent>
@@ -318,17 +185,46 @@ export function SopSection() {
           </p>
         </div>
 
-        {/* Grid 2 Kolom yang Independen (Anti Ketarik) */}
-        <div className='grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start'>
-          {/* Kolom Kiri */}
-          <Accordion type='multiple' className='flex flex-col gap-4 w-full'>
-            {renderAccordionItems(leftColumnData)}
-          </Accordion>
+        {/* State Loading atau Data Kosong */}
+        {isLoading ? (
+          <div className='flex flex-col items-center justify-center py-20 text-blue-200'>
+            <Loader2 className='size-10 animate-spin mb-4' />
+            <p className='font-medium animate-pulse'>Memuat layanan lab...</p>
+          </div>
+        ) : facilitiesData.length === 0 ? (
+          <div className='text-center py-20'>
+            <p className='text-blue-200/60 text-lg italic'>
+              Belum ada data layanan pengujian yang diinputkan oleh Admin Lab.
+            </p>
+          </div>
+        ) : (
+          /* Grid 2 Kolom yang Independen */
+          <div className='grid grid-cols-1 md:grid-cols-2 gap-6 w-full items-start'>
+            {/* Kolom Kiri */}
+            <Accordion type='multiple' className='flex flex-col gap-4 w-full'>
+              {renderAccordionItems(leftColumnData)}
+            </Accordion>
 
-          {/* Kolom Kanan */}
-          <Accordion type='multiple' className='flex flex-col gap-4 w-full'>
-            {renderAccordionItems(rightColumnData)}
-          </Accordion>
+            {/* Kolom Kanan */}
+            <Accordion type='multiple' className='flex flex-col gap-4 w-full'>
+              {renderAccordionItems(rightColumnData)}
+            </Accordion>
+          </div>
+        )}
+
+        {/* Seksi Hubungi Admin (Bagian Bawah) */}
+        <div className='mt-20 text-center bg-white/5 backdrop-blur-md border border-white/10 p-8 rounded-3xl max-w-2xl mx-auto'>
+          <h3 className='text-xl md:text-2xl font-bold text-white mb-3'>
+            Layanan yang dicari belum ada?
+          </h3>
+          <p className='text-blue-100/80 mb-8 leading-relaxed'>
+            Hubungi admin laboratorium terkait untuk informasi ketersediaan
+            layanan pengujian lainnya atau untuk pengajuan proposal / praktikum
+            khusus.
+          </p>
+          <Button className='bg-cyan-500 hover:bg-cyan-600 text-slate-900 font-bold px-8 py-6 rounded-full shadow-lg shadow-cyan-500/20 gap-2 transition-all hover:scale-105'>
+            <Mail className='size-5' /> Hubungi Pusat Layanan
+          </Button>
         </div>
       </div>
     </section>

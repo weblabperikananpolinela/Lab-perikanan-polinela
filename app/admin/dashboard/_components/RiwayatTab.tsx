@@ -12,6 +12,9 @@ import {
   Image as ImageIcon,
   Trash2,
   CheckCircle2,
+  ChevronLeft,
+  ChevronRight,
+  X,
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
@@ -88,6 +91,10 @@ export default function RiwayatTab({
 }) {
   const [dataRiwayat, setDataRiwayat] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [progress, setProgress] = useState(0);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const rowsPerPage = 10;
 
   // Manual Form State
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -123,21 +130,36 @@ export default function RiwayatTab({
 
   const fetchRiwayat = async () => {
     setLoading(true);
-    const { data: res } = await supabase
+    setProgress(0);
+    const interval = setInterval(() => {
+      setProgress((old) => (old < 90 ? old + 15 : old));
+    }, 50);
+
+    const from = (page - 1) * rowsPerPage;
+    const to = from + rowsPerPage - 1;
+
+    const { data: res, count } = await supabase
       .from('peminjaman')
-      .select('*')
+      .select('*', { count: 'exact' })
       .in('status', ['Disetujui', 'Selesai', 'selesai', 'Dibatalkan']) // FITUR BARU: Include Selesai
       .eq('lab_id', adminProfile.lab_id)
-      .order('created_at', { ascending: false });
+      .order('created_at', { ascending: false })
+      .range(from, to);
 
     if (res) setDataRiwayat(res);
-    setLoading(false);
+    if (count !== null) setTotalCount(count);
+
+    clearInterval(interval);
+    setProgress(100);
+    setTimeout(() => {
+      setLoading(false);
+    }, 300);
   };
 
   useEffect(() => {
     fetchRiwayat();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [page]);
 
   const getDayName = (dateStr: string) => {
     if (!dateStr) return '-';
@@ -489,8 +511,10 @@ export default function RiwayatTab({
 
   if (loading)
     return (
-      <div className='animate-pulse text-lg text-slate-500 font-medium'>
-        Memuat data log pemakaian...
+      <div className='flex flex-col items-center justify-center py-20 text-blue-600'>
+        <CheckSquare className='size-10 mb-4' />
+        <span className='text-2xl font-black'>{progress}%</span>
+        <p className='text-sm font-medium text-slate-500 mt-2'>Memuat data log pemakaian...</p>
       </div>
     );
 
@@ -615,7 +639,65 @@ export default function RiwayatTab({
 
       <CardContent>
         {/* TABEL UTAMA RIWAYAT */}
-        <div className='rounded-md border overflow-x-auto'>
+        <>
+        {/* MOBILE VIEW */}
+        <div className='md:hidden flex flex-col gap-4 p-4 bg-slate-50/50'>
+          {dataRiwayat.map((item) => (
+            <div key={item.id} className='bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-col gap-3'>
+              <div className='flex justify-between items-start gap-2'>
+                <div className='min-w-0'>
+                  <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1'>Penanggung Jawab</p>
+                  <p className='font-bold text-slate-800 text-sm truncate'>{item.nama_lengkap}</p>
+                </div>
+                {item.status === 'Dibatalkan' ? (
+                  <Badge className='bg-slate-100 text-slate-700 border border-slate-200 hover:bg-slate-100 font-semibold text-[10px] shrink-0'>
+                    <XCircle className='size-3 mr-1' /> Batal
+                  </Badge>
+                ) : isSelesai(item) ? (
+                  <Badge className='bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-100 font-semibold text-[10px] shrink-0'>
+                    <CheckCircle2 className='size-3 mr-1' /> Selesai
+                  </Badge>
+                ) : (
+                  <Badge className='bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-100 font-semibold text-[10px] shrink-0'>
+                    <RotateCcw className='size-3 mr-1' /> Berjalan
+                  </Badge>
+                )}
+              </div>
+              <div className='min-w-0'>
+                <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1'>Kegiatan</p>
+                <p className='font-semibold text-slate-700 text-sm line-clamp-2'>{item.judul_kegiatan}</p>
+              </div>
+              <div className='grid grid-cols-2 gap-2 mt-2 bg-slate-50 p-2 rounded-lg border border-slate-100'>
+                <div>
+                  <p className='text-[10px] text-slate-500 font-semibold uppercase'>Tanggal</p>
+                  <p className='font-bold text-slate-700 text-xs'>
+                    {item.tanggal ? new Date(item.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-'}
+                  </p>
+                </div>
+                <div>
+                  <p className='text-[10px] text-slate-500 font-semibold uppercase'>Waktu</p>
+                  <p className='font-bold text-slate-700 text-xs text-blue-700'>{item.jam_mulai} - {item.jam_selesai}</p>
+                </div>
+              </div>
+              <div className='flex items-center justify-end gap-2 mt-2 pt-3 border-t border-slate-100'>
+                <Button size='sm' variant='outline' onClick={() => openDetail(item)} className='text-blue-600 hover:text-blue-800 hover:bg-blue-50 font-bold flex-1 h-9'>
+                  <Eye className='size-4 mr-2' /> Detail
+                </Button>
+                <Button size='sm' variant='ghost' onClick={() => handleDelete(item)} className='text-red-500 hover:text-red-700 hover:bg-red-50 font-bold flex-1 h-9'>
+                  <Trash2 className='size-4 mr-2' /> Hapus
+                </Button>
+              </div>
+            </div>
+          ))}
+          {dataRiwayat.length === 0 && (
+            <div className='text-center py-10 text-slate-500 text-base'>
+              Belum ada riwayat lab yang berjalan (status sah).
+            </div>
+          )}
+        </div>
+
+        {/* DESKTOP VIEW */}
+        <div className='hidden md:block rounded-md border overflow-x-auto'>
           <Table>
             <TableHeader className='bg-slate-50'>
               <TableRow>
@@ -725,61 +807,83 @@ export default function RiwayatTab({
             </TableBody>
           </Table>
         </div>
+        {/* PAGINATION */}
+        {totalCount > rowsPerPage && (
+          <div className='flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 p-4 bg-slate-50 border-t border-slate-200 mt-4 rounded-b-xl'>
+            <span className='text-sm font-semibold text-slate-500 sm:mr-4 text-center sm:text-left'>
+              Total Data: {totalCount} | Halaman {page} dari {Math.ceil(totalCount / rowsPerPage)}
+            </span>
+            <div className='flex gap-2 w-full sm:w-auto'>
+              <Button variant='outline' size='sm' onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1 || loading} className='flex-1 sm:flex-none h-10 font-bold'>
+                <ChevronLeft className='size-4 mr-1' /> Prev
+              </Button>
+              <Button variant='outline' size='sm' onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / rowsPerPage), p + 1))} disabled={page === Math.ceil(totalCount / rowsPerPage) || loading} className='flex-1 sm:flex-none h-10 font-bold'>
+                Next <ChevronRight className='size-4 ml-1' />
+              </Button>
+            </div>
+          </div>
+        )}
+        </>
       </CardContent>
 
       {/* MODAL DETAIL + FORM PENGEMBALIAN */}
       <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
-        <DialogContent className='sm:max-w-[90vw] md:max-w-[80vw] lg:max-w-[70vw] w-full max-h-[95vh] overflow-y-auto rounded-none sm:rounded-lg m-0 p-4 sm:p-6'>
-          <DialogHeader>
-            <DialogTitle className='text-xl font-bold'>
-              Detail Pemakaian Lab
-            </DialogTitle>
-            {selectedRiwayat &&
-              !isSelesai(selectedRiwayat) &&
-              selectedRiwayat.status !== 'Dibatalkan' && (
-                <DialogDescription className='text-base'>
-                  Barang belum dikembalikan. Isi form di bawah untuk mencatat
-                  pengembalian.
-                </DialogDescription>
-              )}
-          </DialogHeader>
+        <DialogContent className='w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[85vh] overflow-hidden rounded-2xl flex flex-col p-0 bg-slate-50 border-none shadow-2xl [&>button]:hidden'>
+          <div className='shrink-0 bg-white border-b border-slate-200 px-5 py-4 flex items-start justify-between z-20 shadow-sm'>
+            <div className='flex flex-col'>
+              <DialogTitle className='text-xl md:text-2xl font-black text-slate-800'>
+                Detail Pemakaian Lab
+              </DialogTitle>
+              {selectedRiwayat &&
+                !isSelesai(selectedRiwayat) &&
+                selectedRiwayat.status !== 'Dibatalkan' && (
+                  <p className='text-sm md:text-base text-slate-500 mt-1'>
+                    Barang belum dikembalikan. Isi form di bawah untuk mencatat pengembalian.
+                  </p>
+                )}
+            </div>
+            <Button type='button' variant='ghost' size='icon' className='shrink-0 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors' onClick={() => setIsDetailOpen(false)}>
+              <X className='size-6' />
+            </Button>
+          </div>
 
+          <div className='flex-1 overflow-y-auto p-4 sm:p-6'>
           {selectedRiwayat && (
-            <div className='flex flex-col md:flex-row gap-6 mt-4'>
+            <div className='flex flex-col md:flex-row gap-6 mt-0'>
               {/* SISI KIRI: Info Peminjaman & Pembayaran */}
-              <div className='flex-1 space-y-5'>
+              <div className='flex-1 space-y-5 w-full max-w-full min-w-0'>
                 <div className='bg-slate-50 p-4 rounded-xl border border-slate-100 flex flex-col gap-3 h-fit'>
-                  <div>
-                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                  <div className='min-w-0'>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider truncate'>
                       Penanggung Jawab
                     </p>
-                    <p className='font-bold text-slate-900 text-base'>
+                    <p className='font-bold text-slate-900 text-base truncate' title={selectedRiwayat.nama_lengkap}>
                       {selectedRiwayat.nama_lengkap}
                     </p>
                   </div>
-                  <div>
-                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                  <div className='min-w-0'>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider truncate'>
                       Kegiatan
                     </p>
-                    <p className='font-bold text-slate-900 text-base'>
+                    <p className='font-bold text-slate-900 text-base break-words'>
                       {selectedRiwayat.judul_kegiatan}
                     </p>
                   </div>
-                  <div>
-                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                  <div className='min-w-0'>
+                    <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider truncate'>
                       Laboratorium
                     </p>
-                    <p className='font-bold text-slate-900 text-base'>
+                    <p className='font-bold text-slate-900 text-base truncate'>
                       {labMap[selectedRiwayat.lab_id] ||
                         `Lab ${selectedRiwayat.lab_id}`}
                     </p>
                   </div>
                   <div className='grid grid-cols-2 gap-3'>
-                    <div>
-                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                    <div className='min-w-0'>
+                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider truncate'>
                         Tanggal
                       </p>
-                      <p className='font-bold text-slate-900 text-sm'>
+                      <p className='font-bold text-slate-900 text-sm truncate'>
                         {selectedRiwayat.tanggal
                           ? new Date(
                               selectedRiwayat.tanggal,
@@ -792,40 +896,40 @@ export default function RiwayatTab({
                           : '-'}
                       </p>
                     </div>
-                    <div>
-                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
+                    <div className='min-w-0'>
+                      <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider truncate'>
                         Waktu
                       </p>
-                      <p className='font-bold text-slate-900 text-sm'>
+                      <p className='font-bold text-slate-900 text-sm truncate'>
                         {selectedRiwayat.jam_mulai} -{' '}
                         {selectedRiwayat.jam_selesai} WIB
                       </p>
                     </div>
                   </div>
-                  <div className='flex items-center gap-2 mt-2'>
+                  <div className='flex items-center gap-2 mt-2 flex-wrap'>
                     <p className='text-xs font-semibold text-slate-500 uppercase tracking-wider'>
                       Status:
                     </p>
                     {selectedRiwayat.status === 'Dibatalkan' ? (
                       <Badge className='bg-slate-100 text-slate-700 border border-slate-200 font-semibold text-xs'>
-                        <XCircle className='size-3 mr-1' /> Dibatalkan
+                        <XCircle className='size-3 mr-1 shrink-0' /> Dibatalkan
                       </Badge>
                     ) : isSelesai(selectedRiwayat) ? (
                       <Badge className='bg-emerald-100 text-emerald-700 border border-emerald-200 font-semibold text-xs'>
-                        <CheckCircle2 className='size-3 mr-1' /> Selesai
+                        <CheckCircle2 className='size-3 mr-1 shrink-0' /> Selesai
                       </Badge>
                     ) : (
                       <Badge className='bg-amber-100 text-amber-700 border border-amber-200 font-semibold text-xs'>
-                        <RotateCcw className='size-3 mr-1' /> Berjalan
+                        <RotateCcw className='size-3 mr-1 shrink-0' /> Berjalan
                       </Badge>
                     )}
                   </div>
                 </div>
 
-                {selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' && (
+                {(selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' || selectedRiwayat.total_biaya > 0) && (
                   <div className='space-y-2 pt-2 border-t'>
                     <p className='font-semibold text-slate-500 text-sm'>
-                      Informasi Pembayaran (Pemohon Umum)
+                      Informasi Pembayaran {selectedRiwayat.kategori_pemohon?.toLowerCase() === 'umum' ? '(Pemohon Umum)' : ''}
                     </p>
                     <div className='bg-blue-50/50 p-4 rounded-xl border border-blue-100'>
                       <Label className='font-bold block mb-3 text-slate-800 text-base'>
@@ -834,21 +938,21 @@ export default function RiwayatTab({
                       {selectedRiwayat.bukti_pembayaran ? (
                         <Button
                           variant='outline'
-                          className='w-full justify-between bg-white h-12 shadow-sm border-blue-200'
+                          className='w-full justify-between bg-white h-12 shadow-sm border-blue-200 hover:border-blue-300 hover:bg-blue-50 transition-colors'
                           asChild>
                           <a
                             href={selectedRiwayat.bukti_pembayaran}
                             target='_blank'
                             rel='noopener noreferrer'>
-                            <span className='flex items-center gap-2 text-blue-700 font-semibold text-base'>
-                              <ImageIcon className='size-5' /> Lihat Bukti
+                            <span className='flex items-center gap-2 text-blue-700 font-semibold text-base truncate'>
+                              <ImageIcon className='size-5 shrink-0' /> Lihat Bukti
                               Unggahan
                             </span>
-                            <ExternalLink className='size-5 text-slate-400' />
+                            <ExternalLink className='size-5 shrink-0 text-slate-400' />
                           </a>
                         </Button>
                       ) : (
-                        <p className='text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic'>
+                        <p className='text-red-500 text-base font-semibold py-2 bg-red-50 px-3 rounded-md border border-red-100 italic break-words'>
                           Bukti transfer belum diunggah
                         </p>
                       )}
@@ -858,7 +962,7 @@ export default function RiwayatTab({
               </div>
 
               {/* SISI KANAN: Daftar Barang & Pengembalian */}
-              <div className='flex-1 flex flex-col justify-between'>
+              <div className='flex-1 flex flex-col justify-between w-full max-w-full min-w-0'>
                 <div className='space-y-5 mb-6'>
                   {loadingDetail ? (
                     <p className='text-slate-500 animate-pulse text-center py-4'>
@@ -871,8 +975,8 @@ export default function RiwayatTab({
                         /* ==================== MODE READ-ONLY ==================== */
                         <div className='space-y-6'>
                           {selectedRiwayat.status === 'Dibatalkan' && (
-                            <div className='bg-red-50 text-red-700 p-4 rounded-xl border border-red-200'>
-                              <p className='text-sm'>
+                            <div className='bg-red-50 text-red-700 p-4 rounded-xl border border-red-200 min-w-0'>
+                              <p className='text-sm break-words'>
                                 <strong>Batal:</strong>{' '}
                                 {selectedRiwayat.pesan_pembatalan ||
                                   selectedRiwayat.pesan_feedback ||
@@ -1133,6 +1237,7 @@ export default function RiwayatTab({
               </div>
             </div>
           )}
+          </div>
         </DialogContent>
       </Dialog>
     </Card>

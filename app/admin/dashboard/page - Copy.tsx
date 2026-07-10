@@ -19,7 +19,6 @@ import {
   Landmark,
   CalendarDays,
   FolderKanban,
-  Activity,
 } from 'lucide-react';
 
 import OverviewTab from './_components/OverviewTab';
@@ -29,10 +28,9 @@ import PengajuanTab from './_components/PengajuanTab';
 import SettingRekening from './_components/SettingRekening';
 import KelolaJadwal from './_components/KelolaJadwal';
 import MateriTab from './_components/MateriTab';
-import LayananTab from './_components/LayananTab'; // Import Tab Layanan
 import NotifButton from '@/app/_components/NotifButton';
 
-// --- CONFIG & HELPERS ---
+// --- CONFIG & HELPERS (UPDATED 18 LABS) ---
 const labMap: Record<number, string> = {
   1: 'Lab. Kesehatan Ikan',
   2: 'Lab. Kualitas Air',
@@ -54,35 +52,11 @@ const labMap: Record<number, string> = {
   18: 'Lab Radar',
 };
 
-// FITUR BARU: Header Dinamis dan Minimalis[cite: 3]
-const getDynamicHeader = (tab: string, labId: number) => {
-  const labName = labMap[labId] || 'Laboratorium';
-
-  switch (tab) {
-    case 'overview':
-      return {
-        title: `Dashboard Pengelola: ${labName}`,
-        desc: 'Platform terisolasi. Anda memegang kendali penuh pada validasi peminjaman dan pengelolaan inventaris yang masuk ke wilayah kewenangan Anda secara aman.',
-      };
-    case 'pengajuan':
-      return { title: `Pengajuan: ${labName}`, desc: null };
-    case 'layanan':
-      return { title: `Layanan Uji: ${labName}`, desc: null };
-    case 'materi':
-      return { title: `Materi & Kelas: ${labName}`, desc: null };
-    case 'riwayat':
-      return { title: `Riwayat Pemakaian: ${labName}`, desc: null };
-    case 'inventaris':
-      return { title: `Inventaris Lab: ${labName}`, desc: null };
-    case 'pengaturan':
-      return { title: `Pengaturan Rekening: ${labName}`, desc: null };
-    case 'jadwal':
-      return { title: `Jadwal Lab: ${labName}`, desc: null };
-    default:
-      return { title: labName, desc: null };
-  }
+const getDashboardTitle = (lab_id: number) => {
+  return `Dashboard Pengelola: ${labMap[lab_id] || 'Laboratorium'}`;
 };
 
+// --- INNER COMPONENT DENGAN LOGIKA MULTI-LAB ---
 function DashboardContent() {
   const [initLoading, setInitLoading] = useState(true);
   const [adminProfiles, setAdminProfiles] = useState<any[]>([]);
@@ -91,7 +65,7 @@ function DashboardContent() {
   // States untuk UI
   const [activeTab, setActiveTab] = useState('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
-  const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [isMobileOpen, setIsMobileOpen] = useState(false); // <-- STATE BARU UNTUK MOBILE
 
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -110,6 +84,7 @@ function DashboardContent() {
         return;
       }
 
+      // Tarik SEMUA data lab yang dimiliki oleh email dosen ini
       const { data: adminData } = await supabase
         .from('whitelist_admin')
         .select('*')
@@ -122,6 +97,7 @@ function DashboardContent() {
 
       setAdminProfiles(adminData);
 
+      // Logika Penentuan Lab Aktif
       if (adminData.length === 1) {
         setActiveProfile(adminData[0]);
       } else if (adminData.length > 1) {
@@ -134,6 +110,7 @@ function DashboardContent() {
           setActiveProfile(null);
         }
       }
+
       setInitLoading(false);
     };
 
@@ -151,7 +128,7 @@ function DashboardContent() {
     );
   }
 
-  // --- LAYAR PEMILIHAN LAB MULTI-TENANT ---
+  // --- LAYAR PEMILIHAN LAB ---
   if (!activeProfile && adminProfiles.length > 1) {
     return (
       <div className='min-h-screen bg-slate-50 flex flex-col items-center justify-center p-4'>
@@ -165,6 +142,7 @@ function DashboardContent() {
               dari satu fasilitas.
             </p>
           </div>
+
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
             {adminProfiles.map((profile) => (
               <button
@@ -185,6 +163,7 @@ function DashboardContent() {
               </button>
             ))}
           </div>
+
           <div className='mt-12 text-center'>
             <Link
               href='/'
@@ -197,9 +176,10 @@ function DashboardContent() {
     );
   }
 
+  // Fungsi helper untuk mengganti tab & menutup menu mobile
   const handleTabChange = (tab: string) => {
     setActiveTab(tab);
-    setIsMobileOpen(false);
+    setIsMobileOpen(false); // Tutup sidebar mobile setelah menu dipilih
   };
 
   const renderTabContent = () => {
@@ -216,8 +196,6 @@ function DashboardContent() {
         return (
           <PengajuanTab adminProfile={activeProfile} supabase={supabase} />
         );
-      case 'layanan':
-        return <LayananTab adminProfile={activeProfile} supabase={supabase} />;
       case 'riwayat':
         return <RiwayatTab adminProfile={activeProfile} supabase={supabase} />;
       case 'inventaris':
@@ -242,21 +220,22 @@ function DashboardContent() {
     }
   };
 
-  const headerInfo = getDynamicHeader(activeTab, activeProfile.lab_id);
-
   return (
     <div className='min-h-screen flex bg-slate-50 relative'>
-      {/* Overlay Gelap Mobile */}
+      {/* Overlay Gelap untuk Mode Mobile */}
       {isMobileOpen && (
         <div
-          className='fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-40 md:hidden transition-opacity'
+          className='fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden transition-opacity'
           onClick={() => setIsMobileOpen(false)}
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - Desktop & Mobile */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 transform flex flex-col bg-slate-900 border-r border-slate-800 shadow-xl transition-all duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0 ${isSidebarCollapsed ? 'w-24' : 'w-72'}`}>
+        className={`fixed inset-y-0 left-0 z-50 transform flex flex-col bg-slate-900 border-r border-slate-800 shadow-xl transition-all duration-300 ease-in-out ${
+          isMobileOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:relative md:translate-x-0 ${isSidebarCollapsed ? 'w-24' : 'w-72'}`}>
+        {/* Toggle Button (Hanya tampil di Desktop) */}
         <button
           onClick={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
           className='hidden md:flex absolute -right-3.5 top-14 bg-slate-800 border border-slate-700 text-white p-1 rounded-full hover:bg-blue-600 transition-colors z-30 shadow-md items-center justify-center'>
@@ -306,61 +285,56 @@ function DashboardContent() {
         </div>
 
         <nav
-          className={`flex-1 overflow-y-auto px-4 space-y-2 mt-2 text-base font-medium ${isSidebarCollapsed ? 'px-3' : ''} custom-scrollbar`}>
+          className={`flex-1 px-4 space-y-3 mt-2 text-base font-medium ${isSidebarCollapsed ? 'px-3' : ''}`}>
           <button
             onClick={() => handleTabChange('overview')}
             title='Dashboard Utama'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'overview' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <LayoutDashboard className='size-5 flex-shrink-0' />{' '}
+            <LayoutDashboard className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Dashboard Utama</span>}
           </button>
           <button
             onClick={() => handleTabChange('pengajuan')}
             title='Lihat Pengajuan'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'pengajuan' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <FileStack className='size-5 flex-shrink-0' />{' '}
+            <FileStack className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Lihat Pengajuan</span>}
           </button>
-          <button
-            onClick={() => handleTabChange('layanan')}
-            title='Layanan Uji Lab'
-            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'layanan' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <Activity className='size-5 flex-shrink-0' />{' '}
-            {!isSidebarCollapsed && <span>Layanan Uji Lab</span>}
-          </button>
+
           <button
             onClick={() => handleTabChange('materi')}
             title='Materi & Kelas'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'materi' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <FolderKanban className='size-5 flex-shrink-0' />{' '}
+            <FolderKanban className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Manajemen Materi</span>}
           </button>
+
           <button
             onClick={() => handleTabChange('riwayat')}
             title='Riwayat Pemakaian Lab'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'riwayat' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <FolderOutput className='size-5 flex-shrink-0' />{' '}
+            <FolderOutput className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Riwayat Pemakaian Lab</span>}
           </button>
           <button
             onClick={() => handleTabChange('inventaris')}
             title='Inventaris Lab'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'inventaris' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <PackageSearch className='size-5 flex-shrink-0' />{' '}
+            <PackageSearch className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Inventaris Lab</span>}
           </button>
           <button
             onClick={() => handleTabChange('pengaturan')}
             title='Pengaturan Rekening'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'pengaturan' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <Landmark className='size-5 flex-shrink-0' />{' '}
+            <Landmark className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Pengaturan Rekening</span>}
           </button>
           <button
             onClick={() => handleTabChange('jadwal')}
             title='Kelola Jadwal Lab'
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'jadwal' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
-            <CalendarDays className='size-5 flex-shrink-0' />{' '}
+            <CalendarDays className='size-5 flex-shrink-0' />
             {!isSidebarCollapsed && <span>Jadwal Lab</span>}
           </button>
         </nav>
@@ -382,7 +356,8 @@ function DashboardContent() {
 
       {/* Main Content Area */}
       <main className='flex-1 flex flex-col min-h-screen overflow-hidden relative w-full'>
-        {/* Header Mobile Hamburger */}
+        {/* Header Mobile (Sekarang tombolnya aktif!) */}
+        {/* Header Mobile (Diperbarui: Hamburger pindah ke Kiri) */}
         <header className='md:hidden flex items-center gap-4 p-5 bg-slate-900 border-b border-slate-800 shadow-sm z-20'>
           <button
             onClick={() => setIsMobileOpen(true)}
@@ -390,47 +365,36 @@ function DashboardContent() {
             <Menu className='size-6' />
           </button>
           <h2 className='text-xl font-bold text-white tracking-tight'>
-            DOLPHIN
+            DHOLPIN
           </h2>
         </header>
 
-        <div className='flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 pb-24 custom-scrollbar'>
-          <div className='max-w-6xl mx-auto w-full'>
-            {/* FITUR BARU: Dynamic Minimalist Header */}
-            <div
-              className={`pb-4 md:pb-5 border-b border-slate-200 flex flex-col items-start ${activeTab === 'overview' ? 'mb-6 md:mb-8' : 'mb-5 md:mb-6'}`}>
-              {/* Notif dan Status HANYA muncul di Tab Overview */}
-              {activeTab === 'overview' && (
-                <div className='flex items-center justify-between w-full mb-3 md:mb-4 animate-in fade-in slide-in-from-top-2 duration-500'>
-                  <div className='inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-xs md:text-sm font-semibold text-emerald-700 tracking-wide border border-emerald-200 shadow-sm'>
-                    <Circle className='size-2.5 fill-emerald-500 text-emerald-500 animate-pulse' />{' '}
-                    Status Sistem: Online
-                  </div>
-                  <NotifButton
-                    userEmail={activeProfile?.email}
-                    role='admin'
-                    labId={activeProfile?.lab_id}
-                  />
+        <div className='flex-1 overflow-y-auto p-6 md:p-8 lg:p-10 pb-20'>
+          <div className='max-w-6xl mx-auto space-y-8 w-full'>
+            <div className='pb-4 border-b border-slate-200 flex flex-col items-start'>
+              <div className='flex items-center justify-between w-full mb-3'>
+                <div className='inline-flex items-center gap-1.5 rounded-full bg-emerald-100 px-3 py-1 text-sm font-semibold text-emerald-700 tracking-wide border border-emerald-200'>
+                  <Circle className='size-2.5 fill-emerald-500 text-emerald-500 animate-pulse' />
+                  Status Sistem: Online
                 </div>
-              )}
-
-              <h1
-                className={`font-extrabold text-slate-900 tracking-tight leading-tight transition-all duration-300 ${activeTab === 'overview' ? 'text-2xl md:text-3xl lg:text-4xl' : 'text-xl md:text-2xl lg:text-3xl'}`}>
-                {headerInfo.title}
+                <NotifButton
+                  userEmail={activeProfile?.email}
+                  role='admin'
+                  labId={activeProfile?.lab_id}
+                />
+              </div>
+              <h1 className='text-3xl md:text-4xl font-extrabold text-slate-900 tracking-tight leading-tight'>
+                {getDashboardTitle(activeProfile.lab_id)}
               </h1>
-
-              {/* Deskripsi HANYA muncul jika tab overview (di semua layar) */}
-              {headerInfo.desc && (
-                <p className='mt-2.5 text-slate-500 text-sm md:text-base lg:text-lg max-w-3xl leading-relaxed animate-in fade-in slide-in-from-top-2 duration-500'>
-                  {headerInfo.desc}
-                </p>
-              )}
+              <p className='mt-3 text-slate-500 text-lg max-w-3xl leading-relaxed'>
+                Platform terisolasi. Anda memegang kendali penuh pada validasi
+                peminjaman dan pengelolaan inventaris yang masuk ke wilayah
+                kewenangan Anda secara aman.
+              </p>
             </div>
 
-            {/* Injeksi Sub-Komponen Berdasarkan Tab */}
-            <div className='animate-in fade-in slide-in-from-bottom-2 duration-500'>
-              {renderTabContent()}
-            </div>
+            {/* Injeksi Sub-Komponen */}
+            {renderTabContent()}
           </div>
         </div>
       </main>

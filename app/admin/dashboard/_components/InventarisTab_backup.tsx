@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState, useCallback } from 'react';
-import { PackageSearch, Plus, Pencil, FolderPlus, Trash2, X, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { PackageSearch, Plus, Pencil, FolderPlus, Trash2 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -96,12 +96,6 @@ export default function InventarisTab({
 
   const [dataInventaris, setDataInventaris] = useState<InventarisItem[]>([]);
   const [loadingInventaris, setLoadingInventaris] = useState(false);
-  const [progressInventaris, setProgressInventaris] = useState(0);
-  const [progressKategori, setProgressKategori] = useState(0);
-  
-  const [page, setPage] = useState(1);
-  const [totalCount, setTotalCount] = useState(0);
-  const rowsPerPage = 10;
 
   // --- Modal Tambah Kategori ---
   const [isKategoriModalOpen, setIsKategoriModalOpen] = useState(false);
@@ -118,11 +112,6 @@ export default function InventarisTab({
   // FETCH KATEGORI
   const fetchKategori = useCallback(async () => {
     setLoadingKategori(true);
-    setProgressKategori(0);
-    const interval = setInterval(() => {
-      setProgressKategori((old) => (old < 90 ? old + 15 : old));
-    }, 50);
-
     const { data } = await supabase
       .from('kategori_inventaris')
       .select('*')
@@ -139,11 +128,7 @@ export default function InventarisTab({
       setKategoriList([]);
       setActiveKategoriId(null);
     }
-    clearInterval(interval);
-    setProgressKategori(100);
-    setTimeout(() => {
-      setLoadingKategori(false);
-    }, 300);
+    setLoadingKategori(false);
   }, [supabase, adminProfile.lab_id]);
 
   useEffect(() => {
@@ -157,39 +142,20 @@ export default function InventarisTab({
       return;
     }
     setLoadingInventaris(true);
-    setProgressInventaris(0);
-    const interval = setInterval(() => {
-      setProgressInventaris((old) => (old < 90 ? old + 15 : old));
-    }, 50);
-
-    const from = (page - 1) * rowsPerPage;
-    const to = from + rowsPerPage - 1;
-
-    const { data, count } = await supabase
+    const { data } = await supabase
       .from('inventaris')
-      .select('*', { count: 'exact' })
+      .select('*')
       .eq('kategori_id', activeKategoriId)
-      .order('jenis_alat', { ascending: true })
-      .range(from, to);
+      .order('jenis_alat', { ascending: true });
 
     if (data) setDataInventaris(data);
     else setDataInventaris([]);
-    if (count !== null) setTotalCount(count);
-
-    clearInterval(interval);
-    setProgressInventaris(100);
-    setTimeout(() => {
-      setLoadingInventaris(false);
-    }, 300);
-  }, [supabase, activeKategoriId, page]);
+    setLoadingInventaris(false);
+  }, [supabase, activeKategoriId]);
 
   useEffect(() => {
     fetchInventaris();
   }, [fetchInventaris]);
-
-  useEffect(() => {
-    setPage(1);
-  }, [activeKategoriId]);
 
   // SUBMIT KATEGORI BARU
   const submitKategori = async (e: React.FormEvent) => {
@@ -442,10 +408,8 @@ export default function InventarisTab({
 
   if (loadingKategori) {
     return (
-      <div className='flex flex-col items-center justify-center py-20 text-purple-600'>
-        <PackageSearch className='size-10 mb-4' />
-        <span className='text-2xl font-black'>{progressKategori}%</span>
-        <p className='text-sm font-medium text-slate-500 mt-2'>Memuat data kategori...</p>
+      <div className='animate-pulse text-lg text-slate-500 font-medium'>
+        Memuat data inventaris...
       </div>
     );
   }
@@ -521,39 +485,11 @@ export default function InventarisTab({
             atas untuk memulai.
           </div>
         ) : loadingInventaris ? (
-          <div className='flex flex-col items-center justify-center py-20 text-purple-600'>
-            <Activity className='size-10 mb-4' />
-            <span className='text-2xl font-black'>{progressInventaris}%</span>
-            <p className='text-sm font-medium text-slate-500 mt-2'>Memuat inventaris...</p>
+          <div className='animate-pulse text-center py-16 text-slate-500 text-lg font-medium'>
+            Memuat data inventaris...
           </div>
         ) : (
-          <>
-            {/* MOBILE VIEW */}
-            <div className='md:hidden flex flex-col gap-3 p-4 bg-slate-50/50'>
-              {dataInventaris.map((item) => {
-                const total = (item.jumlah_baik ?? 0) + (item.jumlah_rusak_ringan ?? 0) + (item.jumlah_rusak_berat ?? 0);
-                return (
-                  <div key={item.id} className='bg-white border border-slate-200 shadow-sm rounded-xl p-4 flex flex-col gap-3'>
-                    <div className='flex justify-between items-start gap-2'>
-                      <h4 className='font-bold text-slate-800 line-clamp-2'>{item.jenis_alat}</h4>
-                    </div>
-                    <p className='text-sm text-slate-500 line-clamp-2'>{item.spesifikasi || '-'}</p>
-                    <div className='grid grid-cols-2 gap-2 text-xs font-semibold'>
-                      <span className='bg-green-50 text-green-700 px-2 py-1.5 rounded-lg border border-green-200 text-center'>Baik: {item.jumlah_baik ?? 0}</span>
-                      <span className='bg-amber-50 text-amber-700 px-2 py-1.5 rounded-lg border border-amber-200 text-center'>RR: {item.jumlah_rusak_ringan ?? 0}</span>
-                      <span className='bg-red-50 text-red-700 px-2 py-1.5 rounded-lg border border-red-200 text-center'>RB: {item.jumlah_rusak_berat ?? 0}</span>
-                      <span className='bg-slate-100 text-slate-700 px-2 py-1.5 rounded-lg border border-slate-200 text-center font-bold text-sm'>Total: {total}</span>
-                    </div>
-                    {item.keterangan && <p className='text-xs text-slate-400 italic line-clamp-1 mt-1'>{item.keterangan}</p>}
-                    <Button variant='outline' className='w-full mt-2 h-11 border-purple-200 text-purple-700 bg-purple-50/50 hover:bg-purple-100 font-bold' onClick={() => openEdit(item)}>
-                      <Pencil className='size-4 mr-2' /> Edit Alat
-                    </Button>
-                  </div>
-                );
-              })}
-            </div>
-            {/* DESKTOP VIEW */}
-            <div className='hidden md:block rounded-md border overflow-x-auto'>
+          <div className='rounded-md border overflow-x-auto'>
             <Table>
               <TableHeader className='bg-slate-50'>
                 <TableRow>
@@ -657,42 +593,20 @@ export default function InventarisTab({
               </TableBody>
             </Table>
           </div>
-          {totalCount > rowsPerPage && (
-            <div className='flex flex-col sm:flex-row items-center justify-between sm:justify-end gap-3 p-4 bg-slate-50 border-t border-slate-200'>
-              <span className='text-sm font-semibold text-slate-500 sm:mr-4 text-center sm:text-left'>
-                Total Data: {totalCount} | Halaman {page} dari {Math.ceil(totalCount / rowsPerPage)}
-              </span>
-              <div className='flex gap-2 w-full sm:w-auto'>
-                <Button variant='outline' size='sm' onClick={() => setPage((p) => Math.max(1, p - 1))} disabled={page === 1 || loadingInventaris} className='flex-1 sm:flex-none h-10 font-bold'>
-                  <ChevronLeft className='size-4 mr-1' /> Prev
-                </Button>
-                <Button variant='outline' size='sm' onClick={() => setPage((p) => Math.min(Math.ceil(totalCount / rowsPerPage), p + 1))} disabled={page === Math.ceil(totalCount / rowsPerPage) || loadingInventaris} className='flex-1 sm:flex-none h-10 font-bold'>
-                  Next <ChevronRight className='size-4 ml-1' />
-                </Button>
-              </div>
-            </div>
-          )}
-          </>
         )}
       </CardContent>
 
       {/* MODAL — TAMBAH KATEGORI */}
       <Dialog open={isKategoriModalOpen} onOpenChange={setIsKategoriModalOpen}>
-        <DialogContent className='w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[85vh] overflow-hidden rounded-2xl flex flex-col p-0 bg-slate-50 border-none shadow-2xl [&>button]:hidden'>
-          <div className='shrink-0 bg-white border-b border-slate-200 px-5 py-4 flex items-start justify-between z-20 shadow-sm'>
-            <div className='flex flex-col'>
-              <DialogTitle className='text-xl md:text-2xl font-black text-slate-800'>Tambah Kategori Baru</DialogTitle>
-              <DialogDescription className='text-sm md:text-base text-slate-500 mt-1'>
-                Buat kategori untuk mengelompokkan alat/bahan inventaris.
-              </DialogDescription>
-            </div>
-            <Button type='button' variant='ghost' size='icon' className='shrink-0 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors' onClick={() => setIsKategoriModalOpen(false)}>
-              <X className='size-6' />
-            </Button>
-          </div>
-          <form onSubmit={submitKategori} className='flex flex-col h-full overflow-hidden'>
-            <div className='flex-1 overflow-y-auto p-4 sm:p-6 space-y-4'>
-              <div className='space-y-2'>
+        <DialogContent className='sm:max-w-md'>
+          <DialogHeader>
+            <DialogTitle className='text-xl'>Tambah Kategori Baru</DialogTitle>
+            <DialogDescription className='text-base'>
+              Buat kategori untuk mengelompokkan alat/bahan inventaris.
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitKategori} className='space-y-4 pt-4'>
+            <div className='space-y-2'>
               <Label htmlFor='kat_nama' className='text-base'>
                 Nama Kategori
               </Label>
@@ -729,15 +643,14 @@ export default function InventarisTab({
               </div>
             </div>
 
-            </div>
-            <div className='shrink-0 bg-white border-t border-slate-200 p-4 sm:px-6 flex justify-end z-20'>
+            <DialogFooter className='mt-6 pt-4'>
               <Button
                 type='submit'
                 className='w-full font-bold bg-purple-600 hover:bg-purple-700 text-base py-6'
                 disabled={isSubmittingKategori}>
                 {isSubmittingKategori ? 'Menyimpan...' : 'Simpan Kategori'}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
@@ -752,29 +665,23 @@ export default function InventarisTab({
           } else setIsFormOpen(true);
         }}>
         <DialogContent
-          className='w-[95vw] lg:max-w-[85vw] xl:max-w-[75vw] max-h-[85vh] overflow-hidden rounded-2xl flex flex-col p-0 bg-slate-50 border-none shadow-2xl [&>button]:hidden'
+          className='sm:max-w-lg max-h-[90vh] overflow-y-auto'
           onInteractOutside={(e) => {
             const isSwalOpen = document.querySelector('.swal2-container');
             if (isSwalOpen) e.preventDefault();
           }}>
-          <div className='shrink-0 bg-white border-b border-slate-200 px-5 py-4 flex items-start justify-between z-20 shadow-sm'>
-            <div className='flex flex-col'>
-              <DialogTitle className='text-xl md:text-2xl font-black text-slate-800'>
-                {editItemId ? 'Edit Data Alat' : 'Tambah Alat Baru'}
-              </DialogTitle>
-              <DialogDescription className='text-sm md:text-base text-slate-500 mt-1'>
-                {editItemId
-                  ? 'Ubah informasi inventaris ini sesuai keadaan terbaru.'
-                  : 'Registrasi data aset baru ke dalam inventaris laboratorium Anda.'}
-              </DialogDescription>
-            </div>
-            <Button type='button' variant='ghost' size='icon' className='shrink-0 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors' onClick={() => { setIsFormOpen(false); setEditItemId(null); }}>
-              <X className='size-6' />
-            </Button>
-          </div>
-          <form onSubmit={submitInventaris} className='flex flex-col h-full overflow-hidden'>
-            <div className='flex-1 overflow-y-auto p-4 sm:p-6 space-y-4'>
-              <div className='space-y-2'>
+          <DialogHeader>
+            <DialogTitle className='text-xl'>
+              {editItemId ? 'Edit Data Alat' : 'Tambah Alat Baru'}
+            </DialogTitle>
+            <DialogDescription className='text-base'>
+              {editItemId
+                ? 'Ubah informasi inventaris ini sesuai keadaan terbaru.'
+                : 'Registrasi data aset baru ke dalam inventaris laboratorium Anda.'}
+            </DialogDescription>
+          </DialogHeader>
+          <form onSubmit={submitInventaris} className='space-y-4 pt-4'>
+            <div className='space-y-2'>
               <Label className='text-base'>Kategori</Label>
               <Input
                 value={
@@ -893,8 +800,7 @@ export default function InventarisTab({
               />
             </div>
 
-            </div>
-            <div className='shrink-0 bg-white border-t border-slate-200 p-4 sm:px-6 flex flex-col sm:flex-row gap-3 justify-end z-20'>
+            <DialogFooter className='mt-8 flex flex-col sm:flex-row gap-3 border-t pt-5'>
               {/* TOMBOL HAPUS (Hanya muncul jika sedang edit barang) */}
               {editItemId && (
                 <Button
@@ -917,7 +823,7 @@ export default function InventarisTab({
                     ? 'Simpan Perubahan'
                     : 'Simpan Alat'}
               </Button>
-            </div>
+            </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>

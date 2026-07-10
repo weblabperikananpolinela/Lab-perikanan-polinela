@@ -10,6 +10,7 @@ import {
   ExternalLink,
   Plus,
   FolderOpen,
+  X,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -42,6 +43,7 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [categoryFiles, setCategoryFiles] = useState<any[]>([]);
   const [isLoadingFiles, setIsLoadingFiles] = useState(false);
+  const [progressFiles, setProgressFiles] = useState(0);
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const fetchAdminCategories = async () => {
@@ -112,6 +114,11 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
 
   const fetchCategoryFiles = async (categoryId: number) => {
     setIsLoadingFiles(true);
+    setProgressFiles(0);
+    const interval = setInterval(() => {
+      setProgressFiles((old) => (old < 90 ? old + 15 : old));
+    }, 50);
+
     const { data, error } = await supabase
       .from('materi_dosen')
       .select('*')
@@ -121,7 +128,11 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
     if (!error && data) {
       setCategoryFiles(data);
     }
-    setIsLoadingFiles(false);
+    clearInterval(interval);
+    setProgressFiles(100);
+    setTimeout(() => {
+      setIsLoadingFiles(false);
+    }, 300);
   };
 
   const handleUpload = async (e: React.FormEvent) => {
@@ -353,16 +364,21 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
 
         {/* --- MODAL UPLOAD ADMIN --- */}
         <Dialog open={isUploadModalOpen} onOpenChange={setIsUploadModalOpen}>
-          <DialogContent className='max-w-[95vw] sm:max-w-[95vw] lg:max-w-4xl !w-full h-[95vh] sm:h-auto sm:max-h-[85vh] p-0 overflow-hidden sm:rounded-2xl'>
-            <div className='flex flex-col md:flex-row h-full max-h-[95vh] sm:max-h-[85vh]'>
-              <div className='w-full md:w-1/3 bg-slate-50 border-r border-slate-200 p-6 overflow-y-auto hidden-scrollbar flex-shrink-0'>
-                <DialogHeader className='mb-6'>
-                  <DialogTitle className='text-xl'>Unggah Baru</DialogTitle>
-                  <p className='text-sm text-slate-500 font-medium'>
-                    Untuk {selectedCategory?.nama_kategori}
-                  </p>
-                </DialogHeader>
+          <DialogContent className='w-[95vw] lg:max-w-5xl max-h-[95vh] overflow-hidden rounded-none sm:rounded-2xl flex flex-col p-0 bg-white border-none shadow-2xl [&>button]:hidden'>
+            <div className='shrink-0 bg-white border-b border-slate-200 px-5 py-4 flex items-start justify-between z-20 shadow-sm'>
+              <div className='flex flex-col'>
+                <DialogTitle className='text-xl md:text-2xl font-black text-slate-800'>Kelola Materi: {selectedCategory?.nama_kategori}</DialogTitle>
+                <p className='text-sm md:text-base text-slate-500 mt-1'>
+                  Unggah file baru atau kelola file yang sudah ada.
+                </p>
+              </div>
+              <Button type='button' variant='ghost' size='icon' className='shrink-0 rounded-full text-slate-400 hover:text-red-600 hover:bg-red-50 transition-colors' onClick={() => setIsUploadModalOpen(false)}>
+                <X className='size-6' />
+              </Button>
+            </div>
 
+            <div className='flex flex-col md:flex-row h-full overflow-hidden flex-1'>
+              <div className='w-full md:w-1/3 bg-slate-50 border-r border-slate-200 p-6 overflow-y-auto hidden-scrollbar flex-shrink-0'>
                 <form onSubmit={handleUpload} className='space-y-6'>
                   <div className='space-y-2'>
                     <label className='text-sm font-bold text-slate-700'>
@@ -436,8 +452,10 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
                   )}
                 </h3>
                 {isLoadingFiles ? (
-                  <div className='py-12 flex justify-center'>
-                    <Loader2 className='size-8 text-slate-300 animate-spin' />
+                  <div className='py-20 flex flex-col items-center justify-center text-blue-600'>
+                    <FileText className='size-10 mb-4' />
+                    <span className='text-2xl font-black'>{progressFiles}%</span>
+                    <p className='text-sm font-medium text-slate-500 mt-2'>Memuat daftar file...</p>
                   </div>
                 ) : categoryFiles.length === 0 ? (
                   <div className='py-12 text-center text-slate-500 border border-slate-100 bg-slate-50/50 rounded-xl'>
