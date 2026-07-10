@@ -148,7 +148,6 @@ export function SopSection() {
                       {service.nama_layanan}
                     </span>
                   </div>
-
                 </li>
               ))}
             </ul>
@@ -176,7 +175,7 @@ export function SopSection() {
             <span>Kapasitas dan Layanan</span>
           </div>
           <h2 className='text-3xl md:text-5xl font-extrabold text-white tracking-tight text-balance'>
-            Layanan Pengujian & Praktikum
+            Layanan Pengujian
           </h2>
           <p className='mt-4 max-w-2xl text-blue-100/80 md:text-lg leading-relaxed'>
             Eksplorasi berbagai jenis pengujian, layanan analisis, dan fasilitas
