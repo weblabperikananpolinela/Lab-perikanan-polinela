@@ -1,1 +1,0 @@
-(()=>{let i=self;i.addEventListener("push",t=>{let n=t.data?.json()||{},o=n.title||"Notification",a={body:n.body||"",icon:n.icon||"/icon-192x192.png",data:{url:n.url||"/"}};t.waitUntil(i.registration.showNotification(o,a))}),i.addEventListener("notificationclick",t=>{t.notification.close(),t.notification.data?.url&&t.waitUntil(i.clients.openWindow(t.notification.data.url))})})();
