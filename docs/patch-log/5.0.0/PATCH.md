@@ -110,7 +110,7 @@ AGENTS.md
 | LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `s3sqnMmsD7Ca48sM0-5em`) |
 | AUTO-TEST (agent) | PASS | tsc, production build, smoke test curl 7 route dari server, verifikasi BUILD_ID aktif |
 | DEPLOYED (Polinela production) | PASS | 2026-09-24 ~18:40 UTC; semua route uji HTTP 200; backup server `~/backup-deploy-20260924-183606`; rollback: `*.old-20260924-183606` |
-| GITHUB-BACKUP (commit+push) | PASS | Di-push ke `origin/master` pada checkpoint ini (lihat riwayat commit v5.0.0) |
+| GITHUB-BACKUP (commit+push) | PASS | Commit `0be3391` di-push ke `origin/master` (2026-09-25). Lihat https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/0be3391 |
 | MANUAL-TEST (PM) | PASS | Project Manager menguji langsung dan memberi ACC (2026-09-25) |
 
 ## Catatan deploy
@@ -145,3 +145,10 @@ AGENTS.md
 
 Laporan visual semua versi: `docs/patch-log/report.html` (satu file untuk
 seluruh riwayat). File per versi hanya `PATCH.md`.
+
+## Referensi GitHub
+
+- Repository: https://github.com/weblabperikananpolinela/Lab-perikanan-polinela
+- Branch: `master`
+- Commit rilis v5.0.0: `0be3391`
+- Commit sebelumnya: `686bff9` (refactor untuk plesk)
