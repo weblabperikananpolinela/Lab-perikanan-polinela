@@ -66,10 +66,12 @@ export function SopSection() {
 
     const fetchLayanan = async () => {
       const supabase = createClient();
+      // Hanya kolom yang dirender (lab_id + nama_layanan). Harga dan
+      // created_at tidak dipakai section publik ini.
       const { data, error } = await supabase
         .from('layanan_lab')
-        .select('*')
-        .order('created_at', { ascending: true });
+        .select('id, lab_id, nama_layanan')
+        .order('id', { ascending: true });
 
       if (!error && data) {
         // Gabungkan data layanan ke Lab masing-masing

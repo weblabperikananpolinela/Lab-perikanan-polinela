@@ -21,6 +21,7 @@ import {
   FileUp, // <-- Icon untuk Upload Materi
   FolderKanban,
   LockKeyhole,
+  ShieldCheck,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -76,7 +77,9 @@ export function Navbar() {
   const [session, setSession] = useState<any>(null);
 
   // STATE BARU: Menyimpan role dan data admin
-  const [userRole, setUserRole] = useState<'admin_lab' | 'dosen' | null>(null);
+  const [userRole, setUserRole] = useState<
+    'system_admin' | 'admin_lab' | 'dosen' | null
+  >(null);
   const [adminProfiles, setAdminProfiles] = useState<any[]>([]);
 
   const supabase = createClient();
@@ -107,31 +110,33 @@ export function Navbar() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // LOGIKA LOGIN BARU: Memisahkan Admin Lab (Whitelist) dan Dosen Reguler (@polinela.ac.id)
   const checkUserRole = async (user: any) => {
     if (!user || !user.email) return;
     const email = user.email;
 
-    // 1. Cek apakah email ada di Whitelist Admin
+    // 1. Whitelist admin: select role juga supaya bisa beda
+    //    system_admin (dashboard /admin/system) vs admin_lab biasa.
     const { data: adminData, error } = await supabase
       .from('whitelist_admin')
-      .select('*')
+      .select('id, email, role, nama_dosen, lab_id')
       .eq('email', email);
 
     if (!error && adminData && adminData.length > 0) {
+      const isSystem = adminData.some((r: any) => r.role === 'system_admin');
+      if (isSystem) {
+        setUserRole('system_admin');
+        setAdminProfiles([]);
+        return;
+      }
       setUserRole('admin_lab');
       setAdminProfiles(adminData);
       return;
     }
 
-    // 2. Jika bukan admin, cek apakah domain emailnya @polinela.ac.id
-    // (Juga memasukkan email dev kamu agar mudah saat testing)
-    if (
-      email.endsWith('@polinela.ac.id') ||
-      email === 'afnanimadurrosyad911@gmail.com'
-    ) {
+    // 2. Dosen: cukup domain @polinela.ac.id.
+    if (email.endsWith('@polinela.ac.id')) {
       setUserRole('dosen');
-      setAdminProfiles([]); // Kosongkan admin profile karena dia cuma dosen
+      setAdminProfiles([]);
       return;
     }
 
@@ -398,6 +403,18 @@ export function Navbar() {
                   </p>
                 </div>
 
+                {/* Dashboard System Admin */}
+                {userRole === 'system_admin' && (
+                  <DropdownMenuItem
+                    asChild
+                    className='cursor-pointer py-2.5 rounded-md font-semibold text-purple-700 focus:text-purple-800 focus:bg-purple-50'>
+                    <Link href='/admin/system'>
+                      <ShieldCheck className='size-4 mr-2' />
+                      <span className='truncate'>Dashboard System Admin</span>
+                    </Link>
+                  </DropdownMenuItem>
+                )}
+
                 {/* Dashboard Lab (Khusus Admin Lab) */}
                 {userRole === 'admin_lab' &&
                   adminProfiles.map((profile) => (
@@ -565,6 +582,21 @@ export function Navbar() {
                       <p className='text-[10px] font-bold text-blue-300 uppercase tracking-wider'>
                         Ruang Kerja Anda
                       </p>
+
+                      {/* Menu Dashboard System Admin */}
+                      {userRole === 'system_admin' && (
+                        <Button
+                          asChild
+                          variant='secondary'
+                          className='w-full justify-start text-left h-auto py-3 bg-white hover:bg-purple-50 text-purple-700 font-semibold border-none shadow-sm'>
+                          <Link
+                            href='/admin/system'
+                            onClick={() => setIsOpen(false)}>
+                            <ShieldCheck className='size-4 mr-2 text-purple-500' />
+                            Dashboard System Admin
+                          </Link>
+                        </Button>
+                      )}
 
                       {/* Menu Dashboard (Khusus Admin Lab) */}
                       {userRole === 'admin_lab' &&

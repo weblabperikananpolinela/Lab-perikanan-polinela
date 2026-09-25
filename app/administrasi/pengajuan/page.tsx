@@ -17,6 +17,7 @@ import {
   FlaskConical,
   CreditCard,
   UserCircle,
+  TriangleAlert,
 } from 'lucide-react';
 import NotifButton from '@/app/_components/NotifButton';
 import { getOrCreateDeviceId } from '@/lib/push-utils';
@@ -223,6 +224,60 @@ export default function PengajuanForm() {
   const kategoriPemohon = watch('kategori_pemohon');
   const labTargetValue = watch('labTarget');
   const judulPenelitianValue = watch('judulPenelitian');
+  const tanggalValue = watch('tanggal');
+  const jamMulaiValue = watch('jam_mulai');
+  const jamSelesaiValue = watch('jam_selesai');
+
+  // Info overlap jadwal (non-blocking): hanya untuk ditampilkan ke pemohon
+  // dan diteruskan ke admin. Keputusan ACC/tolak 100% di tangan admin.
+  const [overlapList, setOverlapList] = useState<any[]>([]);
+  const [isCheckingOverlap, setIsCheckingOverlap] = useState(false);
+
+  useEffect(() => {
+    if (
+      !labTargetValue ||
+      !tanggalValue ||
+      !jamMulaiValue ||
+      !jamSelesaiValue
+    ) {
+      setOverlapList([]);
+      return;
+    }
+    const lab_id = labMap[labTargetValue];
+    if (!lab_id) {
+      setOverlapList([]);
+      return;
+    }
+
+    let cancelled = false;
+    const timer = setTimeout(async () => {
+      setIsCheckingOverlap(true);
+      try {
+        const supabase = createClient();
+        const { data } = await supabase
+          .from('peminjaman')
+          .select('jam_mulai, jam_selesai, nama_lengkap, judul_kegiatan, status')
+          .eq('lab_id', lab_id)
+          .eq('tanggal', tanggalValue)
+          .in('status', ['Disetujui', 'Menunggu validasi']);
+        if (cancelled) return;
+        const overlaps = (data || []).filter(
+          (s: any) =>
+            jamMulaiValue < s.jam_selesai && jamSelesaiValue > s.jam_mulai,
+        );
+        setOverlapList(overlaps);
+      } catch {
+        if (!cancelled) setOverlapList([]);
+      } finally {
+        if (!cancelled) setIsCheckingOverlap(false);
+      }
+    }, 500);
+
+    return () => {
+      cancelled = true;
+      clearTimeout(timer);
+    };
+  }, [labTargetValue, tanggalValue, jamMulaiValue, jamSelesaiValue]);
 
   const [availableItems, setAvailableItems] = useState<any[]>([]);
   const [availableLayanan, setAvailableLayanan] = useState<any[]>([]);
@@ -384,38 +439,23 @@ export default function PengajuanForm() {
       const supabase = createClient();
       const resolvedLabId = labMap[data.labTarget] || 1;
 
-      const { data: existingSchedules, error: existingError } = await supabase
-        .from('peminjaman')
-        .select('jam_mulai, jam_selesai, nama_lengkap')
-        .eq('lab_id', resolvedLabId)
-        .eq('tanggal', data.tanggal)
-        .eq('status', 'Disetujui');
-
-      if (existingError)
-        throw new Error('Gagal memeriksa jadwal: ' + existingError.message);
-
-      let conflictFound = null;
-      if (existingSchedules) {
-        for (const schedule of existingSchedules) {
-          if (
+      // Cek overlap hanya untuk info (non-blocking). Tidak ada penolakan
+      // otomatis — keputusan ACC/tolak ada di tangan admin lab.
+      let overlapInfo: any[] = [];
+      try {
+        const { data: existingSchedules } = await supabase
+          .from('peminjaman')
+          .select('jam_mulai, jam_selesai, nama_lengkap, judul_kegiatan, status')
+          .eq('lab_id', resolvedLabId)
+          .eq('tanggal', data.tanggal)
+          .in('status', ['Disetujui', 'Menunggu validasi']);
+        overlapInfo = (existingSchedules || []).filter(
+          (schedule: any) =>
             data.jam_mulai < schedule.jam_selesai &&
-            data.jam_selesai > schedule.jam_mulai
-          ) {
-            conflictFound = schedule;
-            break;
-          }
-        }
-      }
-
-      if (conflictFound) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Jadwal Bentrok!',
-          text: `Maaf, Lab ${data.labTarget} sudah dipesan pada jam tersebut oleh ${conflictFound.nama_lengkap}. Silakan pilih jam lain.`,
-          confirmButtonColor: '#3085d6',
-        });
-        setIsSubmitting(false);
-        return;
+            data.jam_selesai > schedule.jam_mulai,
+        );
+      } catch {
+        overlapInfo = [];
       }
 
       const currentDeviceId = getOrCreateDeviceId();
@@ -488,6 +528,15 @@ export default function PengajuanForm() {
               lab_id: resolvedLabId,
               kategori_pemohon: data.kategori_pemohon,
               is_berbayar: requirePayment,
+              overlap_info:
+                overlapInfo.length > 0
+                  ? overlapInfo
+                      .map(
+                        (o: any) =>
+                          `${o.judul_kegiatan || '-'} oleh ${o.nama_lengkap || '-'} (${o.jam_mulai}-${o.jam_selesai}, ${o.status})`,
+                      )
+                      .join('; ')
+                  : null,
             },
           }),
         });
@@ -905,9 +954,48 @@ export default function PengajuanForm() {
                       className='underline font-bold hover:text-blue-900'>
                       melihat jadwal ketersediaan lab
                     </Link>{' '}
-                    terlebih dahulu untuk menghindari bentrok jadwal.
+                    terlebih dahulu. Pengajuan yang jamnya bertabrakan dengan
+                    pengajuan lain tetap dikirim dan keputusannya ada di tangan
+                    admin lab.
                   </p>
                 </div>
+                {isCheckingOverlap && (
+                  <div className='mb-5 flex items-center gap-3 bg-slate-50 border border-slate-200 rounded-xl p-4'>
+                    <Loader2 className='size-5 text-slate-400 animate-spin shrink-0' />
+                    <p className='text-sm text-slate-500 font-medium'>
+                      Memeriksa jadwal lain di jam ini...
+                    </p>
+                  </div>
+                )}
+                {!isCheckingOverlap && overlapList.length > 0 && (
+                  <div className='mb-5 bg-amber-50 border border-amber-200 rounded-xl p-4'>
+                    <div className='flex items-start gap-3'>
+                      <TriangleAlert className='size-5 text-amber-600 shrink-0 mt-0.5' />
+                      <div className='flex-1'>
+                        <p className='text-sm font-bold text-amber-800'>
+                          Perhatian: ada {overlapList.length} pengajuan lain di
+                          jam ini
+                        </p>
+                        <ul className='mt-2 space-y-1.5'>
+                          {overlapList.map((o: any, i: number) => (
+                            <li
+                              key={i}
+                              className='text-sm text-amber-700 leading-relaxed'>
+                              • {o.judul_kegiatan || '(tanpa judul)'} oleh{' '}
+                              {o.nama_lengkap || '-'} ({o.jam_mulai}–
+                              {o.jam_selesai},{' '}
+                              {o.status})
+                            </li>
+                          ))}
+                        </ul>
+                        <p className='mt-2 text-sm text-amber-700 font-medium'>
+                          Pengajuan Anda tetap dikirim. Admin lab yang
+                          memutuskan disetujui atau tidak.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
                 <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
                   <div className='space-y-2'>
                     <Label className='text-slate-700 font-semibold'>

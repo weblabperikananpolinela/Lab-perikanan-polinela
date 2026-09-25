@@ -123,9 +123,11 @@ export default function InventarisTab({
       setProgressKategori((old) => (old < 90 ? old + 15 : old));
     }, 50);
 
+    // Hanya kolom yang dipakai tab ini (id untuk key/relasi, sisanya
+    // untuk render + form edit). created_at tidak dirender.
     const { data } = await supabase
       .from('kategori_inventaris')
-      .select('*')
+      .select('id, lab_id, nama_kategori, is_bisa_berkurang')
       .eq('lab_id', adminProfile.lab_id)
       .order('nama_kategori', { ascending: true });
 
@@ -165,9 +167,13 @@ export default function InventarisTab({
     const from = (page - 1) * rowsPerPage;
     const to = from + rowsPerPage - 1;
 
+    // created_at tidak dirender tab ini — tidak diambil.
     const { data, count } = await supabase
       .from('inventaris')
-      .select('*', { count: 'exact' })
+      .select(
+        'id, kategori_id, jenis_alat, spesifikasi, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat, keterangan',
+        { count: 'exact' },
+      )
       .eq('kategori_id', activeKategoriId)
       .order('jenis_alat', { ascending: true })
       .range(from, to);

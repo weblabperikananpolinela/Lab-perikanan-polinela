@@ -84,6 +84,8 @@ export default function MateriDosenPage() {
   const fetchUnlockedCategories = async (email: string) => {
     const { data, error } = await supabase
       .from('akses_dosen_materi')
+      // Nested eksplisit: hanya kolom yang dirender (id/title/url/type).
+      // dosen_email/created_at tidak dipakai halaman ini.
       .select(
         `
         id,
@@ -91,7 +93,7 @@ export default function MateriDosenPage() {
           id,
           nama_kategori,
           created_by,
-          materi_dosen (*)
+          materi_dosen (id, title, file_url, file_type)
         )
       `,
       )

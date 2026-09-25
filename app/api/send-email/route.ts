@@ -65,8 +65,10 @@ export async function POST(request: Request) {
     if (type === 'STATUS_UPDATE') {
       const isApproved = data.status_baru === 'Disetujui';
       const colorScheme = isApproved ? '#10b981' : '#ef4444'; // Emerald for success, Red for rejected
-      const headerText = isApproved ? 'Pengajuan Disetujui' : 'Pengajuan Ditolak';
-      
+      const headerText = isApproved
+        ? 'Pengajuan Disetujui'
+        : 'Pengajuan Ditolak';
+
       await resend.emails.send({
         from: 'DOLPHIN Polinela <onboarding@resend.dev>',
         to: [to],

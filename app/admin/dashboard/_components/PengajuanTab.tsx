@@ -105,6 +105,7 @@ export default function PengajuanTab({
 
   const [selectedPengajuan, setSelectedPengajuan] = useState<any>(null);
   const [selectedItems, setSelectedItems] = useState<any[]>([]);
+  const [overlapAdmin, setOverlapAdmin] = useState<any[]>([]);
   const [pesanFeedback, setPesanFeedback] = useState('');
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -122,9 +123,13 @@ export default function PengajuanTab({
       setProgressM(currentM);
     }, 150);
 
+    // Daftar antrean: kolom kartu + modal (email/device dipakai notif,
+    // detail_layanan/tagihan/bukti dipakai modal). Tanpa created_at.
     const { data: res1 } = await supabase
       .from('peminjaman')
-      .select('*')
+      .select(
+        'id, nama_lengkap, email_pemohon, device_id, kategori_pemohon, npm, nik, program_studi, judul_kegiatan, dosen_pembimbing, lab_id, tanggal, jam_mulai, jam_selesai, status, pesan_feedback, detail_layanan, total_biaya, bukti_pembayaran',
+      )
       .eq('status', 'Menunggu validasi')
       .eq('lab_id', adminProfile.lab_id)
       .order('created_at', { ascending: false });
@@ -155,7 +160,10 @@ export default function PengajuanTab({
 
     const { data: res2, count } = await supabase
       .from('peminjaman')
-      .select('*', { count: 'exact' })
+      .select(
+        'id, nama_lengkap, email_pemohon, device_id, kategori_pemohon, npm, nik, program_studi, judul_kegiatan, dosen_pembimbing, lab_id, tanggal, jam_mulai, jam_selesai, status, pesan_feedback, detail_layanan, total_biaya, bukti_pembayaran',
+        { count: 'exact' },
+      )
       .eq('lab_id', adminProfile.lab_id)
       .neq('status', 'Menunggu validasi')
       .order('created_at', { ascending: false })
@@ -183,11 +191,31 @@ export default function PengajuanTab({
   const openDetailModal = async (pengajuan: any) => {
     setSelectedPengajuan(pengajuan);
     setPesanFeedback(pengajuan.pesan_feedback || '');
+    setOverlapAdmin([]);
     const { data: items } = await supabase
       .from('peminjaman_item')
       .select('*')
       .eq('peminjaman_id', pengajuan.id);
     setSelectedItems(items || []);
+    // Info overlap untuk human verifier: pengajuan lain di lab+tanggal
+    // sama yang jamnya bertabrakan. Non-blocking, hanya ditampilkan.
+    try {
+      const { data: others } = await supabase
+        .from('peminjaman')
+        .select('id, jam_mulai, jam_selesai, nama_lengkap, judul_kegiatan, status')
+        .eq('lab_id', pengajuan.lab_id)
+        .eq('tanggal', pengajuan.tanggal)
+        .neq('id', pengajuan.id)
+        .in('status', ['Disetujui', 'Menunggu validasi']);
+      const overlaps = (others || []).filter(
+        (o: any) =>
+          pengajuan.jam_mulai < o.jam_selesai &&
+          pengajuan.jam_selesai > o.jam_mulai,
+      );
+      setOverlapAdmin(overlaps);
+    } catch {
+      setOverlapAdmin([]);
+    }
     setIsDialogOpen(true);
   };
 
@@ -952,6 +980,34 @@ export default function PengajuanTab({
               </div>
             )}
           </div>
+
+          {overlapAdmin.length > 0 && (
+            <div className='shrink-0 bg-amber-50 border-t border-amber-200 px-4 sm:px-6 py-4 z-20'>
+              <div className='flex items-start gap-3'>
+                <AlertCircle className='size-5 text-amber-600 shrink-0 mt-0.5' />
+                <div className='flex-1'>
+                  <p className='text-sm font-bold text-amber-800'>
+                    Perhatian: jam pengajuan ini bertabrakan dengan{' '}
+                    {overlapAdmin.length} pengajuan lain
+                  </p>
+                  <ul className='mt-2 space-y-1.5'>
+                    {overlapAdmin.map((o: any) => (
+                      <li
+                        key={o.id}
+                        className='text-sm text-amber-700 leading-relaxed'>
+                        • {o.judul_kegiatan || '(tanpa judul)'} oleh{' '}
+                        {o.nama_lengkap || '-'} ({o.jam_mulai}–{o.jam_selesai},{' '}
+                        {o.status})
+                      </li>
+                    ))}
+                  </ul>
+                  <p className='mt-2 text-sm text-amber-700 font-medium'>
+                    Pertimbangkan tabrakan ini sebelum menyetujui.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
 
           {selectedPengajuan?.status === 'Menunggu validasi' && (
             <div className='shrink-0 bg-white border-t border-slate-200 p-4 sm:px-6 flex gap-3 flex-col sm:flex-row sm:justify-end z-20'>

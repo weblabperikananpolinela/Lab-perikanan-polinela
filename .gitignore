@@ -14,3 +14,22 @@ next.user-config.*
 node_modules
 .next/
 .DS_Store
+# Deployment artifacts & logs (jangan masuk GitHub)
+deploy-dolphin*.zip
+dolphin-dev.log
+dolphin-err*.log
+
+# Scratch scripts (one-off refactors)
+rewrite.js
+rewrite.py
+
+# Duplicate skill installs (sumber utama: .agents/skills, lock di skills-lock.json)
+.claude/skills/
+
+# Build artifacts PWA (dihasilkan next build, tidak perlu di-track)
+public/sw.js
+public/workbox-*.js
+public/worker-*.js
+
+# TypeScript incremental cache
+tsconfig.tsbuildinfo

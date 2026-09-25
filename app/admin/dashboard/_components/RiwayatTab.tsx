@@ -138,9 +138,14 @@ export default function RiwayatTab({
     const from = (page - 1) * rowsPerPage;
     const to = from + rowsPerPage - 1;
 
+    // Kolom kartu + modal detail (kategori/total/bukti dipakai seksi
+    // pembayaran, pesan dipakai seksi feedback). Tanpa created_at.
     const { data: res, count } = await supabase
       .from('peminjaman')
-      .select('*', { count: 'exact' })
+      .select(
+        'id, nama_lengkap, kategori_pemohon, judul_kegiatan, lab_id, tanggal, jam_mulai, jam_selesai, status, is_dikembalikan, pesan_feedback, pesan_pembatalan, total_biaya, bukti_pembayaran',
+        { count: 'exact' },
+      )
       .in('status', ['Disetujui', 'Selesai', 'selesai', 'Dibatalkan']) // FITUR BARU: Include Selesai
       .eq('lab_id', adminProfile.lab_id)
       .order('created_at', { ascending: false })
@@ -179,9 +184,13 @@ export default function RiwayatTab({
     setDetailItems([]);
     setReturnForms([]);
 
+    // Kolom tabel item pengembalian (id untuk update, sisanya render).
+    // created_at tidak dirender.
     const { data: items } = await supabase
       .from('peminjaman_item')
-      .select('*')
+      .select(
+        'id, peminjaman_id, nama_alat_bahan, jumlah, jumlah_kembali_baik, jumlah_kembali_rusak_ringan, jumlah_kembali_rusak_berat, catatan_pengembalian',
+      )
       .eq('peminjaman_id', item.id);
 
     const fetchedItems = items || [];
@@ -270,15 +279,20 @@ export default function RiwayatTab({
             throw new Error(`Update ditolak RLS.`);
         }
 
-        // 2. Update inventaris
+        // 2. Update inventaris — 1 query .in() untuk semua alat (hindari
+        // N+1: sebelumnya 1 query per item). Hasil dipetakan by jenis_alat.
+        const namaAlatList = returnForms.map((item) => item.nama_alat_bahan);
+        const { data: invList } = await supabase
+          .from('inventaris')
+          .select(
+            'id, jenis_alat, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat, kategori_inventaris(is_bisa_berkurang)',
+          )
+          .in('jenis_alat', namaAlatList);
+        const invByNama = new Map<string, any>(
+          (invList || []).map((row: any) => [row.jenis_alat, row] as [string, any]),
+        );
         for (const item of returnForms) {
-          const { data: invRows } = await supabase
-            .from('inventaris')
-            .select(
-              'id, jumlah_baik, jumlah_rusak_ringan, jumlah_rusak_berat, kategori_inventaris(is_bisa_berkurang)',
-            )
-            .eq('jenis_alat', item.nama_alat_bahan)
-            .maybeSingle();
+          const invRows = invByNama.get(item.nama_alat_bahan);
 
           if (invRows) {
             if (invRows.kategori_inventaris?.is_bisa_berkurang === false) {
@@ -372,17 +386,26 @@ export default function RiwayatTab({
         try {
           const { data: items } = await supabase
             .from('peminjaman_item')
-            .select('*')
+            .select('nama_alat_bahan, jumlah')
             .eq('peminjaman_id', item.id);
           if (items) {
+            // 1 query .in() untuk semua alat (hindari N+1).
+            const { data: invList } = await supabase
+              .from('inventaris')
+              .select(
+                'id, jenis_alat, jumlah_baik, kategori_inventaris(is_bisa_berkurang)',
+              )
+              .in(
+                'jenis_alat',
+                items.map((pi: any) => pi.nama_alat_bahan),
+              );
+            const invByNama = new Map<string, any>(
+              (invList || []).map(
+                (row: any) => [row.jenis_alat, row] as [string, any],
+              ),
+            );
             for (const pi of items) {
-              const { data: invRows } = await supabase
-                .from('inventaris')
-                .select(
-                  'id, jumlah_baik, kategori_inventaris(is_bisa_berkurang)',
-                )
-                .eq('jenis_alat', pi.nama_alat_bahan)
-                .maybeSingle();
+              const invRows = invByNama.get(pi.nama_alat_bahan);
               if (
                 invRows &&
                 invRows.kategori_inventaris?.is_bisa_berkurang === true

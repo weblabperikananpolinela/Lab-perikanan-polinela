@@ -49,29 +49,44 @@ const labMap: Record<number, string> = {
 export default function StatusRiwayatPage() {
   const [riwayat, setRiwayat] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(false);
+  const [hasSearched, setHasSearched] = useState(false);
 
   // State untuk Modal Detail
   const [selectedItem, setSelectedItem] = useState<any>(null);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
 
+  // Pencarian server-side (debounce): tanpa kata kunci (min 3 huruf)
+  // tidak ada query sama sekali — halaman publik tidak lagi menyedot
+  // seluruh tabel. Kolom sensitif (email/npm/nik/device_id/bukti)
+  // TIDAK diambil: hemat egress + tutup bocor PII.
   useEffect(() => {
-    const fetchRiwayat = async () => {
-      const supabase = createClient();
-      const { data, error } = await supabase
-        .from('peminjaman')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (data) setRiwayat(data);
+    const keyword = searchQuery.trim();
+    if (keyword.length < 3) {
+      setRiwayat([]);
+      setHasSearched(false);
       setLoading(false);
-    };
-    fetchRiwayat();
-  }, []);
+      return;
+    }
+    setLoading(true);
+    const timer = setTimeout(async () => {
+      const supabase = createClient();
+      const { data } = await supabase
+        .from('peminjaman')
+        .select(
+          'id, nama_lengkap, lab_id, tanggal, jam_mulai, jam_selesai, status, judul_kegiatan, kategori_pemohon, pesan_feedback, pesan_pembatalan',
+        )
+        .ilike('nama_lengkap', `%${keyword}%`)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      setRiwayat(data || []);
+      setHasSearched(true);
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
 
-  const filteredRiwayat = riwayat.filter((item) =>
-    item.nama_lengkap?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
+  const filteredRiwayat = riwayat;
 
   const openDetail = (item: any) => {
     setSelectedItem(item);
@@ -134,7 +149,7 @@ export default function StatusRiwayatPage() {
           <div className='relative w-full md:w-80'>
             <Search className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 size-5' />
             <Input
-              placeholder='Cari nama peminjam...'
+              placeholder='Ketik min. 3 huruf nama peminjam...'
               className='pl-10 h-12 bg-white border-slate-300 focus:border-blue-500'
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -162,6 +177,13 @@ export default function StatusRiwayatPage() {
                       colSpan={6}
                       className='p-8 text-center text-slate-500 animate-pulse font-medium'>
                       Memuat data pengajuan...
+                    </td>
+                  </tr>
+                ) : !hasSearched ? (
+                  <tr>
+                    <td colSpan={6} className='p-8 text-center text-slate-500'>
+                      Ketik minimal 3 huruf nama untuk mencari status
+                      pengajuan Anda.
                     </td>
                   </tr>
                 ) : filteredRiwayat.length === 0 ? (

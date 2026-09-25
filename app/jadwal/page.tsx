@@ -37,7 +37,11 @@ export default function JadwalPage() {
   useEffect(() => {
     const fetchSemuaJadwal = async () => {
       const supabase = createClient();
-      const { data, error } = await supabase.from('jadwal_lab').select('*');
+      // Hanya kolom yang dirender (lab_id + file_url). uploaded_by /
+      // file_type / updated_at tidak dipakai halaman ini.
+      const { data, error } = await supabase
+        .from('jadwal_lab')
+        .select('lab_id, file_url');
       if (!error && data) {
         setJadwalData(data);
       } else {

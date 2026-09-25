@@ -1,6 +1,7 @@
 'use client';
 
 import { Wrench } from 'lucide-react';
+import { APP_VERSION_LABEL } from '@/lib/version';
 
 export default function MaintenancePage() {
   return (
@@ -15,6 +16,9 @@ export default function MaintenancePage() {
         Kami sedang melakukan pemeliharaan rutin dan peningkatan fitur pada
         sistem Laboratorium Perikanan Polinela. Silakan kembali beberapa saat
         lagi.
+      </p>
+      <p className='mt-10 text-xs font-medium text-slate-500 tracking-wide'>
+        {APP_VERSION_LABEL}
       </p>
     </div>
   );

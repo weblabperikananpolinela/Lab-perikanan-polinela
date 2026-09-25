@@ -31,9 +31,10 @@ export default function RootLayout({
         {/* Bungkus seluruh aplikasi dengan LayoutWrapper */}
         <LayoutWrapper>{children}</LayoutWrapper>
 
-        {/* Vercel Trackers */}
-        <Analytics />
-        <SpeedInsights />
+        {/* Vercel trackers are only useful on Vercel and should not make a
+            self-hosted Plesk request depend on an external analytics script. */}
+        {process.env.VERCEL === '1' && <Analytics />}
+        {process.env.VERCEL === '1' && <SpeedInsights />}
       </body>
     </html>
   );

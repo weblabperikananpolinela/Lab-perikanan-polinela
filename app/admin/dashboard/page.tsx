@@ -20,6 +20,7 @@ import {
   CalendarDays,
   FolderKanban,
   Activity,
+  ShieldCheck,
 } from 'lucide-react';
 
 import OverviewTab from './_components/OverviewTab';
@@ -31,6 +32,7 @@ import KelolaJadwal from './_components/KelolaJadwal';
 import MateriTab from './_components/MateriTab';
 import LayananTab from './_components/LayananTab'; // Import Tab Layanan
 import NotifButton from '@/app/_components/NotifButton';
+import { APP_VERSION_LABEL } from '@/lib/version';
 
 // --- CONFIG & HELPERS ---
 const labMap: Record<number, string> = {
@@ -110,9 +112,11 @@ function DashboardContent() {
         return;
       }
 
+      // Gate keamanan: getSession (baca cookie lokal). System admin
+      // tidak boleh memakai dashboard lab — dia lewat /admin/system.
       const { data: adminData } = await supabase
         .from('whitelist_admin')
-        .select('*')
+        .select('role, lab_id')
         .eq('email', session.user.email);
 
       if (!adminData || adminData.length === 0) {
@@ -120,13 +124,41 @@ function DashboardContent() {
         return;
       }
 
-      setAdminProfiles(adminData);
+      const isSystemAdmin = adminData.some((r: any) => r.role === 'system_admin');
+      const labRows = adminData.filter((r: any) => r.role !== 'system_admin');
 
-      if (adminData.length === 1) {
-        setActiveProfile(adminData[0]);
-      } else if (adminData.length > 1) {
+      // System admin + lab_id valid → profil sintetis, full control via RLS bypass
+      if (isSystemAdmin && labIdParam) {
+        const labIdNum = Number(labIdParam);
+        if (!Number.isInteger(labIdNum) || labIdNum <= 0) {
+          router.push('/admin/system');
+          return;
+        }
+        setAdminProfiles([]);
+        setActiveProfile({
+          role: 'system_admin',
+          lab_id: labIdNum,
+          email: session.user.email,
+          nama_dosen: 'System Admin',
+        });
+        setInitLoading(false);
+        return;
+      }
+
+      // Only system_admin, no lab_id → /admin/system
+      if (isSystemAdmin && labRows.length === 0) {
+        router.push('/admin/system');
+        return;
+      }
+
+      // Gunakan labRows untuk pemilihan lab (system_admin + lab, atau admin biasa)
+      setAdminProfiles(labRows);
+
+      if (labRows.length === 1) {
+        setActiveProfile(labRows[0]);
+      } else if (labRows.length > 1) {
         if (labIdParam) {
-          const selected = adminData.find(
+          const selected = labRows.find(
             (p) => p.lab_id.toString() === labIdParam,
           );
           if (selected) setActiveProfile(selected);
@@ -366,17 +398,34 @@ function DashboardContent() {
         </nav>
 
         <div
-          className={`p-6 border-t border-slate-800/80 ${isSidebarCollapsed ? 'flex justify-center px-4' : ''}`}>
-          <Link
-            href='/'
-            title='Kembali ke Beranda'
-            className={`flex items-center justify-center w-full py-3 text-base font-semibold text-slate-300 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-slate-700/50 ${isSidebarCollapsed ? 'px-0' : ''}`}>
-            {isSidebarCollapsed ? (
-              <LogOut className='size-5' />
-            ) : (
-              'Kembali ke Beranda'
-            )}
-          </Link>
+          className={`p-6 border-t border-slate-800/80 ${isSidebarCollapsed ? 'flex flex-col items-center gap-2 px-4' : ''}`}>
+          {activeProfile?.role === 'system_admin' ? (
+            <Link
+              href='/admin/system'
+              title='Kembali ke System Admin'
+              className={`flex items-center justify-center w-full py-3 text-base font-semibold text-slate-300 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-slate-700/50 ${isSidebarCollapsed ? 'px-0' : ''}`}>
+              {isSidebarCollapsed ? (
+                <ShieldCheck className='size-5' />
+              ) : (
+                'Kembali ke System Admin'
+              )}
+            </Link>
+          ) : (
+            <Link
+              href='/'
+              title='Kembali ke Beranda'
+              className={`flex items-center justify-center w-full py-3 text-base font-semibold text-slate-300 hover:text-white transition-colors bg-slate-800/50 hover:bg-slate-800 rounded-xl border border-slate-700/50 ${isSidebarCollapsed ? 'px-0' : ''}`}>
+              {isSidebarCollapsed ? (
+                <LogOut className='size-5' />
+              ) : (
+                'Kembali ke Beranda'
+              )}
+            </Link>
+          )}
+          <p
+            className={`text-[11px] text-slate-500 font-medium ${isSidebarCollapsed ? 'hidden' : 'text-center'}`}>
+            {APP_VERSION_LABEL}
+          </p>
         </div>
       </aside>
 
