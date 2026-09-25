@@ -272,11 +272,11 @@ AGENTS.md                             (aturan aset + sesi)
 
 | Checkpoint | Status | Bukti / waktu |
 |---|---|---|
-| LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `WuZKDyFdUpIQPJ9nhi8Zq`) |
+| LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `hXu-UzBl9gyYn7SRlHorK`) |
 | SESSION-CHECK (regression) | PASS | `node scripts/check-session-cookie.mjs` → 1 chunk |
 | ASSET-AUDIT | PASS | `node scripts/audit-assets.mjs` → 0 broken reference, 11 UNUSED tercatat |
-| GITHUB-BACKUP | PENDING | menunggu ACC PM |
-| DEPLOYED | PENDING | menunggu ACC PM |
+| GITHUB-BACKUP | PASS | Commit `473c9b4` pushed ke `origin/master` |
+| DEPLOYED | PASS | 2026-09-25 07:33 UTC; BUILD_ID `hXu-UzBl9gyYn7SRlHorK`; smoke test 7 route HTTP 200; backup `httpdocs/*.old-20260925-0735` |
 | MANUAL-TEST (PM) | PENDING | uji idle ±1 jam + ukur Cache Storage |
 
 ## Aset UNUSED (kandidat hapus — menunggu keputusan PM)
@@ -292,13 +292,17 @@ AGENTS.md                             (aturan aset + sesi)
 
 ## Risiko & rollback
 
+- HOTFIX-502 sudah terdeploy: deploy ini bukan lagi menunggu, tetapi status
+  manual PM (uji idle 1 jam) tetap PENDING sampai user mengonfirmasi.
+
 - `user.identities` dihapus dari cookie. Kode tidak memakainya (`rg
   identities` bersih); `getUser()` tetap memvalidasi ke server bila
   identitas/klaim dibutuhkan.
 - Browser tanpa dukungan WebP sangat tua tidak menampilkan gambar
   (didukung semua browser modern sejak 2020).
-- Rollback: `git checkout 0be3391 -- .` atau pasang ulang artefak
-  `*.old-<ts>` di server.
+- Rollback instan: kembalikan `httpdocs/*.old-20260925-0735` lalu
+  `touch tmp/restart.txt`. Produk lama `*.old-20260924-183606` bisa dihapus
+  setelah v5.0.1 lolos uji manual.
 - Offline halaman dinamis sengaja tidak tersedia.
 
 ## Pekerjaan tersisa
@@ -315,5 +319,5 @@ AGENTS.md                             (aturan aset + sesi)
 
 - Repository: https://github.com/weblabperikananpolinela/Lab-perikanan-polinela
 - Branch: `master`
-- Commit v5.0.1: (diisi setelah commit)
+- Commit v5.0.1: `473c9b4` — https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/473c9b4
 - Commit v5.0.0 (dasar): `0be3391`
