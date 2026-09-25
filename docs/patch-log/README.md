@@ -84,17 +84,17 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 ## Status saat ini
 
 - Versi aplikasi: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
-  1 chunk untuk data user nyata).
+  1 chunk untuk data user nyata). **Sudah terdeploy** 2026-09-26 13:04 UTC
+  dengan BUILD_ID `xs8ATU0djm6ntGl10t7w_`; smoke test 7/7 HTTP 200.
 - Perbaikan cookie OAuth anti-431 (v5.0.0) dan pelangsing PWA/aset (v5.0.1)
-  tetap aktif.
-- Build v5.0.1 `hXu-UzBl9gyYn7SRlHorK` sudah terdeploy ke production
-  Polinela (2026-09-25 07:33 UTC). Build v5.0.2 `xs8ATU0djm6ntGl10t7w_`
-  masih menunggu ACC Project Manager sebelum dipasang.
+  tetap aktif. Build v5.0.1 `hXu-UzBl9gyYn7SRlHorK` (25 Sep 2026 07:33 UTC)
+  kini menjadi titik rollback terdekat.
 - Temuan penting: hotfix v5.0.1 **belum cukup** — sesi nyata user Google
   Polinela tetap 3330 char / 2 chunk. v5.0.2 memangkas berlapis sampai
   2481 char / 1 chunk (margin 699 char).
-- Smoke test server v5.0.0 untuk `/`, `/jadwal`, `/inventaris`, `/organisasi`,
-  `/admin/dashboard`, `/admin/system`, dan `/sw.js` mengembalikan HTTP 200.
+- Server dibersihkan 2026-09-26: vhost 404 MB → 210 MB (generasi pre-v5.0.0
+  + ZIP lama dihapus; rollback v5.0.0 `*.old-20260925-0735` dan v5.0.1
+  `*.old-20260926-1946` dipertahankan).
 - Audit aset: `docs/patch-log/asset-audit.json` (dihasilkan
   `node scripts/audit-assets.mjs`, read-only). 11 file UNUSED (1.62 MB)
   sudah ditandai dan menunggu keputusan PM.

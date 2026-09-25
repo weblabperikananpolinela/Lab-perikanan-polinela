@@ -171,9 +171,34 @@ docs/patch-log/report.html            (bagian v5.0.2)
 | LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `xs8ATU0djm6ntGl10t7w_`) |
 | SESSION-CHECK (regression) | PASS | `check-session-cookie.mjs` → 2481 char, 1 chunk |
 | EDGE-CHECK | PASS | `check-slim-edge.mjs` → 4/4 PASS (nama/email panjang) |
-| GITHUB-BACKUP | PENDING | menunggu persetujuan PM |
-| DEPLOYED | PENDING | menunggu persetujuan PM |
-| MANUAL-TEST (PM) | PENDING | uji idle ±1 jam → harus 200 |
+| GITHUB-BACKUP | PASS | Commit `d8d8e5d` pushed ke `origin/master` |
+| DEPLOYED | PASS | 2026-09-26 13:04 UTC; BUILD_ID `xs8ATU0djm6ntGl10t7w_`; middleware hash `d4913726…` identik lokal↔server; ZIP SHA-256 `67e60271…3eef`; smoke test 7/7 HTTP 200; footer `DOLPHIN System v5.0.2` |
+| OBSERVASI-LOG | PASS | 0 entri  baru sejak deploy 13:04 UTC (entri terakhir 12:35 pre-deploy) — lalu lintas pasca-deploy bersih |
+| MANUAL-TEST (PM) | PENDING | uji idle ±1 jam + login Google ulang → harus 200 |
+
+### Bersih-bersih artefak server (2026-09-26)
+
+Dihapus (pindah ke staging lalu `find -delete`, pola non-destruktif):
+
+- Generasi pre-v5.0.0: `httpdocs/.next.old-20260924-183606`,
+  `node_modules.old-20260924-183606`, `public.old-20260924-183606`,
+  `app.js.old-20260924-183606`, `package.json.old-20260924-183606`,
+  `backup-deploy-20260924-183606`.
+- ZIP lama: `deploy-dolphin.zip`, `deploy-dolphin1.zip`,
+  `deploy-dolphin-s3sqnMmsD7Ca48sM0-5em.zip`.
+- Dir kosong: `backup-deploy-501`, `staging-501`.
+
+Vhost: **404 MB → 210 MB** (hemat ±194 MB). Disk server 359 GB free.
+
+DIPERTAHANKAN sebagai rollback:
+
+- `httpdocs/*.old-20260925-0735` (BUILD_ID `s3sqnMmsD7Ca48sM0-5em` = **v5.0.0**).
+- `deploy-dolphin-hXu-UzBl9gyYn7SRlHorK.zip` (artefak **v5.0.1**, 28 MB).
+- Generasi baru: `httpdocs/*.old-20260926-1946` (BUILD_ID `hXu-UzBl9gyYn7SRlHorK` = **v5.0.1**),
+  sebagai titik rollback terdekat.
+
+Catatan penting: `.old-20260925-0735` berisi **v5.0.0**, bukan v5.0.1 —
+verifikasi via `cat .next.old-*/BUILD_ID` sebelum menghapus apa pun.
 
 ## Risiko & rollback
 
@@ -181,16 +206,18 @@ docs/patch-log/report.html            (bagian v5.0.2)
   (`rg` atas `picture`, `avatar_url`, `identities`, `user.id`, timestamp).
 - `user_metadata.full_name` dipertahankan; fallback email sudah ada di
   navbar untuk kasus ekstrem (lapis 6).
-- Rollback = deploy ulang build v5.0.1 (`httpdocs/*.old-*`), atau
-  `git revert` commit ini.
+- Rollback terdekat = `httpdocs/*.old-20260926-1946` (v5.0.1) lalu
+  `touch tmp/restart.txt`; rollback lebih jauh = `*.old-20260925-0735`
+  (v5.0.0) atau `git revert d8d8e5d`.
 - Bukan perubahan DB/RLS — tidak ada risiko data.
 
-## Pekerjaan tersisa (tidak berubah dari v5.0.1)
+## Pekerjaan tersisa
 
 - Uji PM: idle ±1 jam lalu buka DOLPHIN + login ulang Google (dua skenario
-  502: `/?code=` dan refresh).
-- Keputusan PM: hapus aset UNUSED; drop `whitelist_dosen`; bersihkan
-  `page - Copy.tsx`, `backup.txt`, ZIP lama.
+  502: `/?code=` dan refresh) → harus 200.
+- Keputusan PM: hapus 11 aset UNUSED (1,62 MB); drop
+  `public.whitelist_dosen`; bersihkan `page - Copy.tsx` + `backup.txt` di
+  repo.
 - Opsional: buffer nginx per-vhost (pertahanan tambahan).
 - Next 16: `middleware.ts` → `proxy.ts` (warning deprecation di build).
 
@@ -198,5 +225,5 @@ docs/patch-log/report.html            (bagian v5.0.2)
 
 - Repository: https://github.com/weblabperikananpolinela/Lab-perikanan-polinela
 - Branch: `master`
-- Commit v5.0.2: (diisi setelah commit)
+- Commit v5.0.2: `d8d8e5d` — https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/d8d8e5d
 - Commit v5.0.1 (dasar): `473c9b4`
