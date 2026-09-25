@@ -15,20 +15,20 @@ const sopData: Record<string, { title: string; pdfPath: string }> = {
   "pemeliharaan-alat": {
     title: "SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan",
     pdfPath:
-      "/SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan.pdf",
+      "/dokumen/SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan.pdf",
   },
   "peminjaman-bahan": {
     title: "SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian",
     pdfPath:
-      "/SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian.pdf",
+      "/dokumen/SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian.pdf",
   },
   "penanganan-limbah": {
     title: "SOP Penanganan Limbah Laboratorium Perikanan",
-    pdfPath: "/SOP Penanganan Limbah Laboratorium Perikanan .pdf",
+    pdfPath: "/dokumen/SOP Penanganan Limbah Laboratorium Perikanan .pdf",
   },
   "operasional-lab": {
     title: "Standar Operasional Prosedur Laboratorium",
-    pdfPath: "/STANDAR OPERASIONAL PROSEDUR OK.pdf",
+    pdfPath: "/dokumen/STANDAR OPERASIONAL PROSEDUR OK.pdf",
   },
 };
 

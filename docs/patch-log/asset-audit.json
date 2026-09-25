@@ -1,0 +1,337 @@
+{
+  "generatedAt": "2026-09-25T04:26:27.875Z",
+  "totalFiles": 72,
+  "totalBytes": 9423831,
+  "brokenRefs": [],
+  "precache": {
+    "includedFiles": 8,
+    "includedBytes": 215743,
+    "excludedBytes": 7480815
+  },
+  "groups": {
+    "USED": {
+      "count": 46,
+      "bytes": 6771200,
+      "files": [
+        {
+          "path": "/dokumen/SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian.pdf",
+          "bytes": 594134
+        },
+        {
+          "path": "/dokumen/SOP Penanganan Limbah Laboratorium Perikanan .pdf",
+          "bytes": 582238
+        },
+        {
+          "path": "/dokumen/SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan.pdf",
+          "bytes": 574148
+        },
+        {
+          "path": "/dokumen/STANDAR OPERASIONAL PROSEDUR OK.pdf",
+          "bytes": 455705
+        },
+        {
+          "path": "/dokumen/SOP PENGGUNAAN LAB UNTUK PENELITIAN.pdf",
+          "bytes": 345203
+        },
+        {
+          "path": "/dokumen/SOP PENGGUNAAN LAB UNTUK PRAKTIKUM.pdf",
+          "bytes": 344731
+        },
+        {
+          "path": "/dokumen/SOP PENGELOLAAN LIMBAH.pdf",
+          "bytes": 331939
+        },
+        {
+          "path": "/dokumen/SOP MANAJEMEN LABORATORIUM.pdf",
+          "bytes": 331539
+        },
+        {
+          "path": "/dokumen/SOP EVALUASI KEPUASAN PENGGUNA.pdf",
+          "bytes": 329770
+        },
+        {
+          "path": "/dokumen/SOP JADWAL PEMELIHARAAN DAN PERAWATAN.pdf",
+          "bytes": 321065
+        },
+        {
+          "path": "/dokumen/SOP Peminjaman dan Pengembalian alat.pdf",
+          "bytes": 316513
+        },
+        {
+          "path": "/dokumen/SOP PENGUSULAN PENGADAAN ALAT DAN BAHAN LABORATORIUM.pdf",
+          "bytes": 303967
+        },
+        {
+          "path": "/dokumen/SOP PEMELIHARAAN, PERBAIKAN, DAN KALIBRASI ALAT.pdf",
+          "bytes": 286139
+        },
+        {
+          "path": "/banner/hero-1.webp",
+          "bytes": 142126
+        },
+        {
+          "path": "/banner/hero-3.webp",
+          "bytes": 138124
+        },
+        {
+          "path": "/foto-organisasi/org-6.webp",
+          "bytes": 134156
+        },
+        {
+          "path": "/gallery-6.webp",
+          "bytes": 120492
+        },
+        {
+          "path": "/icon-512x512.png",
+          "bytes": 112570
+        },
+        {
+          "path": "/gallery-4.webp",
+          "bytes": 102640
+        },
+        {
+          "path": "/gallery-1.webp",
+          "bytes": 89696
+        },
+        {
+          "path": "/gallery-3.webp",
+          "bytes": 84066
+        },
+        {
+          "path": "/banner/hero-4.webp",
+          "bytes": 82464
+        },
+        {
+          "path": "/banner/hero-2.webp",
+          "bytes": 77402
+        },
+        {
+          "path": "/logo_dolphin.webp",
+          "bytes": 75966
+        },
+        {
+          "path": "/gallery-5.webp",
+          "bytes": 73134
+        },
+        {
+          "path": "/foto-organisasi/org-11.webp",
+          "bytes": 70862
+        },
+        {
+          "path": "/foto-organisasi/org-3.webp",
+          "bytes": 58550
+        },
+        {
+          "path": "/foto-organisasi/organisasi-1.webp",
+          "bytes": 46262
+        },
+        {
+          "path": "/gallery-2.webp",
+          "bytes": 39506
+        },
+        {
+          "path": "/foto-organisasi/org-10.webp",
+          "bytes": 39330
+        },
+        {
+          "path": "/dokumentasi/foto-2.webp",
+          "bytes": 36878
+        },
+        {
+          "path": "/dokumentasi/foto-1.webp",
+          "bytes": 23486
+        },
+        {
+          "path": "/icon-192x192.png",
+          "bytes": 20441
+        },
+        {
+          "path": "/foto-organisasi/org-2.webp",
+          "bytes": 19266
+        },
+        {
+          "path": "/foto-organisasi/org-12.webp",
+          "bytes": 18938
+        },
+        {
+          "path": "/foto-organisasi/org-4.webp",
+          "bytes": 9236
+        },
+        {
+          "path": "/foto-organisasi/org-14.webp",
+          "bytes": 8404
+        },
+        {
+          "path": "/foto-organisasi/org-5.webp",
+          "bytes": 7704
+        },
+        {
+          "path": "/foto-organisasi/org-7.webp",
+          "bytes": 5270
+        },
+        {
+          "path": "/foto-organisasi/org-13.webp",
+          "bytes": 4944
+        },
+        {
+          "path": "/foto-organisasi/org-8.webp",
+          "bytes": 3438
+        },
+        {
+          "path": "/foto-organisasi/org-9.webp",
+          "bytes": 3296
+        },
+        {
+          "path": "/apple-icon.png",
+          "bytes": 2626
+        },
+        {
+          "path": "/placeholder-user.jpg",
+          "bytes": 1635
+        },
+        {
+          "path": "/manifest.json",
+          "bytes": 633
+        },
+        {
+          "path": "/placeholder-logo.png",
+          "bytes": 568
+        }
+      ]
+    },
+    "DYNAMIC": {
+      "count": 11,
+      "bytes": 924054,
+      "files": [
+        {
+          "path": "/dokumentasi/foto-9.webp",
+          "bytes": 195134
+        },
+        {
+          "path": "/dokumentasi/foto-12.webp",
+          "bytes": 165350
+        },
+        {
+          "path": "/dokumentasi/foto-11.webp",
+          "bytes": 144890
+        },
+        {
+          "path": "/dokumentasi/foto-10.webp",
+          "bytes": 129496
+        },
+        {
+          "path": "/dokumentasi/foto-13.webp",
+          "bytes": 89606
+        },
+        {
+          "path": "/dokumentasi/foto-8.webp",
+          "bytes": 47908
+        },
+        {
+          "path": "/dokumentasi/foto-4.webp",
+          "bytes": 36662
+        },
+        {
+          "path": "/dokumentasi/foto-5.webp",
+          "bytes": 31308
+        },
+        {
+          "path": "/dokumentasi/foto-6.webp",
+          "bytes": 30524
+        },
+        {
+          "path": "/dokumentasi/foto-3.webp",
+          "bytes": 26684
+        },
+        {
+          "path": "/dokumentasi/foto-7.webp",
+          "bytes": 26492
+        }
+      ]
+    },
+    "UNUSED": {
+      "count": 6,
+      "bytes": 1685334,
+      "files": [
+        {
+          "path": "/jadwal/jadwal-tangkap.jpg",
+          "bytes": 790552
+        },
+        {
+          "path": "/hero-lab-3.jpg",
+          "bytes": 280811
+        },
+        {
+          "path": "/hero-lab-2.jpg",
+          "bytes": 210376
+        },
+        {
+          "path": "/hero-lab-4.jpg",
+          "bytes": 150732
+        },
+        {
+          "path": "/hero-lab-1.jpg",
+          "bytes": 144260
+        },
+        {
+          "path": "/jadwal/jadwal-perikanan.jpg",
+          "bytes": 108603
+        }
+      ]
+    },
+    "PARTIAL": {
+      "count": 5,
+      "bytes": 8676,
+      "files": [
+        {
+          "path": "/placeholder.svg",
+          "bytes": 3253
+        },
+        {
+          "path": "/placeholder-logo.svg",
+          "bytes": 3208
+        },
+        {
+          "path": "/placeholder.jpg",
+          "bytes": 1064
+        },
+        {
+          "path": "/icon-dark-32x32.png",
+          "bytes": 585
+        },
+        {
+          "path": "/icon-light-32x32.png",
+          "bytes": 566
+        }
+      ]
+    },
+    "IMPLICIT": {
+      "count": 1,
+      "bytes": 1304,
+      "files": [
+        {
+          "path": "/icon.svg",
+          "bytes": 1304
+        }
+      ]
+    },
+    "GENERATED": {
+      "count": 3,
+      "bytes": 33263,
+      "files": [
+        {
+          "path": "/workbox-44af417d.js",
+          "bytes": 22645
+        },
+        {
+          "path": "/sw.js",
+          "bytes": 9815
+        },
+        {
+          "path": "/worker-7029e8b8f98f0d6b.js",
+          "bytes": 803
+        }
+      ]
+    }
+  }
+}

@@ -10,9 +10,20 @@ export async function DokumentasiSection() {
     const dirPath = path.join(process.cwd(), 'public', 'dokumentasi');
     const files = fs.readdirSync(dirPath);
 
-    // Filter hanya mengambil file gambar
+    // Utamakan WebP. Jika suatu foto belum punya versi WebP, gunakan sumber
+    // JPEG/PNG-nya sebagai fallback agar galeri tetap utuh.
+    const webpBases = new Set(
+      files
+        .filter((file) => /\.webp$/i.test(file))
+        .map((file) => file.replace(/\.webp$/i, '')),
+    );
     images = files
-      .filter((file) => /\.(jpg|jpeg|png|webp)$/i.test(file))
+      .filter((file) => {
+        if (/\.webp$/i.test(file)) return true;
+        const match = file.match(/^(.*)\.(jpg|jpeg|png)$/i);
+        return Boolean(match && !webpBases.has(match[1]));
+      })
+      .sort((a, b) => a.localeCompare(b, 'id', { numeric: true }))
       .map((file) => `/dokumentasi/${file}`);
   } catch (error) {
     console.error('Gagal membaca direktori dokumentasi:', error);
@@ -20,7 +31,7 @@ export async function DokumentasiSection() {
 
   // Fallback jika folder kosong atau belum ada foto
   if (images.length === 0) {
-    images = ['/dokumentasi/foto-1.jpg', '/dokumentasi/foto-2.jpg']; // Sesuaikan jika perlu
+    images = ['/dokumentasi/foto-1.webp', '/dokumentasi/foto-2.webp']; // Sesuaikan jika perlu
   }
 
   // 2. Gandakan array 4 kali agar bisa looping sempurna tanpa putus di layar lebar

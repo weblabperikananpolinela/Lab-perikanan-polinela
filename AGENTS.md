@@ -108,6 +108,20 @@ Catatan:
 - Upload file via Cloudinary unsigned preset; hapus via
   `/api/delete-cloudinary`. Email via Resend `/api/send-email`.
   Push via web-push + `push_subscriptions` + `worker/index.ts`.
+- Cookie sesi Auth harus muat dalam SATU chunk (≤3180 char). Helper
+  `lib/supabase/slim-session.ts` membuang `provider_token`,
+  `provider_refresh_token`, `user.identities`, dan `user.factors`.
+  `user.email` dan `user_metadata` tetap. Jalankan
+  `node scripts/check-session-cookie.mjs` setelah ubah kode auth.
+  502 setelah idle 1 jam = `Set-Cookie` gemuk di-tolak nginx — jangan
+  anggap Node crash.
+- Aset publik (v5.0.1) sudah WebP. Tambah foto baru = jalankan
+  `node scripts/optimize-public-images.mjs` (sharp, hasilkan `.webp`),
+  lalu update referensi. Jalankan `node scripts/audit-assets.mjs`
+  (read-only) untuk cek aset yatim + referensi rusak sebelum rilis.
+  PWA (`next.config.mjs`) sengaja TIDAK precache aset berat
+  (banner/dokumentasi/foto-organisasi/dokumen/logo); halaman dinamis,
+  RSC, dan API `NetworkOnly` — jangan ubah ke NetworkFirst tanpa alasan.
 - `middleware.ts` juga berisi logika pelangsing cookie Google OAuth
   (anti-431) — jangan hapus saat edit gerbang maintenance.
 - Respons ringkas. Path file selalu jelas saat kerja dengan file.

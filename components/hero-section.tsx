@@ -7,10 +7,10 @@ import Link from 'next/link'; // <-- Tambahkan import ini
 import { useEffect, useState } from 'react';
 
 const heroImages = [
-  '/banner/hero-1.jpg',
-  '/banner/hero-2.jpg',
-  '/banner/hero-3.jpg',
-  '/banner/hero-4.jpg',
+  '/banner/hero-1.webp',
+  '/banner/hero-2.webp',
+  '/banner/hero-3.webp',
+  '/banner/hero-4.webp',
 ];
 
 export function HeroSection() {

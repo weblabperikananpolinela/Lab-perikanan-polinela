@@ -33,3 +33,7 @@ public/worker-*.js
 
 # TypeScript incremental cache
 tsconfig.tsbuildinfo
+
+# Scratch compile output for session-cookie regression check
+tmp-slimtest/
+

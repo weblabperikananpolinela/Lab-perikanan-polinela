@@ -1,14 +1,9 @@
+import { createBrowserClient, createChunks } from '@supabase/ssr';
 import {
-  createBrowserClient,
-  createChunks,
-  stringFromBase64URL,
-  stringToBase64URL,
-} from '@supabase/ssr';
-
-// Matches auth session cookies, chunked ("sb-xxx-auth-token.0") or not
-// ("sb-xxx-auth-token"). Deliberately excludes other auth cookies such as
-// "sb-xxx-auth-token-code-verifier", which end with a different suffix.
-const AUTH_COOKIE_REGEX = /^(.*-auth-token)(?:\.(\d+))?$/;
+  AUTH_COOKIE_REGEX,
+  slimSessionValue,
+  staleAuthCookieNames,
+} from '@/lib/supabase/slim-session';
 
 function parseDocumentCookies(): Record<string, string> {
   const out: Record<string, string> = {};
@@ -39,24 +34,6 @@ function serializeCookie(
   return `${name}=${value}; path=${path}; max-age=${maxAge}; samesite=${sameSite}; secure`;
 }
 
-// Remove provider OAuth tokens from a raw chunked session value.
-// Returns the cleaned value, or null if nothing needed stripping.
-function stripProviderTokens(fullValue: string): string | null {
-  if (!fullValue.startsWith('base64-')) return null;
-  try {
-    const session = JSON.parse(
-      stringFromBase64URL(fullValue.substring('base64-'.length)),
-    );
-    if (!session.provider_token && !session.provider_refresh_token) return null;
-    delete session.provider_token;
-    delete session.provider_refresh_token;
-    return 'base64-' + stringToBase64URL(JSON.stringify(session));
-  } catch (err) {
-    console.warn('DOLPHIN: gagal melangsingkan cookie sesi:', err);
-    return null;
-  }
-}
-
 export const createClient = () => {
   return createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -70,9 +47,8 @@ export const createClient = () => {
           }));
         },
         setAll(cookiesToSet) {
-          // Collect chunked auth-token writes so they can be processed as a
-          // whole (the session may span multiple cookies).
           const authChunkSets = new Map<string, Map<number, string>>();
+          const originalNames = new Map<string, Set<string>>();
           const authCookieOptions: { path?: string; maxAge?: number } = {
             path: '/',
             maxAge: 400 * 24 * 60 * 60,
@@ -85,42 +61,44 @@ export const createClient = () => {
               const index = match[2] ? Number(match[2]) : 0;
               if (!authChunkSets.has(base)) authChunkSets.set(base, new Map());
               authChunkSets.get(base)!.set(index, value);
+              if (!originalNames.has(base)) originalNames.set(base, new Set());
+              originalNames.get(base)!.add(name);
               if (options?.path) authCookieOptions.path = options.path;
               if (typeof options?.maxAge === 'number') {
                 authCookieOptions.maxAge = options.maxAge;
               }
               continue;
             }
-            // Regular set / remove (includes code-verifier and chunk removals)
             document.cookie = value
               ? serializeCookie(name, value, options)
               : serializeCookie(name, '', { ...options, maxAge: 0 });
           }
 
           for (const [base, chunks] of authChunkSets) {
-            // Reassemble the session from its ordered chunks
             const fullValue = [...chunks.entries()]
               .sort((a, b) => a[0] - b[0])
               .map(([, v]) => v)
               .join('');
 
-            const cleaned = stripProviderTokens(fullValue) ?? fullValue;
-
-            // Expire any existing chunks of this cookie (handles shrinking
-            // chunk counts after stripping)
+            const cleaned = slimSessionValue(fullValue) ?? fullValue;
             const existing = Object.keys(parseDocumentCookies()).filter(
-              (n) => n === base || n.startsWith(base + '.'),
+              (n) => n === base || n.startsWith(`${base}.`),
             );
-            for (const n of existing) {
-              document.cookie = serializeCookie(n, '', { path: '/', maxAge: 0 });
-            }
-
-            // Re-chunk using the library's own chunker so sizes stay
-            // compatible with @supabase/ssr readers (server + middleware)
-            for (const { name: chunkName, value: chunkValue } of createChunks(
+            const newChunks = createChunks(base, cleaned);
+            const keep = new Set(newChunks.map((c) => c.name));
+            const maxIndex = Math.max(chunks.size, ...chunks.keys(), 0);
+            for (const name of staleAuthCookieNames(
               base,
-              cleaned,
+              [...existing, ...(originalNames.get(base) ?? [])],
+              maxIndex,
+              keep,
             )) {
+              document.cookie = serializeCookie(name, '', {
+                path: '/',
+                maxAge: 0,
+              });
+            }
+            for (const { name: chunkName, value: chunkValue } of newChunks) {
               document.cookie = serializeCookie(
                 chunkName,
                 chunkValue,

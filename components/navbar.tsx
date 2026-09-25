@@ -218,7 +218,7 @@ export function Navbar() {
           href='/'
           className='flex items-center gap-2 transition-colors hover:opacity-80'>
           <Image
-            src='/logo_dolphin.png'
+            src='/logo_dolphin.webp'
             alt='Logo Dolphin'
             width={160}
             height={160}

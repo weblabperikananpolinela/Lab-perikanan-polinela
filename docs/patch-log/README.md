@@ -83,11 +83,15 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.0.0`.
-- Perbaikan cookie OAuth anti-431 sudah diuji dengan type-check dan production
-  build lokal.
-- Build `s3sqnMmsD7Ca48sM0-5em` sudah terdeploy ke production Polinela.
-- Smoke test server untuk `/`, `/jadwal`, `/inventaris`, `/organisasi`,
+- Versi aplikasi: `5.0.1` (audit aset + optimasi WebP + pelangsing PWA).
+- Perbaikan cookie OAuth anti-431 (v5.0.0) tetap aktif dan sudah teruji di
+  production.
+- Build v5.0.0 `s3sqnMmsD7Ca48sM0-5em` sudah terdeploy ke production Polinela;
+  build v5.0.1 masih menunggu ACC Project Manager sebelum dipasang.
+- Smoke test server v5.0.0 untuk `/`, `/jadwal`, `/inventaris`, `/organisasi`,
   `/admin/dashboard`, `/admin/system`, dan `/sw.js` mengembalikan HTTP 200.
-- Tes manual login/navigasi dari Project Manager masih harus dicatat setelah
-  user melakukan verifikasi browser.
+- Audit aset: `docs/patch-log/asset-audit.json` (dihasilkan
+  `node scripts/audit-assets.mjs`, read-only). 11 file UNUSED (1.62 MB)
+  sudah ditandai dan menunggu keputusan PM.
+- Tes manual v5.0.1 (`PASS`/`FAIL`/`PENDING`) dicatat setelah uji browser
+  pasca-deploy, termasuk pengukuran Cache Storage dan uji push notification.

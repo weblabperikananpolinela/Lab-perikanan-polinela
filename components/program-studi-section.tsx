@@ -16,10 +16,10 @@ const programs = [
     quote:
       "Dunia butuh lebih banyak 'koki ekosistem' yang mampu memberi makan ribuan orang dari satu pengelolaan kolam yang sempurna. Ayo!!! Jadi juragan muda yang visioner.",
     logo: '/placeholder-logo.png', // Ganti dengan path logo prodi asli
-    image: '/gallery-3.jpg',
+    image: '/gallery-3.webp',
     kaprodi: {
       name: 'Kaprodi D3 Budidaya Perikanan',
-      image: '/placeholder-kaprodi.jpg', // Ganti dengan foto asli kaprodi
+      image: '/placeholder-user.jpg', // Ganti dengan foto asli kaprodi
     },
   },
   {
@@ -30,10 +30,10 @@ const programs = [
     quote:
       'Masa depan perikanan dimulai dari mikroskop kami. Jika kamu mencintai sains dan ingin merancang kehidupan yang lebih baik sejak dari fase larva, laboratorium pembenihan kami adalah rumahmu!',
     logo: '/placeholder-logo.png',
-    image: '/gallery-2.jpg',
+    image: '/gallery-2.webp',
     kaprodi: {
       name: 'Rio Yusufi Subhan, S.Pi., M.Si.',
-      image: '/placeholder-kaprodi.jpg',
+      image: '/placeholder-user.jpg',
     },
   },
   {
@@ -44,10 +44,10 @@ const programs = [
     quote:
       'Samudera memanggil para pemimpin! Jadilah nahkoda masa depan yang menaklukkan ombak dengan kecerdasan navigasi, bukan sekadar keberuntungan. Siap untuk berlayar lebih jauh?',
     logo: '/placeholder-logo.png',
-    image: '/gallery-4.jpg',
+    image: '/gallery-4.webp',
     kaprodi: {
       name: 'Fauzi Syahputra, S.Pi., M.Si.',
-      image: '/placeholder-kaprodi.jpg',
+      image: '/placeholder-user.jpg',
     },
   },
   {
@@ -58,10 +58,10 @@ const programs = [
     quote:
       'Jangan cuma budidaya biasa, mari kita bangun industri yang canggih! Jadilah arsitek akuakultur modern yang mampu membuktikan bahwa industri dan alam bisa hidup berdampingan.',
     logo: '/placeholder-logo.png',
-    image: '/gallery-6.jpg',
+    image: '/gallery-6.webp',
     kaprodi: {
       name: 'Dr. Nur Indaryanti, S.P., M.Si.',
-      image: '/placeholder-kaprodi.jpg',
+      image: '/placeholder-user.jpg',
     },
   },
   {
@@ -72,10 +72,10 @@ const programs = [
     quote:
       "Bawa teknologi ke tengah laut! Ubah kodingmu menjadi jaring digital dan mari kita hack masa depan perikanan dunia dengan sensor dan data pintarmu. Let's make waves!",
     logo: '/placeholder-logo.png',
-    image: '/gallery-1.jpg',
+    image: '/gallery-1.webp',
     kaprodi: {
       name: 'Denta Tirtana, S.P., M.Si.',
-      image: '/placeholder-kaprodi.jpg',
+      image: '/placeholder-user.jpg',
     },
   },
   {
@@ -86,10 +86,10 @@ const programs = [
     quote:
       'Ikan adalah emas biru. Jika kamu memiliki jiwa bisnis dan ingin menguasai pasar dunia, mari bergabung dan jadilah arsitek ekonomi biru yang sukses. Join the hustle!',
     logo: '/placeholder-logo.png',
-    image: '/gallery-5.jpg',
+    image: '/gallery-5.webp',
     kaprodi: {
       name: 'Kaprodi S1 Tr. Agribisnis Perikanan',
-      image: '/placeholder-kaprodi.jpg',
+      image: '/placeholder-user.jpg',
     },
   },
 ];

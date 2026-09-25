@@ -14,8 +14,9 @@ export const metadata: Metadata = {
   description:
     'Digital Operational Laboratory for Harmonized Integrated Navigation',
   icons: {
-    icon: '/logo_dolphin.png',
-    apple: '/logo_dolphin.png',
+    // Ikon PWA berukuran kecil; logo utama dipakai pada navbar/footer.
+    icon: '/icon-512x512.png',
+    apple: '/apple-icon.png',
   },
   manifest: '/manifest.json',
 };

@@ -29,7 +29,7 @@ export function Footer() {
             <Link href='/' className='flex items-center gap-3 group'>
               <div className='bg-white/10 p-2 rounded-xl backdrop-blur-sm group-hover:bg-white/20 transition-colors'>
                 <Image
-                  src='/logo_dolphin.png'
+                  src='/logo_dolphin.webp'
                   alt='Logo Dolphin'
                   width={48}
                   height={48}
