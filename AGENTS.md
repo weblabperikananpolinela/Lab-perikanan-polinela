@@ -109,12 +109,17 @@ Catatan:
   `/api/delete-cloudinary`. Email via Resend `/api/send-email`.
   Push via web-push + `push_subscriptions` + `worker/index.ts`.
 - Cookie sesi Auth harus muat dalam SATU chunk (≤3180 char). Helper
-  `lib/supabase/slim-session.ts` membuang `provider_token`,
-  `provider_refresh_token`, `user.identities`, dan `user.factors`.
-  `user.email` dan `user_metadata` tetap. Jalankan
-  `node scripts/check-session-cookie.mjs` setelah ubah kode auth.
+  `lib/supabase/slim-session.ts` memangkas berlapis: `provider_token`,
+  `provider_refresh_token`, `user.identities`, `user.factors`, field
+  `user` di luar allowlist (timestamp/phone/is_anonymous), serta
+  `user_metadata`/`app_metadata` di luar allowlist (URL foto Google
+  ganda, iss/sub/provider_id, custom_claims). Yang dipertahankan:
+  `user.id`, `user.role`, `user.email`, `user_metadata.full_name`.
+  Jalankan `node scripts/check-session-cookie.mjs` (data user nyata) +
+  `node scripts/check-slim-edge.mjs` (profil panjang) setelah ubah kode auth.
   502 setelah idle 1 jam = `Set-Cookie` gemuk di-tolak nginx — jangan
-  anggap Node crash.
+  anggap Node crash. Akar 502 v5.0.1: metadata Google nyata tetap
+  3330 char/2 chunk; v5.0.2: 2481 char/1 chunk.
 - Aset publik (v5.0.1) sudah WebP. Tambah foto baru = jalankan
   `node scripts/optimize-public-images.mjs` (sharp, hasilkan `.webp`),
   lalu update referensi. Jalankan `node scripts/audit-assets.mjs`

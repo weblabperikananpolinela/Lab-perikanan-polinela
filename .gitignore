@@ -36,4 +36,5 @@ tsconfig.tsbuildinfo
 
 # Scratch compile output for session-cookie regression check
 tmp-slimtest/
+tmp-slimedge/
 

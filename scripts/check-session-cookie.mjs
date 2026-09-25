@@ -55,26 +55,69 @@ const { slimCookieWrites } = require(helperPath);
 
 const base = 'sb-dknnzawhsrqbtblnmoll-auth-token';
 
-// Sesi realistis: token panjang + identities + provider_token (kasus 502).
+/**
+ * Metadata NYATA dari auth.users (dolphinperikanan@polinela.ac.id).
+ * Inilah yang membuat sesi tetap 2 chunk setelah slim v5.0.1: URL foto
+ * Google ganda (picture + avatar_url), iss, sub, provider_id, custom_claims.
+ */
+const realUserMetadata = {
+  iss: 'https://accounts.google.com',
+  sub: '109694026982840069955',
+  name: 'Dolphin Perikanan Polinela',
+  email: 'dolphinperikanan@polinela.ac.id',
+  picture:
+    'https://lh3.googleusercontent.com/a/ACg8ocKutoiYB6QC2CeKbF9B2c2Mkm40g6A1yBVKrLAQiJa6WuC4iw=s96-c',
+  full_name: 'Dolphin Perikanan Polinela',
+  avatar_url:
+    'https://lh3.googleusercontent.com/a/ACg8ocKutoiYB6QC2CeKbF9B2c2Mkm40g6A1yBVKrLAQiJa6WuC4iw=s96-c',
+  provider_id: '109694026982840069955',
+  custom_claims: { hd: 'polinela.ac.id' },
+  email_verified: true,
+  phone_verified: false,
+};
+
+const realUserId = '75e5441c-483c-4206-8a74-fb34f5848845';
+
+// Access token JWT sepanjang nyata (payload memuat user_metadata).
+const realAccessToken =
+  'eyJhbGciOiJIUzI1NiJ9.' + 'A'.repeat(1369) + '.' + 'B'.repeat(43);
+
+// Sesi seperti hasil `getUser()` refresh setelah idle ~1 jam.
 const fatSession = {
-  access_token: 'x'.repeat(900),
-  refresh_token: 'y'.repeat(60),
-  provider_token: 'ya29.' + 'z'.repeat(1200),
+  access_token: realAccessToken,
+  token_type: 'bearer',
+  expires_in: 3600,
+  expires_at: 1790000000,
+  refresh_token: 'v1.' + 'r'.repeat(44),
+  provider_token: 'ya29.' + 'z'.repeat(1300),
+  provider_refresh_token: 'ya29.refresh.' + 'w'.repeat(700),
   user: {
+    id: realUserId,
+    aud: 'authenticated',
+    role: 'authenticated',
     email: 'dolphinperikanan@polinela.ac.id',
-    user_metadata: {
-      full_name: 'Dolphin Perikanan',
-      name: 'Dolphin Perikanan',
-      avatar_url: 'https://example.test/avatar.png',
-    },
+    email_confirmed_at: '2026-09-24T10:00:00Z',
+    phone: '',
+    confirmed_at: '2026-09-24T10:00:00Z',
+    last_sign_in_at: '2026-09-25T06:21:47Z',
+    app_metadata: { provider: 'google', providers: ['google'] },
+    user_metadata: realUserMetadata,
     identities: [
       {
         identity_id: 'f0e1d2c3-b4a5-4687-9789-0123456789ab',
-        identity_data: { email: 'dolphinperikanan@polinela.ac.id' },
+        id: '109694026982840069955',
+        user_id: realUserId,
+        identity_data: realUserMetadata,
         provider: 'google',
+        last_sign_in_at: '2026-09-25T06:21:47Z',
+        created_at: '2026-09-24T10:00:00Z',
+        updated_at: '2026-09-25T06:21:47Z',
+        email: 'dolphinperikanan@polinela.ac.id',
       },
     ],
-    factors: [{ id: 'factor-1', status: 'unverified' }],
+    created_at: '2026-09-24T10:00:00Z',
+    updated_at: '2026-09-25T06:21:47Z',
+    is_anonymous: false,
   },
 };
 
@@ -117,6 +160,15 @@ if (session.provider_token) {
 }
 if (session.user?.identities) {
   failures.push('user.identities masih tersimpan di cookie');
+}
+if (session.user?.user_metadata?.picture || session.user?.user_metadata?.avatar_url) {
+  failures.push('URL foto Google masih tersimpan di cookie');
+}
+if (session.user?.created_at || session.user?.updated_at || session.user?.last_sign_in_at) {
+  failures.push('timestamp user masih tersimpan di cookie');
+}
+if (session.user?.user_metadata?.full_name !== 'Dolphin Perikanan Polinela') {
+  failures.push('user_metadata.full_name hilang setelah dilangsingkan');
 }
 
 const expiredNames = (slimmed ?? [])

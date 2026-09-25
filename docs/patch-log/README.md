@@ -83,15 +83,22 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.0.1` (audit aset + optimasi WebP + pelangsing PWA).
-- Perbaikan cookie OAuth anti-431 (v5.0.0) tetap aktif dan sudah teruji di
-  production.
-- Build v5.0.0 `s3sqnMmsD7Ca48sM0-5em` sudah terdeploy ke production Polinela;
-  build v5.0.1 masih menunggu ACC Project Manager sebelum dipasang.
+- Versi aplikasi: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
+  1 chunk untuk data user nyata).
+- Perbaikan cookie OAuth anti-431 (v5.0.0) dan pelangsing PWA/aset (v5.0.1)
+  tetap aktif.
+- Build v5.0.1 `hXu-UzBl9gyYn7SRlHorK` sudah terdeploy ke production
+  Polinela (2026-09-25 07:33 UTC). Build v5.0.2 `xs8ATU0djm6ntGl10t7w_`
+  masih menunggu ACC Project Manager sebelum dipasang.
+- Temuan penting: hotfix v5.0.1 **belum cukup** — sesi nyata user Google
+  Polinela tetap 3330 char / 2 chunk. v5.0.2 memangkas berlapis sampai
+  2481 char / 1 chunk (margin 699 char).
 - Smoke test server v5.0.0 untuk `/`, `/jadwal`, `/inventaris`, `/organisasi`,
   `/admin/dashboard`, `/admin/system`, dan `/sw.js` mengembalikan HTTP 200.
 - Audit aset: `docs/patch-log/asset-audit.json` (dihasilkan
   `node scripts/audit-assets.mjs`, read-only). 11 file UNUSED (1.62 MB)
   sudah ditandai dan menunggu keputusan PM.
-- Tes manual v5.0.1 (`PASS`/`FAIL`/`PENDING`) dicatat setelah uji browser
-  pasca-deploy, termasuk pengukuran Cache Storage dan uji push notification.
+- Regresi sesi: `node scripts/check-session-cookie.mjs` (data user nyata) dan
+  `node scripts/check-slim-edge.mjs` (profil panjang) harus lulus 1 chunk.
+- Tes manual v5.0.2 (`PASS`/`FAIL`/`PENDING`) dicatat setelah uji browser
+  pasca-deploy: idle ±1 jam, login Google ulang, Cache Storage, push notification.

@@ -2,6 +2,9 @@ import { createChunks, stringFromBase64URL, stringToBase64URL } from '@supabase/
 
 export const AUTH_COOKIE_REGEX = /^(.*-auth-token)(?:\.(\d+))?$/;
 
+/** Harus sama dengan MAX_CHUNK_SIZE di @supabase/ssr (3180). */
+export const MAX_CHUNK_SIZE = 3180;
+
 export const AUTH_COOKIE_OPTIONS = {
   path: '/',
   sameSite: 'lax' as const,
@@ -15,24 +18,60 @@ export type CookieLike = {
   options?: Record<string, unknown>;
 };
 
+/** Field `user` yang dipakai aplikasi (navbar + dashboard). */
+const USER_KEYS_TO_KEEP = new Set(['id', 'aud', 'role', 'email', 'app_metadata', 'user_metadata']);
+const APP_METADATA_KEYS_TO_KEEP = new Set(['provider']);
+/** Aplikasi hanya membaca `full_name`; `name` disimpan sebagai cadangan. */
+const USER_METADATA_KEYS_TO_KEEP = new Set(['full_name', 'name']);
+
+/** Buang key yang tidak ada di allowlist. Return true bila ada yang dibuang. */
+function keepOnly(target: Record<string, unknown>, allowed: Set<string>): boolean {
+  let changed = false;
+  for (const key of Object.keys(target)) {
+    if (!allowed.has(key)) {
+      delete target[key];
+      changed = true;
+    }
+  }
+  return changed;
+}
+
 /**
- * Strip bulky Google/OAuth fields that must never be persisted in cookies.
- * Keep `user.email` and `user.user_metadata` — navbar and dashboards need them.
+ * Pangkas objek session agar muat dalam SATU cookie chunk (3180 char).
  *
- * After ~1h idle, `getUser()` refreshes the JWT and writes a new session that
- * includes `user.identities` (duplicated Google profile). That pushes the
- * cookie past 3180 chars → 2 Set-Cookie chunks → nginx 502
- * ("upstream sent too big header"). Removing identities/factors keeps it
- * in a single chunk without switching to `encode: 'tokens-only'`.
+ * Latar belakang insiden 502:
+ * - `access_token` Supabase kedaluwarsa tiap **3600 detik (1 jam)**.
+ * - Request pertama setelah idle memicu middleware `getUser()` → refresh JWT
+ *   → menulis session baru lewat `Set-Cookie`.
+ * - Session itu memuat `provider_token` + `user.identities` (duplikat profil
+ *   Google) sehingga > 3180 char → `createChunks()` memecahnya jadi 2-3
+ *   `Set-Cookie`. Total header respons melewati buffer nginx
+ *   (`upstream sent too big header`) → HTTP 502.
+ *
+ * Slim ini memangkas berlapis sehingga session selalu muat 1 chunk:
+ * 1. `provider_token` / `provider_refresh_token` (hanya ada saat OAuth exchange).
+ * 2. `user.identities` (duplikat `user_metadata`) + `user.factors`.
+ * 3. Field `user` di luar allowlist (timestamp, phone, is_anonymous, dll).
+ * 4. `user_metadata` + `app_metadata` di luar allowlist (URL foto Google yang
+ *    ganda, iss, sub, provider_id, custom_claims).
+ * 5. Bila masih ≥ 3180 char, `user_metadata.name` yang menduplikasi
+ *    `full_name` juga dibuang.
+ * 6. Jaring terakhir: `user_metadata` dibuang seluruhnya. Navbar punya
+ *    fallback ke email, jadi UI tetap benar.
+ *
+ * Yang DIPERTAHANKAN: `access_token`, `refresh_token`, `expires_at`,
+ * `user.id`, `user.role`, `user.email`, `user.user_metadata.full_name`.
  */
 export function slimSessionValue(fullValue: string): string | null {
   if (!fullValue.startsWith('base64-')) return null;
   try {
     const session = JSON.parse(
       stringFromBase64URL(fullValue.slice('base64-'.length)),
-    ) as Record<string, unknown>;
+    ) as Record<string, any>;
 
     let changed = false;
+
+    // Lapis 1 — token OAuth besar.
     if (session.provider_token) {
       delete session.provider_token;
       changed = true;
@@ -42,7 +81,8 @@ export function slimSessionValue(fullValue: string): string | null {
       changed = true;
     }
 
-    const user = session.user as Record<string, unknown> | undefined;
+    // Lapis 2-4 — objek user.
+    const user = session.user;
     if (user && typeof user === 'object') {
       if (Array.isArray(user.identities) && user.identities.length > 0) {
         delete user.identities;
@@ -52,10 +92,44 @@ export function slimSessionValue(fullValue: string): string | null {
         delete user.factors;
         changed = true;
       }
+      if (keepOnly(user, USER_KEYS_TO_KEEP)) changed = true;
+
+      if (user.app_metadata && typeof user.app_metadata === 'object') {
+        if (keepOnly(user.app_metadata, APP_METADATA_KEYS_TO_KEEP)) changed = true;
+      }
+      if (user.user_metadata && typeof user.user_metadata === 'object') {
+        const metadata = user.user_metadata;
+        if (keepOnly(metadata, USER_METADATA_KEYS_TO_KEEP)) changed = true;
+        // `full_name` adalah field metadata yang dibaca navbar.
+        if (!metadata.full_name && typeof metadata.name === 'string') {
+          metadata.full_name = metadata.name;
+          changed = true;
+        }
+      }
     }
 
     if (!changed) return null;
-    return 'base64-' + stringToBase64URL(JSON.stringify(session));
+
+    let encoded = 'base64-' + stringToBase64URL(JSON.stringify(session));
+    const meta = session.user?.user_metadata as Record<string, unknown> | undefined;
+    const reencode = () => {
+      encoded = 'base64-' + stringToBase64URL(JSON.stringify(session));
+    };
+
+    // Lapis 5 — `name` sering menduplikasi `full_name`; buang bila masih gemuk.
+    if (encoded.length >= MAX_CHUNK_SIZE && meta?.name) {
+      delete meta.name;
+      reencode();
+    }
+
+    // Lapis 6 — jaring pengaman terakhir: profil Google yang sangat panjang
+    // (nama + email panjang) masih bisa > 3180. Buang `user_metadata`;
+    // navbar jatuh ke fallback email (lihat components/navbar.tsx).
+    if (encoded.length >= MAX_CHUNK_SIZE && session.user?.user_metadata) {
+      delete session.user.user_metadata;
+      reencode();
+    }
+    return encoded;
   } catch {
     return null;
   }
