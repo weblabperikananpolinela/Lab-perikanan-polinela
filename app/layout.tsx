@@ -14,8 +14,12 @@ export const metadata: Metadata = {
   description:
     'Digital Operational Laboratory for Harmonized Integrated Navigation',
   icons: {
-    // Ikon PWA berukuran kecil; logo utama dipakai pada navbar/footer.
-    icon: '/icon-512x512.png',
+    // Favicon tab/bookmark; ICO multi-size juga mencakup browser lama.
+    icon: [
+      { url: '/favicon.ico', sizes: '16x16 32x32 48x48' },
+      { url: '/icon-512x512.png', type: 'image/png', sizes: '512x512' },
+    ],
+    // Ikon home screen iOS/iPadOS.
     apple: '/apple-icon.png',
   },
   manifest: '/manifest.json',

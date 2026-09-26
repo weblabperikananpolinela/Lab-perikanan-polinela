@@ -1,8 +1,13 @@
 # PATCH v5.0.2 — Perbaikan Tuntas 502: Sesi Cookie Selalu 1 Chunk
 
-Tanggal: 2026-09-26 (WIB)
+Tanggal: 2026-09-25 (WIB)
 Status versi: `minor` bump dari `5.0.1`. Memuat **perbaikan definitif**
 untuk 502 yang masih muncul setelah hotfix v5.0.1.
+
+> **Update verifikasi PM (26 Sep 2026 WIB):** Setelah deployment v5.0.2,
+> PM mengakses berbagai route dan **belum menemukan 502**. Pengujian idle
+> ±1 jam + login Google ulang dilanjutkan. Status `MANUAL-TEST` tetap
+> `PENDING` sampai skenario idle selesai (itu pemicu 502 yang terbukti).
 
 ## Ringkasan
 
@@ -172,11 +177,15 @@ docs/patch-log/report.html            (bagian v5.0.2)
 | SESSION-CHECK (regression) | PASS | `check-session-cookie.mjs` → 2481 char, 1 chunk |
 | EDGE-CHECK | PASS | `check-slim-edge.mjs` → 4/4 PASS (nama/email panjang) |
 | GITHUB-BACKUP | PASS | Commit `d8d8e5d` pushed ke `origin/master` |
-| DEPLOYED | PASS | 2026-09-26 13:04 UTC; BUILD_ID `xs8ATU0djm6ntGl10t7w_`; middleware hash `d4913726…` identik lokal↔server; ZIP SHA-256 `67e60271…3eef`; smoke test 7/7 HTTP 200; footer `DOLPHIN System v5.0.2` |
-| OBSERVASI-LOG | PASS | 0 entri  baru sejak deploy 13:04 UTC (entri terakhir 12:35 pre-deploy) — lalu lintas pasca-deploy bersih |
-| MANUAL-TEST (PM) | PENDING | uji idle ±1 jam + login Google ulang → harus 200 |
+| DEPLOYED | PASS | 2026-09-25 13:04 UTC (25 Sep 20:04 WIB); BUILD_ID `xs8ATU0djm6ntGl10t7w_`; middleware hash `d4913726…` identik lokal↔server; ZIP SHA-256 `67e60271…3eef`; smoke test 7/7 HTTP 200; footer `DOLPHIN System v5.0.2` |
+| OBSERVASI-LOG | PASS | 0 entri `too big header` baru sejak deploy 13:04 UTC (entri terakhir 12:35 pre-deploy) — lalu lintas pasca-deploy bersih |
+| MANUAL-TEST (PM) | PENDING | PM mengakses berbagai route: belum ada 502. Uji idle ±1 jam + login Google ulang masih menunggu |
 
-### Bersih-bersih artefak server (2026-09-26)
+### Bersih-bersih artefak server (2026-09-25 WIB)
+
+> Catatan: suffix `.old-*` adalah label manual dan **tidak selalu cocok**
+> dengan mtime direktori. Yang otoritatif adalah isi `BUILD_ID`:
+> `*.old-20260925-0735` → v5.0.0, `*.old-20260926-1946` → v5.0.1.
 
 Dihapus (pindah ke staging lalu `find -delete`, pola non-destruktif):
 
@@ -196,9 +205,6 @@ DIPERTAHANKAN sebagai rollback:
 - `deploy-dolphin-hXu-UzBl9gyYn7SRlHorK.zip` (artefak **v5.0.1**, 28 MB).
 - Generasi baru: `httpdocs/*.old-20260926-1946` (BUILD_ID `hXu-UzBl9gyYn7SRlHorK` = **v5.0.1**),
   sebagai titik rollback terdekat.
-
-Catatan penting: `.old-20260925-0735` berisi **v5.0.0**, bukan v5.0.1 —
-verifikasi via `cat .next.old-*/BUILD_ID` sebelum menghapus apa pun.
 
 ## Risiko & rollback
 

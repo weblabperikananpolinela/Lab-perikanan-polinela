@@ -1,17 +1,17 @@
 {
-  "generatedAt": "2026-09-25T04:26:27.875Z",
-  "totalFiles": 72,
-  "totalBytes": 9423831,
+  "generatedAt": "2026-09-25T17:02:01.787Z",
+  "totalFiles": 73,
+  "totalBytes": 9487509,
   "brokenRefs": [],
   "precache": {
     "includedFiles": 8,
-    "includedBytes": 215743,
+    "includedBytes": 277955,
     "excludedBytes": 7480815
   },
   "groups": {
     "USED": {
-      "count": 46,
-      "bytes": 6771200,
+      "count": 47,
+      "bytes": 6834716,
       "files": [
         {
           "path": "/dokumen/SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian.pdf",
@@ -122,6 +122,10 @@
           "bytes": 58550
         },
         {
+          "path": "/apple-icon.png",
+          "bytes": 58338
+        },
+        {
           "path": "/foto-organisasi/organisasi-1.webp",
           "bytes": 46262
         },
@@ -162,6 +166,10 @@
           "bytes": 8404
         },
         {
+          "path": "/favicon.ico",
+          "bytes": 7804
+        },
+        {
           "path": "/foto-organisasi/org-5.webp",
           "bytes": 7704
         },
@@ -180,10 +188,6 @@
         {
           "path": "/foto-organisasi/org-9.webp",
           "bytes": 3296
-        },
-        {
-          "path": "/apple-icon.png",
-          "bytes": 2626
         },
         {
           "path": "/placeholder-user.jpg",
@@ -250,8 +254,8 @@
       ]
     },
     "UNUSED": {
-      "count": 6,
-      "bytes": 1685334,
+      "count": 7,
+      "bytes": 1686638,
       "files": [
         {
           "path": "/jadwal/jadwal-tangkap.jpg",
@@ -276,6 +280,10 @@
         {
           "path": "/jadwal/jadwal-perikanan.jpg",
           "bytes": 108603
+        },
+        {
+          "path": "/icon.svg",
+          "bytes": 1304
         }
       ]
     },
@@ -305,19 +313,9 @@
         }
       ]
     },
-    "IMPLICIT": {
-      "count": 1,
-      "bytes": 1304,
-      "files": [
-        {
-          "path": "/icon.svg",
-          "bytes": 1304
-        }
-      ]
-    },
     "GENERATED": {
       "count": 3,
-      "bytes": 33263,
+      "bytes": 33425,
       "files": [
         {
           "path": "/workbox-44af417d.js",
@@ -325,7 +323,7 @@
         },
         {
           "path": "/sw.js",
-          "bytes": 9815
+          "bytes": 9977
         },
         {
           "path": "/worker-7029e8b8f98f0d6b.js",

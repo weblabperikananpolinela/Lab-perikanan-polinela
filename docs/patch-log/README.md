@@ -83,9 +83,16 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
-  1 chunk untuk data user nyata). **Sudah terdeploy** 2026-09-26 13:04 UTC
-  dengan BUILD_ID `xs8ATU0djm6ntGl10t7w_`; smoke test 7/7 HTTP 200.
+- Versi aplikasi: `5.0.3` (favicon + apple-icon memakai logo DOLPHIN;
+  local-ready, menunggu ACC PM untuk commit/push/deploy).
+- Versi terdeploy: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
+  1 chunk untuk data user nyata). Terdeploy 2026-09-25 13:04 UTC
+  (25 Sep 20:04 WIB) dengan BUILD_ID `xs8ATU0djm6ntGl10t7w_`; smoke test
+  7/7 HTTP 200.
+- **Laporan PM (26 Sep WIB): mengakses berbagai route, belum ada 502**.
+  Log `proxy_error_log` tidak memiliki entri `too big header` baru sejak
+  deploy 13:04 UTC (entri terakhir 12:35 pre-deploy). Uji idle ±1 jam +
+  login Google ulang masih menunggu (itu pemicu 502 yang terbukti).
 - Perbaikan cookie OAuth anti-431 (v5.0.0) dan pelangsing PWA/aset (v5.0.1)
   tetap aktif. Build v5.0.1 `hXu-UzBl9gyYn7SRlHorK` (25 Sep 2026 07:33 UTC)
   kini menjadi titik rollback terdekat.
@@ -96,8 +103,9 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
   + ZIP lama dihapus; rollback v5.0.0 `*.old-20260925-0735` dan v5.0.1
   `*.old-20260926-1946` dipertahankan).
 - Audit aset: `docs/patch-log/asset-audit.json` (dihasilkan
-  `node scripts/audit-assets.mjs`, read-only). 11 file UNUSED (1.62 MB)
-  sudah ditandai dan menunggu keputusan PM.
+  `node scripts/audit-assets.mjs`, read-only). Pola `IMPLICIT` sudah
+  dipersempit — sisa template (mis. `icon.svg`) tidak lagi salah dikira
+  terpakai. 11 file UNUSED (1.62 MB) menunggu keputusan PM.
 - Regresi sesi: `node scripts/check-session-cookie.mjs` (data user nyata) dan
   `node scripts/check-slim-edge.mjs` (profil panjang) harus lulus 1 chunk.
 - Tes manual v5.0.2 (`PASS`/`FAIL`/`PENDING`) dicatat setelah uji browser

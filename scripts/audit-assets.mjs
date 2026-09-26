@@ -32,16 +32,15 @@ const GENERATED = [
   /^swe-worker-.*\.js$/,
 ];
 
-// Aset yang di-referensikan browser secara implisit (manifest, metadata,
-// favicon otomatis). Tidak muncul sebagai string di source tapi tetap dipakai.
-const IMPLICIT = [
-  /^manifest\.json$/,
-  /^apple-icon\.png$/,
-  /^icon-\d+x\d+\.png$/,
-  /^icon\.svg$/,
-  /^favicon\.ico$/,
-  /^robots\.txt$/,
-];
+// Aset yang di-referensikan browser secara implisit (favicon otomatis,
+// manifest, robots). Tidak muncul sebagai string di source tapi tetap dipakai.
+// CATATAN: pola icon-*.png / apple-icon.png / icon.svg SENGAJA tidak ada di
+// sini. Konvensi otomatis Next.js (app/icon.*, app/apple-icon.*) TIDAK
+// berlaku untuk file di public/ — file public/ hanya dipakai bila eksplisit
+// direferensikan (layout metadata, manifest, worker). Pola lama pernah
+// menandai sisa template Vercel (public/icon.svg) sebagai IMPLICIT padahal
+// tidak dipakai siapa pun (temuan v5.0.3).
+const IMPLICIT = [/^manifest\.json$/, /^favicon\.ico$/, /^robots\.txt$/];
 
 // Folder yang dibaca secara dinamis saat runtime (fs.readdirSync), sehingga
 // isinya dipakai walau tidak muncul sebagai string path di source.
