@@ -95,6 +95,12 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
   Log `proxy_error_log` tidak memiliki entri `too big header` baru sejak
   deploy 13:04 UTC (entri terakhir 12:35 pre-deploy). Uji idle ±1 jam +
   login Google ulang masih menunggu (itu pemicu 502 yang terbukti).
+- **PWA v5.0.3 terverifikasi di filesystem production**: precache 80 entri
+  (tanpa foto/banner/jadwal/dokumen); runtime cache `dolphin-*` v2;
+  NetworkOnly untuk halaman dinamis; worker custom berisi handler `push`,
+  `notificationclick`, dan `activate` (cleanup cache lama); middleware
+  matcher mengecualikan `sw.js`/`manifest.json`/`workbox-*.js`/`worker-*.js`
+  sehingga aset PWA tidak memicu refresh sesi.
 - Perbaikan cookie OAuth anti-431 (v5.0.0) dan pelangsing PWA/aset (v5.0.1)
   tetap aktif. Build v5.0.1 `hXu-UzBl9gyYn7SRlHorK` (25 Sep 2026 07:33 UTC)
   kini menjadi titik rollback terdekat.

@@ -179,7 +179,7 @@ docs/patch-log/report.html            (bagian v5.0.2)
 | GITHUB-BACKUP | PASS | Commit `d8d8e5d` pushed ke `origin/master` |
 | DEPLOYED | PASS | 2026-09-25 13:04 UTC (25 Sep 20:04 WIB); BUILD_ID `xs8ATU0djm6ntGl10t7w_`; middleware hash `d4913726…` identik lokal↔server; ZIP SHA-256 `67e60271…3eef`; smoke test 7/7 HTTP 200; footer `DOLPHIN System v5.0.2` |
 | OBSERVASI-LOG | PASS | 0 entri `too big header` baru sejak deploy 13:04 UTC (entri terakhir 12:35 pre-deploy) — lalu lintas pasca-deploy bersih |
-| MANUAL-TEST (PM) | PENDING | PM mengakses berbagai route: belum ada 502. Uji idle ±1 jam + login Google ulang masih menunggu |
+| MANUAL-TEST (PM) | PARTIAL PASS | berbagai route OK, 0 502 pasca-deploy. Uji idle ±1 jam + login Google ulang masih menunggu (pemicu 502 yang terbukti) |
 
 ### Bersih-bersih artefak server (2026-09-25 WIB)
 
