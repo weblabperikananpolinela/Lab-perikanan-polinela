@@ -9,6 +9,15 @@
 ## Cara menjalankan
 
 - `npm run dev -- --webpack` (dev), `npm run build -- --webpack`, `npm start`
+- **PENTING:** `npm start` TIDAK kompatibel dengan `output: 'standalone'`
+  (Next.js 16 menolak dengan pesan "use node .next/standalone/server.js").
+  Cara menjalankan produksi yang benar:
+  - Lokal: `node .next/standalone/server.js` ATAU lebih baik salin dulu
+    `cp .next/standalone/server.js app.js` lalu `node app.js` dari root —
+    ini menirukan Plesk (app.js di httpdocs) sehingga `public/` (favicon,
+    apple-icon, dll.) ikut tersaji. Kalau jalan dari dalam
+    `.next/standalone/`, `public/` yang dicari hanya isi standalone
+    (biasanya cuma sebagian) → favicon/icon 404.
 - `npx tsc --noEmit` untuk type-check. Selalu jalankan setelah ubah kode.
 - Pi dijalankan via `pi` di PowerShell (npm global `@earendil-works/pi-coding-agent`).
 
@@ -57,6 +66,9 @@ Skill terinstall project-only di `.agents/skills/` (lock di
 | Bikin halaman/komponen baru atau reshape UI yang ada | `frontend-design` (arah visual + kritik mandiri, 2 pass: plan → review → build) |
 | Cek/benefit struktur visual, aksesibilitas, interaksi, responsif, form, navigasi | `ui-ux-pro-max` (baca `references/quick-reference.md` + `references/pro-rules.md` pre-delivery checklist; query via `scripts/search.py`) |
 | Fitur/fitur-baru/perubahan perilaku (creative work) | `brainstorming` — KLASIFIKASI dulu (spike/bounded/architectural), presentasikan desain, TUNGGU approval user, baru implementasi. Anti-pattern: "terlalu simpel untuk desain" tetap butuh approval. |
+| Integrasi Cloudinary (upload/delete/transformasi/URL, Next.js) | `cloudinary-next` (pola SDK v2 server-side, unsigned preset, delete) — load `references/troubleshooting.md` + task-specific saat review/debug |
+| Jawab pertanyaan Cloudinary / integrasi kode generik | `cloudinary-docs` (pilih halaman relevan dari llms.txt resmi) |
+| Bikin URL transformasi image/video yang valid | `cloudinary-transformations` (best practices f_auto/q_auto, named transformations) |
 
 Catatan:
 - `ui-ux-pro-max` ternilai High Risk (Gen) oleh installer — pakai hanya
@@ -66,6 +78,31 @@ Catatan:
   `frontend-design` (arah visual) → `ui-ux-pro-max` (cek aksesibilitas)
   → `vercel-react-best-practices` (pastikan pola React benar).
 - Skill baru hanya ditambah via `npx skills add ...` + catat di tabel ini.
+
+## Cloudinary (MCP + Skills — 2026-09)
+
+- MCP **Asset Management** remote (OAuth) terpasang: `asset-management`
+  (`https://asset-management.mcp.cloudinary.com/mcp`) — 36 tools:
+  upload/delete/search/list/get-asset-details, folders, tags, metadata,
+  transform, generate-image. Tool dipanggil via `mcp({ tool:
+  "asset-management_*", args: {...} })` atau namespace `mcp__asset_management`.
+  OAuth token disimpan adapter MCP (bukan di repo) — jangan commit secret.
+- Endpoint `/mcp` (Streamable HTTP) adalah yang resmi; `/sse` deprecated
+  kecuali Analysis. OAuth dipilih daripada API key header (aman tanpa
+  menaruh credential di file repo). Mock server lain (Environment Config,
+  Structured Metadata, Analysis, MediaFlows) TIDAK terpasang — pasang hanya
+  bila butuh presets/webhooks/metadata fields/automation.
+- Skills resmi Cloudinary terpasang project-only di `.agents/skills/`:
+  `cloudinary-docs`, `cloudinary-transformations`, `cloudinary-next`
+  (lock di `skills-lock.json`). Berguna saat integrasi kode Cloudinary:
+  skill = petunjuk pola benar, MCP = eksekusi operasi nyata. VAJIB baca
+  SKILL.md / reference sesuai job sebelum kerja (cocok dengan aturan tabel di atas).
+- Aturan keras skill: `CLOUDINARY_API_SECRET` JANGAN pernah ke browser;
+  SDK v2 hanya di server (route handler / server action Node.js runtime);
+  delete perlu public_id + resource_type (raw untuk file materi);
+  upload via unsigned preset ke Cloudinary — preset harus tetap diizinkan.
+- Dokumen resmi LLM-friendly: `https://cloudinary.com/documentation/llms.txt`
+  + append `.md` ke URL doc untuk versi markdown.
 
 ## Aturan Database (Supabase — WAJIB)
 
