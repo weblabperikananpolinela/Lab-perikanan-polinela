@@ -83,12 +83,14 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.0.3` (favicon + apple-icon memakai logo DOLPHIN;
-  local-ready, menunggu ACC PM untuk commit/push/deploy).
-- Versi terdeploy: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
-  1 chunk untuk data user nyata). Terdeploy 2026-09-25 13:04 UTC
-  (25 Sep 20:04 WIB) dengan BUILD_ID `xs8ATU0djm6ntGl10t7w_`; smoke test
-  7/7 HTTP 200.
+- Versi aplikasi: `5.0.3` (favicon + apple-icon memakai logo DOLPHIN).
+  **Sudah terdeploy** 2026-09-26 07:35 UTC (26 Sep 14:35 WIB) dengan
+  BUILD_ID `waRbtoTz544HLAz6QwlY4`; smoke 9/9 HTTP 200 termasuk
+  `/favicon.ico` dan `/apple-icon.png`.
+- Versi sebelumnya: `5.0.2` (perbaikan tuntas 502 — sesi cookie dijamin
+  1 chunk). Terdeploy 2026-09-25 13:04 UTC (25 Sep 20:04 WIB) dengan
+  BUILD_ID `xs8ATU0djm6ntGl10t7w_`. Rollback terdekat:
+  `httpdocs/*.old-20260926-0735`.
 - **Laporan PM (26 Sep WIB): mengakses berbagai route, belum ada 502**.
   Log `proxy_error_log` tidak memiliki entri `too big header` baru sejak
   deploy 13:04 UTC (entri terakhir 12:35 pre-deploy). Uji idle ±1 jam +

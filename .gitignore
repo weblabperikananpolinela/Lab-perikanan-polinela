@@ -16,6 +16,7 @@ node_modules
 .DS_Store
 # Deployment artifacts & logs (jangan masuk GitHub)
 deploy-dolphin*.zip
+app.js
 dolphin-dev.log
 dolphin-err*.log
 

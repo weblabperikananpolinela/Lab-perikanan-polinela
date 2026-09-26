@@ -152,8 +152,10 @@ public/favicon.ico                    (BARU — ICO multi-size 16/32/48)
 public/apple-icon.png                 (GANTI — 180x180 logo DOLPHIN)
 app/layout.tsx                        (metadata.icons: favicon.ico eksplisit)
 scripts/generate-favicons.mjs         (BARU — generator ikon)
+scripts/pack-deploy.py                (BARU — paket deploy Plesk)
 scripts/audit-assets.mjs              (IMPLICIT dipersempit)
 lib/version.ts                        (5.0.3)
+.gitignore                            (abaikan app.js hasil packing)
 docs/patch-log/5.0.3/PATCH.md         (BARU)
 docs/patch-log/report.html            (bagian v5.0.3)
 docs/patch-log/asset-audit.json       (regenerasi)
@@ -172,10 +174,10 @@ docs/patch-log/asset-audit.json       (regenerasi)
 
 | Checkpoint | Status | Bukti / waktu |
 |---|---|---|
-| LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ |
-| GITHUB-BACKUP | PENDING | menunggu ACC PM untuk commit + push |
-| DEPLOYED | PENDING | menunggu ACC PM |
-| MANUAL-TEST (PM) | PENDING | verifikasi tab browser + home screen iOS |
+| LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `waRbtoTz544HLAz6QwlY4`) |
+| GITHUB-BACKUP | PASS | Commit `845b4dd` di-push ke `origin/master` |
+| DEPLOYED | PASS | 2026-09-26 07:35 UTC (26 Sep 14:35 WIB); BUILD_ID `waRbtoTz544HLAz6QwlY4`; ZIP SHA-256 `6be9eaa0…cc1c`; smoke 9/9 HTTP 200 (`/`, `/jadwal`, `/inventaris`, `/organisasi`, `/admin/dashboard`, `/admin/system`, `/sw.js`, `/favicon.ico`, `/apple-icon.png`); footer `DOLPHIN System v5.0.3`; HTML memuat 3 link ikon |
+| MANUAL-TEST (PM) | PENDING | verifikasi tab browser + home screen iOS; uji idle v5.0.2 masih menunggu |
 
 ## Risiko & rollback
 
@@ -186,14 +188,19 @@ docs/patch-log/asset-audit.json       (regenerasi)
 - Menghapus `favicon.ico` tidak merusak apa pun (browser kembali memakai
   `link rel="icon"`), tetapi tidak disarankan.
 
+## Rollback
+
+Titik rollback terdekat: `httpdocs/*.old-20260926-0735` (v5.0.2,
+BUILD_ID `xs8ATU0djm6ntGl10t7w_`) lalu `touch tmp/restart.txt`.
+
 ## Pekerjaan tersisa
 
-- ACC PM → commit + push + deploy v5.0.3.
 - Keputusan PM: hapus aset template `icon.svg`, `icon-dark-32x32.png`,
   `icon-light-32x32.png` (kini jujur terdeteksi tidak dipakai).
 - Keputusan PM: hapus 11 aset UNUSED (1,62 MB); drop
   `public.whitelist_dosen`; bersihkan `page - Copy.tsx` + `backup.txt`.
-- Uji PM v5.0.2: idle ±1 jam + login Google ulang → harus 200.
+- Uji PM: idle ±1 jam + login Google ulang → harus 200 (pemicu 502 yang
+  terbukti, belum diuji di v5.0.3).
 - Opsional: buffer nginx per-vhost (pertahanan tambahan).
 - Next 16: `middleware.ts` → `proxy.ts` (warning deprecation di build).
 
@@ -201,4 +208,5 @@ docs/patch-log/asset-audit.json       (regenerasi)
 
 - Repository: https://github.com/weblabperikananpolinela/Lab-perikanan-polinela
 - Branch: `master`
+- Commit v5.0.3: `845b4dd`
 - Commit v5.0.2 (dasar): `08a6ade`
