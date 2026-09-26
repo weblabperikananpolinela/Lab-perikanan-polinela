@@ -72,9 +72,26 @@ transparan (terverifikasi: transparan 32%). Jadi tidak perlu perubahan.
 | Checkpoint | Status | Bukti |
 |---|---|---|
 | LOCAL-READY | PASS | `node scripts/generate-favicons.mjs`; alpha terverifikasi per entri; `npx tsc --noEmit` + `next build --webpack` |
-| GITHUB-BACKUP | PENDING | menunggu komit + push |
-| DEPLOYED | PENDING | menunggu deploy Plesk |
+| GITHUB-BACKUP | PASS | commit `c3dc65e` di `origin/master` (push 2026-09-26 18:5x UTC) |
+| DEPLOYED | PASS | 2026-09-26 18:55 UTC; lihat bawah |
 | MANUAL-TEST (PM) | PENDING | tab browser + home screen |
+
+## Catatan deploy (2026-09-26 18:55 UTC)
+
+- ZIP `deploy-dolphin-aQDHncMlANBGkO3wkE2s_.zip` (27,7 MB / 3.306 file;
+  SHA-256 `1e449209767cace58231375b20ffe9fed694799282049a6ac728a208c3f12975`).
+- BUILD_ID tidak berubah dari v5.2.0 (`aQDHncMlANBGkO3wkE2s_`) karena patch ini
+  hanya mengubah file statis di `public/` (favicon & apple-icon).
+- Extract + `touch tmp/restart.txt` (18:55:09 UTC), footer `/` menunjukkan 5.2.1.
+- Smoke test via origin `:7081`: **9/9 HTTP 200**
+  (`/`, `/favicon.ico`, `/apple-icon.png`, `/materi`, `/jadwal`, `/dosen/materi`,
+  `/admin/dashboard`, `/admin/system`, `/maintenance`).
+- Verifikasi byte: favicon & apple-icon live SHA-256 identik dengan repo.
+- `proxy_error_log`: 67 entri 502 all-time, terakhir 25 Sep 12:35:38 UTC —
+  **0 entri baru** pasca-deploy.
+- Rollback v5.2.0: restore `httpdocs/*.old-20260926-1722`
+  (favicon 7.804 B / apple 17.428 B — latar putih) + `touch tmp/restart.txt`.
+- Artefak dibersihkan: ZIP deploy lama + baru dihapus; vhost 492 → 436 MB.
 
 ## Uji yang harus dilakukan PM
 
