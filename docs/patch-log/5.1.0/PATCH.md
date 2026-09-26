@@ -193,14 +193,17 @@ lib/version.ts                                (5.1.0)
 | Checkpoint | Status | Bukti |
 |---|---|---|
 | LOCAL-READY | PASS | `npx tsc --noEmit`, `next build --webpack` (18 routes inc. /materi) |
-| GITHUB-BACKUP | PENDING | menunggu ACC/komit+push |
-| DEPLOYED | PENDING | menunggu deploy Plesk |
+| GITHUB-BACKUP | PASS | Commit `490f101` di-push ke `origin/master` (26 Sep 2026) |
+| DEPLOYED | PASS | 2026-09-26 17:25 UTC; BUILD_ID `OiHQGwnXwmWLzbOd08haz`; ZIP SHA-256 `ca2c71c3…3211`; smoke origin 9/9 HTTP 200 (`/`, `/materi`, `/jadwal`, `/inventaris`, `/organisasi`, `/dosen/materi`, `/admin/dashboard`, `/favicon.ico`, `/apple-icon.png`); footer `DOLPHIN System v5.1.0`; chunk `/materi/page-7aee9de57e9e2a72.js` memuat `Materi Kuliah` + RPC `materi_public_by_pin` |
 | MANUAL-TEST (PM) | PENDING | 4 skenario di atas |
 
 ## Pekerjaan tersisa
 
-- GITHUB-BACKUP + DEPLOYED v5.1.0 (smoke 8 rute inc. `/materi`, verifikasi
-  `favicon.ico`/`apple-icon.png` tetap 200).
+- DEPLOYED v5.1.0 selesai (2026-09-26 17:25 UTC; smoke origin 9/9; footer
+  v5.1.0). Catatan: Cloudflare mengembalikan 403 challenge untuk request
+  non-browser — verifikasi dilakukan ke origin `https://103.151.63.111:7081`
+  dengan `Host` header. Rollback: `httpdocs/*.old-20260926-1722` (v5.0.3,
+  BUILD_ID `waRbtoTz544HLAz6QwlY4`) lalu `touch tmp/restart.txt`.
 - Keputusan PM yang masih tertunda: hapus 11 aset UNUSED (1,62 MB), drop
   `whitelist_dosen`, bersihkan `page - Copy.tsx` + `backup.txt`, buffer
   nginx, `middleware.ts` → `proxy.ts`.
