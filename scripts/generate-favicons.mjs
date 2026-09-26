@@ -8,6 +8,10 @@
 // ICO dibuat manual dengan payload PNG (PNG-in-ICO). Format ini didukung
 // semua browser modern; kita tidak menambah dependency baru.
 //
+// LATAR TRANSPARAN: sejak v5.2.1 semua ikon memakai alpha (sesuai permintaan
+// PM — “semua logo dolphin latarnya transparan”). Catatan: iOS tidak
+// mendukung alpha pada apple-icon; area transparan tampil HITAM di home screen.
+//
 // Jalankan: node scripts/generate-favicons.mjs
 
 import fs from 'node:fs';
@@ -29,31 +33,34 @@ const APPLE_SIZE = 180;
 // Logo asli punya ruang kosong di tepi; beri sedikit padding agar tidak
 // terpotong saat di-crop bulat oleh OS.
 const PAD_RATIO = 0.04;
-// Apple icon memakai palette 256 warna: ukuran turun dari ~62 KB ke ~18 KB
-// tanpa perbedaan yang terlihat pada ikon 180px di home screen.
-const PALETTE_COLOURS = 256;
+// Latar ikon: TRANSPARAN (alpha 0). Sejak v5.2.1 semua logo DOLPHIN
+// memakai latar transparan sesuai permintaan PM.
+const ICON_BG = { r: 0, g: 0, b: 0, alpha: 0 };
 
-/** Buat PNG persegi berisi logo, dengan latar putih dan padding. */
+/** Buat PNG persegi berisi logo, dengan latar transparan dan padding.
+ *  `palette: true` memakai indexed-colour (256 warna) yang tetap menyimpan
+ *  kanal alpha — ukuran turun dari ~60 KB ke ~17 KB tanpa beda terlihat. */
 async function renderPng(size, { palette = false } = {}) {
   const pad = Math.round(size * PAD_RATIO);
   const inner = size - pad * 2;
   const logo = await sharp(SOURCE)
-    .resize(inner, inner, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+    .resize(inner, inner, { fit: 'contain', background: ICON_BG })
     .png()
     .toBuffer();
 
-  return sharp({
+  const out = sharp({
     create: {
       width: size,
       height: size,
       channels: 4,
-      background: { r: 255, g: 255, b: 255, alpha: 1 },
+      background: ICON_BG,
     },
-  })
-    .composite([{ input: logo, top: pad, left: pad }])
+  }).composite([{ input: logo, top: pad, left: pad }]);
+
+  return out
     .png(
       palette
-        ? { compressionLevel: 9, palette: true, colours: PALETTE_COLOURS, dither: 1 }
+        ? { compressionLevel: 9, palette: true, colours: 256, dither: 1 }
         : { compressionLevel: 9 }
     )
     .toBuffer();
