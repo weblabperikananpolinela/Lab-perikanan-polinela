@@ -114,9 +114,11 @@ function DashboardContent() {
 
       // Gate keamanan: getSession (baca cookie lokal). System admin
       // tidak boleh memakai dashboard lab — dia lewat /admin/system.
+      // whitelist_admin: ambil role+lab_id untuk gate, email+nama_dosen
+      // untuk profil (MateriTab/PengajuanTab memakai adminProfile.email).
       const { data: adminData } = await supabase
         .from('whitelist_admin')
-        .select('role, lab_id')
+        .select('id, role, lab_id, email, nama_dosen')
         .eq('email', session.user.email);
 
       if (!adminData || adminData.length === 0) {
@@ -152,13 +154,22 @@ function DashboardContent() {
       }
 
       // Gunakan labRows untuk pemilihan lab (system_admin + lab, atau admin biasa)
-      setAdminProfiles(labRows);
+      // Jaring terakhir: email profil selalu diisi dari sesi login.
+      // (Regresi v5.0.0: SELECT sempit menghilangkan email → tombol
+      // Tambah Kelas di MateriTab return diam-diam.)
+      const withEmail = (row: any) => ({
+        ...row,
+        email: row?.email || session.user.email,
+      });
 
-      if (labRows.length === 1) {
-        setActiveProfile(labRows[0]);
-      } else if (labRows.length > 1) {
+      const safeLabRows = labRows.map(withEmail);
+      setAdminProfiles(safeLabRows);
+
+      if (safeLabRows.length === 1) {
+        setActiveProfile(safeLabRows[0]);
+      } else if (safeLabRows.length > 1) {
         if (labIdParam) {
-          const selected = labRows.find(
+          const selected = safeLabRows.find(
             (p) => p.lab_id.toString() === labIdParam,
           );
           if (selected) setActiveProfile(selected);

@@ -47,10 +47,12 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
   const [copiedId, setCopiedId] = useState<number | null>(null);
 
   const fetchAdminCategories = async () => {
+    // Semua kelas terlihat oleh semua admin lab + system admin
+    // (RLS sudah mengizinkan SELECT untuk siapa pun di whitelist_admin).
+    // Tampilkan pembuat kelas untuk transparansi.
     const { data, error } = await supabase
       .from('kategori_materi')
-      .select('*, materi_dosen(count)')
-      .eq('created_by', adminProfile.email)
+      .select('id, nama_kategori, pin_akses, created_by, created_at, materi_dosen(count)')
       .order('created_at', { ascending: false });
 
     if (!error && data) {
@@ -317,6 +319,11 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
                             <CardDescription className='text-xs font-semibold px-2 py-0.5 bg-blue-50 text-blue-700 rounded-md inline-block'>
                               {cat.materi_dosen[0]?.count || 0} File Terunggah
                             </CardDescription>
+                            {cat.created_by && (
+                              <p className='text-[11px] text-slate-500 mt-1.5 truncate' title={cat.created_by}>
+                                Dibuat oleh {cat.created_by}
+                              </p>
+                            )}
                           </div>
                           <Button
                             variant='ghost'

@@ -362,6 +362,21 @@ export function Navbar() {
                   </div>
                 </Link>
               </DropdownMenuItem>
+              <DropdownMenuItem asChild className='p-3 cursor-pointer rounded-md transition-all focus:bg-slate-50 hover:bg-slate-50'>
+                <Link href='/materi' className='flex items-start gap-4'>
+                  <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600'>
+                    <BookOpen className='size-5' />
+                  </div>
+                  <div>
+                    <h4 className='text-sm font-semibold text-slate-900'>
+                      Materi Kuliah
+                    </h4>
+                    <p className='text-sm text-slate-500 mt-1'>
+                      Akses materi pembelajaran dengan PIN 6-digit.
+                    </p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
 
@@ -539,6 +554,13 @@ export function Navbar() {
                           className='flex items-center gap-3 py-3 px-4 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-all font-medium'>
                           <Anchor className='size-5 text-blue-500' />
                           SOP Lab. Tangkap
+                        </Link>
+                        <Link
+                          href='/materi'
+                          onClick={() => setIsOpen(false)}
+                          className='flex items-center gap-3 py-3 px-4 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-all font-medium'>
+                          <BookOpen className='size-5 text-blue-500' />
+                          Materi Kuliah
                         </Link>
                       </AccordionContent>
                     </AccordionItem>
