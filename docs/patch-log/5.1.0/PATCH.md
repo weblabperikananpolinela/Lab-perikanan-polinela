@@ -195,7 +195,7 @@ lib/version.ts                                (5.1.0)
 | LOCAL-READY | PASS | `npx tsc --noEmit`, `next build --webpack` (18 routes inc. /materi) |
 | GITHUB-BACKUP | PASS | Commit `490f101` di-push ke `origin/master` (26 Sep 2026) |
 | DEPLOYED | PASS | 2026-09-26 17:25 UTC; BUILD_ID `OiHQGwnXwmWLzbOd08haz`; ZIP SHA-256 `ca2c71c3…3211`; smoke origin 9/9 HTTP 200 (`/`, `/materi`, `/jadwal`, `/inventaris`, `/organisasi`, `/dosen/materi`, `/admin/dashboard`, `/favicon.ico`, `/apple-icon.png`); footer `DOLPHIN System v5.1.0`; chunk `/materi/page-7aee9de57e9e2a72.js` memuat `Materi Kuliah` + RPC `materi_public_by_pin` |
-| MANUAL-TEST (PM) | PENDING | 4 skenario di atas |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: 4 skenario lolos — Tambah Kelas (Gmail & Polinela), shared view kelas, halaman publik `/materi` via PIN |
 
 ## Pekerjaan tersisa
 

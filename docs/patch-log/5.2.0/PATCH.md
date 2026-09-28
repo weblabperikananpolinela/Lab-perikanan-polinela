@@ -72,7 +72,7 @@ npx next build --webpack  PASS (18 rute; /dosen/materi tetap prerendered)
 | LOCAL-READY | PASS | `npx tsc --noEmit` + `next build --webpack`; BUILD_ID `lCxcT0RdeMnOEGY1VPtzw` |
 | GITHUB-BACKUP | PASS | Commit `82bb75f` di-push ke `origin/master` (27 Sep 2026) |
 | DEPLOYED | PASS | 2026-09-26 18:00 UTC; BUILD_ID `lCxcT0RdeMnOEGY1VPtzw`; ZIP SHA-256 `238fcb6e…f433`; smoke origin 9/9 HTTP 200; footer `DOLPHIN System v5.2.0` |
-| MANUAL-TEST (PM) | PENDING | dosen upload file, dosen hapus file sendiri, tombol hapus tidak muncul untuk file orang lain |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: dosen upload file, dosen hapus file sendiri, tombol hapus tidak muncul untuk file orang lain |
 
 ## Uji yang harus dilakukan PM
 
@@ -84,6 +84,10 @@ npx next build --webpack  PASS (18 rute; /dosen/materi tetap prerendered)
    muncul** pada file tersebut (hanya bisa lihat/salin/buka).
 5. Pastikan dosen **tidak** menemukan cara membuat/menghapus kategori di
    halaman ini (hanya admin lab di dashboard).
+
+**Hasil PM (27 Sep 2026 WIB): SEMUA LOLOS.** Dosen dapat mengunggah file,
+menghapus file miliknya sendiri, dan tombol Hapus tidak muncul pada file
+dosen lain; kategori tetap hanya dikelola admin lab.
 
 ## Risiko & rollback
 

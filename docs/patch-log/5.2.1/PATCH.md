@@ -74,7 +74,7 @@ transparan (terverifikasi: transparan 32%). Jadi tidak perlu perubahan.
 | LOCAL-READY | PASS | `node scripts/generate-favicons.mjs`; alpha terverifikasi per entri; `npx tsc --noEmit` + `next build --webpack` |
 | GITHUB-BACKUP | PASS | commit `c3dc65e` di `origin/master` (push 2026-09-26 18:5x UTC) |
 | DEPLOYED | PASS | 2026-09-26 18:55 UTC; lihat bawah |
-| MANUAL-TEST (PM) | PENDING | tab browser + home screen |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: ikon di tab browser tampil transparan tanpa kotak putih; home screen iOS/Android sesuai harapan |
 
 ## Catatan deploy (2026-09-26 18:55 UTC)
 
@@ -100,6 +100,9 @@ transparan (terverifikasi: transparan 32%). Jadi tidak perlu perubahan.
 2. iOS/iPadOS: Add to Home Screen → ikon logo transparan (area transparan
    tampil hitam — perilaku normal Apple).
 3. Android: ikon PWA tetap seperti sebelumnya (tidak berubah).
+
+**Hasil PM (27 Sep 2026 WIB): SEMUA LOLOS.** PM mengonfirmasi seluruh
+skenario uji manual v5.2.1 (dan versi sebelumnya) berstatus lolos.
 
 ## Rollback
 

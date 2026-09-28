@@ -277,7 +277,7 @@ AGENTS.md                             (aturan aset + sesi)
 | ASSET-AUDIT | PASS | `node scripts/audit-assets.mjs` → 0 broken reference, 11 UNUSED tercatat |
 | GITHUB-BACKUP | PASS | Commit `473c9b4` pushed ke `origin/master` |
 | DEPLOYED | PASS | 2026-09-25 07:33 UTC; BUILD_ID `hXu-UzBl9gyYn7SRlHorK`; smoke test 7 route HTTP 200; backup `httpdocs/*.old-20260925-0735` |
-| MANUAL-TEST (PM) | PENDING | uji idle ±1 jam + ukur Cache Storage |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: uji idle ±1 jam tanpa 502; Cache Storage <8 MB; ikon PWA & push notification berfungsi |
 
 ## Aset UNUSED (kandidat hapus — menunggu keputusan PM)
 
@@ -292,8 +292,8 @@ AGENTS.md                             (aturan aset + sesi)
 
 ## Risiko & rollback
 
-- HOTFIX-502 sudah terdeploy: deploy ini bukan lagi menunggu, tetapi status
-  manual PM (uji idle 1 jam) tetap PENDING sampai user mengonfirmasi.
+- HOTFIX-502 sudah terdeploy dan **terverifikasi PM** (uji idle ±1 jam
+  tanpa 502, dikonfirmasi 27 Sep 2026 WIB).
 
 - `user.identities` dihapus dari cookie. Kode tidak memakainya (`rg
   identities` bersih); `getUser()` tetap memvalidasi ke server bila

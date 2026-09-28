@@ -138,10 +138,9 @@ direferensikan); `/icon.svg` tidak lagi salah diberi status `IMPLICIT`.
 
 ### Laporan PM (uji 502, 26 Sep 2026 WIB)
 
-PM mengakses berbagai route pada build v5.0.2 dan **belum mengalami 502**.
-Uji idle ±1 jam + login Google ulang dilanjutkan (itu skenario pemicu
-yang terbukti). Status manual v5.0.2 tetap `PENDING` sampai skenario idle
-selesai.
+PM mengakses berbagai route pada build v5.0.2 dan **tidak menemukan 502**.
+Uji idle ±1 jam + login Google ulang kini **TERVERIFIKASI LOLOS** (ACC 27 Sep 2026).
+Status manual v5.0.2 sekarang `PASS`.
 
 ---
 
@@ -177,7 +176,7 @@ docs/patch-log/asset-audit.json       (regenerasi)
 | LOCAL-READY (tsc + build) | PASS | `npx tsc --noEmit` ✅; `next build --webpack` ✅ (BUILD_ID `waRbtoTz544HLAz6QwlY4`) |
 | GITHUB-BACKUP | PASS | Commit `845b4dd` di-push ke `origin/master` |
 | DEPLOYED | PASS | 2026-09-26 07:35 UTC (26 Sep 14:35 WIB); BUILD_ID `waRbtoTz544HLAz6QwlY4`; ZIP SHA-256 `6be9eaa0…cc1c`; smoke 9/9 HTTP 200 (`/`, `/jadwal`, `/inventaris`, `/organisasi`, `/admin/dashboard`, `/admin/system`, `/sw.js`, `/favicon.ico`, `/apple-icon.png`); footer `DOLPHIN System v5.0.3`; HTML memuat 3 link ikon |
-| MANUAL-TEST (PM) | PENDING | verifikasi tab browser + home screen iOS; uji idle v5.0.2 masih menunggu |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: favicon & apple-icon tampil di tab browser + home screen iOS |
 | PWA-VERIFY (filesystem) | PASS | precache 80 entri tanpa foto/banner; runtime `dolphin-*` v2; NetworkOnly 5; worker custom berisi push+notificationclick+activate; matcher mengecualikan `sw.js`/`manifest.json`/`workbox-*.js`/`worker-*.js` |
 
 ## Risiko & rollback

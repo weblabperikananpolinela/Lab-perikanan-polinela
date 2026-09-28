@@ -4,10 +4,9 @@ Tanggal: 2026-09-25 (WIB)
 Status versi: `minor` bump dari `5.0.1`. Memuat **perbaikan definitif**
 untuk 502 yang masih muncul setelah hotfix v5.0.1.
 
-> **Update verifikasi PM (26 Sep 2026 WIB):** Setelah deployment v5.0.2,
-> PM mengakses berbagai route dan **belum menemukan 502**. Pengujian idle
-> ±1 jam + login Google ulang dilanjutkan. Status `MANUAL-TEST` tetap
-> `PENDING` sampai skenario idle selesai (itu pemicu 502 yang terbukti).
+> **Update verifikasi PM (27 Sep 2026 WIB):** Seluruh uji manual **LOLOS** —
+> PM mengonfirmasi tidak menemukan 502 setelah deployment v5.0.2, termasuk
+> skenario idle ±1 jam + login Google ulang. Status `MANUAL-TEST` = `PASS`.
 
 ## Ringkasan
 
@@ -179,7 +178,7 @@ docs/patch-log/report.html            (bagian v5.0.2)
 | GITHUB-BACKUP | PASS | Commit `d8d8e5d` pushed ke `origin/master` |
 | DEPLOYED | PASS | 2026-09-25 13:04 UTC (25 Sep 20:04 WIB); BUILD_ID `xs8ATU0djm6ntGl10t7w_`; middleware hash `d4913726…` identik lokal↔server; ZIP SHA-256 `67e60271…3eef`; smoke test 7/7 HTTP 200; footer `DOLPHIN System v5.0.2` |
 | OBSERVASI-LOG | PASS | 0 entri `too big header` baru sejak deploy 13:04 UTC (entri terakhir 12:35 pre-deploy) — lalu lintas pasca-deploy bersih |
-| MANUAL-TEST (PM) | PARTIAL PASS | berbagai route OK, 0 502 pasca-deploy. Uji idle ±1 jam + login Google ulang masih menunggu (pemicu 502 yang terbukti) |
+| MANUAL-TEST (PM) | PASS | PM ACC 27 Sep 2026: berbagai route OK, 0 502 pasca-deploy, dan uji idle ±1 jam + login Google ulang **lolos tanpa 502** |
 
 ### Bersih-bersih artefak server (2026-09-25 WIB)
 
