@@ -272,9 +272,9 @@ export default function HeroOrganisasiTab({ supabase }: { supabase: any }) {
     <div className='space-y-6'>
       <Card>
         <CardHeader>
-          <CardTitle>Foto Hero Beranda</CardTitle>
+          <CardTitle>Foto Beranda</CardTitle>
           <CardDescription>
-            Maksimal {MAX_HERO} foto. Urutan menentukan giliran carousel.
+            Maksimal {MAX_HERO} foto untuk slide besar halaman utama.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>

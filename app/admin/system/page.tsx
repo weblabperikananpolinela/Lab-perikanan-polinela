@@ -128,8 +128,8 @@ function SystemAdminContent() {
       desc: 'Atur email pengelola lab. Satu email bisa memegang banyak lab; satu lab bisa dipegang lebih dari satu email.',
     },
     hero: {
-      title: 'Hero & Organisasi',
-      desc: 'Kelola foto hero beranda, pimpinan jurusan, dan penanggung jawab masing-masing laboratorium.',
+      title: 'Beranda & Organisasi',
+      desc: 'Kelola foto beranda, pimpinan jurusan, dan penanggung jawab masing-masing laboratorium.',
     },
     dokumentasi: {
       title: 'Dokumentasi Kegiatan',
@@ -209,7 +209,7 @@ function SystemAdminContent() {
           )}
           {sidebarBtn(
             'hero',
-            'Hero & Organisasi',
+            'Beranda & Organisasi',
             <ImageIcon className='size-5 flex-shrink-0' />,
           )}
           {sidebarBtn(

@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_VERSION_LABEL } from '@/lib/version';
 
 type HealthData = {
-  db: { healthy: boolean };
+  db: { healthy: boolean; sizePercent: number | null };
   storage: { healthy: boolean; usedPercent: number } | null;
   pengajuanMenunggu: number;
   adminCount: number;
@@ -24,7 +24,13 @@ export default function OverviewTab() {
         const res = await fetch('/api/admin/health', { cache: 'no-store' });
         const json = await res.json();
         setData({
-          db: { healthy: Boolean(json.db?.healthy) },
+          db: {
+            healthy: Boolean(json.db?.healthy),
+            sizePercent:
+              typeof json.db?.sizePercent === 'number'
+                ? json.db.sizePercent
+                : null,
+          },
           storage: json.storage
             ? {
                 healthy: Boolean(json.storage.healthy),
@@ -96,11 +102,27 @@ export default function OverviewTab() {
           </CardHeader>
           <CardContent>
             <p className='text-lg font-bold'>
-              {db.healthy ? 'Sehat' : 'Bermasalah'}
+              {db.sizePercent != null ? fmtPercent(db.sizePercent) : '—'}
             </p>
             <p className='text-xs text-slate-500'>
-              {db.healthy ? 'Layanan data berjalan normal' : 'Perlu perhatian'}
+              {db.sizePercent != null
+                ? 'Pemakaian dari kapasitas tersedia'
+                : db.healthy
+                  ? 'Layanan data berjalan normal'
+                  : 'Perlu perhatian'}
             </p>
+            {db.sizePercent != null && (
+              <div className='mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100'>
+                <div
+                  className={`h-full rounded-full ${
+                    db.healthy ? 'bg-emerald-500' : 'bg-rose-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, db.sizePercent))}%`,
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 

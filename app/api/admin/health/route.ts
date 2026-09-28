@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient, hasServiceRoleKey } from '@/lib/supabase/service';
 
 cloudinary.config({
   cloud_name: process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME,
@@ -11,12 +12,15 @@ cloudinary.config({
 
 const SYSTEM_ADMIN_EMAIL = 'dolphinperikanan@polinela.ac.id';
 
+// Kapasitas referensi (bukan hard limit): Postgres project Supabase free tier
+// ±500 MB. Dipakai hanya untuk menampilkan persentase pemakaian. Ubah bila
+// project di-upgrade.
+const DB_CAPACITY_BYTES = 500 * 1024 * 1024;
+
 /**
- * Health summary for the system admin overview panel (v5.3.0).
- *
- * Deliberately high level: the panel shows "Sehat / Bermasalah" rather than
- * technical metrics. Requires a signed-in system admin; secrets never leave
- * the server.
+ * Ringkasan kesehatan untuk panel Overview system admin (v5.3.0).
+ * Hanya menampilkan status tingkat tinggi; kredensial tidak pernah keluar
+ * dari server.
  */
 export async function GET() {
   try {
@@ -28,27 +32,45 @@ export async function GET() {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
-    // Round-trip latency of a trivial query — the DB health signal.
+    // --- Database: sehat + ukuran -------------------------------------
     const dbStarted = Date.now();
+    let dbHealthy = true;
+    let dbSizeBytes: number | null = null;
+
     const { error: dbError } = await supabase
       .from('laboratorium')
       .select('id', { count: 'exact', head: true });
-    const latencyMs = Date.now() - dbStarted;
-    const dbHealthy = !dbError && latencyMs < 3000;
+    if (dbError) dbHealthy = false;
 
+    // Ukuran Postgres butuh hak istimewa; hanya tersedia bila service key ada.
+    if (hasServiceRoleKey()) {
+      try {
+        const service = createServiceClient();
+        const { data } = await service.rpc('get_db_size');
+        if (typeof data === 'number') dbSizeBytes = data;
+      } catch (err) {
+        console.error('DB size lookup failed:', err);
+      }
+    }
+
+    const latencyMs = Date.now() - dbStarted;
+    if (latencyMs > 3000) dbHealthy = false;
+
+    const dbSizePercent =
+      dbSizeBytes != null ? (dbSizeBytes / DB_CAPACITY_BYTES) * 100 : null;
+
+    // --- Penyimpanan (Cloudinary) -------------------------------------
     let storage: { healthy: boolean; usedPercent: number } | null = null;
     try {
       const usage = await cloudinary.api.usage();
       const usedPercent = Number(usage.credits?.used_percent ?? 0);
-      storage = {
-        healthy: usedPercent < 80,
-        usedPercent,
-      };
+      storage = { healthy: usedPercent < 80, usedPercent };
     } catch (err) {
       console.error('Cloudinary usage lookup failed:', err);
       storage = null;
     }
 
+    // --- Info umum ----------------------------------------------------
     const { count: waiting } = await supabase
       .from('peminjaman')
       .select('id', { count: 'exact', head: true })
@@ -66,7 +88,7 @@ export async function GET() {
 
     return NextResponse.json({
       ok: dbHealthy,
-      db: { healthy: dbHealthy, latencyMs },
+      db: { healthy: dbHealthy, sizePercent: dbSizePercent },
       storage,
       pengajuanMenunggu: waiting ?? 0,
       adminCount: adminCount ?? 0,
