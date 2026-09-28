@@ -216,12 +216,23 @@ export default function HeroOrganisasiTab({ supabase }: { supabase: any }) {
   };
 
   const saveLabPj = async (lab: LabRow) => {
+    const cleanName = ((lab.pj_nama || '').trim());
+    const cleanEmail = ((lab.pj_email || '').trim());
+    if (!cleanName || !cleanEmail) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Nama dan email PJ wajib diisi',
+        text: 'Kosongkankan hanya jika memang belum ada penanggung jawab.',
+        confirmButtonColor: '#f59e0b',
+      });
+      return;
+    }
     setBusy(`lab-${lab.id}`);
     const { error } = await supabase
       .from('laboratorium')
       .update({
-        pj_nama: lab.pj_nama,
-        pj_email: lab.pj_email,
+        pj_nama: cleanName,
+        pj_email: cleanEmail,
         pj_foto_url: lab.pj_foto_url,
       })
       .eq('id', lab.id);

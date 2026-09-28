@@ -1,20 +1,13 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Loader2, Database, HardDrive, Users, Calendar, Activity } from 'lucide-react';
+import { Database, HardDrive, Users, ShieldCheck, Calendar } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { APP_VERSION_LABEL } from '@/lib/version';
 
 type HealthData = {
-  ok: boolean;
-  db: { latencyMs: number; counts: Record<string, number | null> };
-  storage: {
-    usedBytes: number;
-    resources: number;
-    creditsUsed: number;
-    creditsLimit: number;
-    usedPercent: number;
-    plan: string;
-  } | null;
+  db: { healthy: boolean; latencyMs: number };
+  storage: { healthy: boolean; resources: number } | null;
   pengajuanMenunggu: number;
   adminCount: number;
   maintenanceMode: boolean;
@@ -30,7 +23,20 @@ export default function OverviewTab() {
       try {
         const res = await fetch('/api/admin/health', { cache: 'no-store' });
         const json = await res.json();
-        setData(json);
+        setData({
+          db: {
+            healthy: json.ok && json.db?.latencyMs < 500,
+            latencyMs: json.db?.latencyMs ?? 9999,
+          },
+          storage: json.storage ? {
+            healthy: json.storage.usedPercent < 80,
+            resources: json.storage.resources,
+          } : null,
+          pengajuanMenunggu: json.pengajuanMenunggu ?? 0,
+          adminCount: json.adminCount ?? 0,
+          maintenanceMode: json.maintenanceMode ?? false,
+          generatedAt: json.generatedAt,
+        });
       } catch {
         setData(null);
       } finally {
@@ -41,13 +47,6 @@ export default function OverviewTab() {
     const interval = setInterval(loadHealth, 30000);
     return () => clearInterval(interval);
   }, []);
-
-  const fmtBytes = (b: number) => {
-    if (b < 1024) return `${b} B`;
-    if (b < 1024 * 1024) return `${(b / 1024).toFixed(1)} KB`;
-    if (b < 1024 * 1024 * 1024) return `${(b / 1024 / 1024).toFixed(1)} MB`;
-    return `${(b / 1024 / 1024 / 1024).toFixed(1)} GB`;
-  };
 
   const fmtDate = (iso: string) =>
     new Date(iso).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' });
@@ -61,7 +60,6 @@ export default function OverviewTab() {
               <div className='space-y-2'>
                 <div className='h-4 w-3/4 rounded bg-slate-200/50 animate-pulse' />
                 <div className='h-8 w-1/2 rounded bg-slate-200/50 animate-pulse' />
-                <div className='h-3 w-full rounded bg-slate-200/30 animate-pulse' />
               </div>
             </CardContent>
           </Card>
@@ -85,69 +83,82 @@ export default function OverviewTab() {
   return (
     <div className='space-y-4'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
-        <Card className='border-emerald-200 shadow-emerald-50/25'>
+        <Card
+          className={`border ${db.healthy ? 'border-emerald-200' : 'border-rose-200'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className='text-sm font-medium'>Database</CardTitle>
-            <Database className='h-4 w-4 text-emerald-600' />
+            <Database
+              className={`h-4 w-4 ${
+                db.healthy ? 'text-emerald-600' : 'text-rose-600'
+              }`} />
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{db.counts.peminjaman ?? '-'} peminjaman</p>
+            <p className='text-lg font-bold'>
+              {db.healthy ? 'Sehat' : 'Bermasalah'}
+            </p>
             <p className='text-xs text-slate-500'>
-              Latency: {db.latencyMs}ms | Last update: {fmtDate(data.generatedAt)}
+              Latency: {db.latencyMs}ms • {new Date(data.generatedAt).toLocaleDateString('id-ID')}
             </p>
           </CardContent>
         </Card>
 
-        <Card className='border-purple-200 shadow-purple-50/25'>
+        <Card
+          className={`border ${
+            storage ? (storage.healthy ? 'border-purple-200' : 'border-rose-200') : 'border-slate-200'
+          }`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className='text-sm font-medium'>Cloudinary Storage</CardTitle>
-            <HardDrive className='h-4 w-4 text-purple-600' />
+            <CardTitle className='text-sm font-medium'>Penyimpanan</CardTitle>
+            <HardDrive
+              className={`h-4 w-4 ${
+                storage
+                  ? storage.healthy
+                    ? 'text-purple-600'
+                    : 'text-rose-600'
+                  : 'text-slate-400'
+              }`} />
           </CardHeader>
           <CardContent>
-            {storage ? (
-              <>
-                <p className='text-2xl font-bold'>{fmtBytes(storage.usedBytes)}</p>
-                <p className='text-xs text-slate-500'>
-                  {storage.resources} assets ({storage.usedPercent.toFixed(1)}% kredit
-                  {storage.plan !== 'unknown' && ` • Plan: ${storage.plan}`})
-                </p>
-              </>
-            ) : (
-              <p className='text-sm text-slate-500'>Tidak tersedia</p>
-            )}
+            <p className='text-lg font-bold'>
+              {storage
+                ? storage.healthy
+                  ? 'Sehat'
+                  : 'Bermasalah'
+                : 'Tidak tersedia'}
+            </p>
+            <p className='text-xs text-slate-500'>
+              {storage ? `${storage.resources} aset` : '—'}
+            </p>
           </CardContent>
         </Card>
 
-        <Card className='border-amber-200 shadow-amber-50/25'>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className='text-sm font-medium'>Pengajuan Menunggu</CardTitle>
+            <CardTitle className='text-sm font-medium'>Pengajuan</CardTitle>
             <Users className='h-4 w-4 text-amber-600' />
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{pengajuanMenunggu ?? 0}</p>
-            <p className='text-xs text-slate-500'>Perlakukan lebih cepat!</p>
+            <p className='text-lg font-bold'>{pengajuanMenunggu}</p>
+            <p className='text-xs text-slate-500'>Menunggu validasi</p>
           </CardContent>
         </Card>
 
-        <Card className='border-sky-200 shadow-sky-50/25'>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
             <CardTitle className='text-sm font-medium'>Admin Lab</CardTitle>
-            <Activity className='h-4 w-4 text-sky-600' />
+            <ShieldCheck className='h-4 w-4 text-sky-600' />
           </CardHeader>
           <CardContent>
-            <p className='text-2xl font-bold'>{adminCount ?? 0}</p>
-            <p className='text-xs text-slate-500'>Pengguna dengan akses lab</p>
+            <p className='text-lg font-bold'>{adminCount}</p>
+            <p className='text-xs text-slate-500'>Pengguna akses</p>
           </CardContent>
         </Card>
 
         <Card
-          className={`border Transition-colors ${
-            maintenanceMode ? 'border-red-200' : 'border-green-200'
-          }`}>
+          className={`border ${maintenanceMode ? 'border-red-200' : 'border-green-200'}`}>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className='text-sm font-medium'>Maintenance Mode</CardTitle>
+            <CardTitle className='text-sm font-medium'>Maintenance</CardTitle>
             {maintenanceMode ? (
-              <Activity className='h-4 w-4 text-red-600' />
+              <Calendar className='h-4 w-4 text-red-600' />
             ) : (
               <Calendar className='h-4 w-4 text-green-600' />
             )}
@@ -156,21 +167,19 @@ export default function OverviewTab() {
             <p className='text-lg font-bold'>
               {maintenanceMode ? 'Aktif' : 'Tidak aktif'}
             </p>
-            <p className='text-xs text-slate-500'>
-              Pengunjung akan mengalami halaman perawatan
-            </p>
+            <p className='text-xs text-slate-500'>Pengunjung beranda</p>
           </CardContent>
         </Card>
 
-        <Card className='border-slate-200 shadow-slate-50/25'>
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className='text-sm font-medium'>System Stats</CardTitle>
+            <CardTitle className='text-sm font-medium'>Status Website</CardTitle>
             <Calendar className='h-4 w-4 text-slate-600' />
           </CardHeader>
           <CardContent>
-            <p className='text-sm text-slate-500'>Versi v5.3.0</p>
-            <p className='text-xs text-slate-400'>
-              Diperbarui: {new Date(data.generatedAt).toLocaleDateString('id-ID')}
+            <p className='text-lg font-bold text-emerald-600'>Aktif</p>
+            <p className='text-xs text-slate-500'>
+              {APP_VERSION_LABEL} • {fmtDate(data.generatedAt)}
             </p>
           </CardContent>
         </Card>

@@ -50,13 +50,13 @@ Spesifikasi: `docs/superpowers/specs/2026-09-28-admin-media-organisasi-overview-
 | `lib/supabase/public.ts` (baru) | anon client tanpa cookie untuk render publik static/ISR. |
 | `lib/cloudinary-upload.ts` (baru) | helper upload per-folder (preset hero/dokumentasi/organisasi), validasi 5 MB & ekstensi, hapus via `/api/delete-cloudinary`. |
 | `lib/site-media.ts` (baru) | tipe + fallback hero/dokumentasi/pimpinan (file lokal agar tidak 404 sebelum admin unggah). |
-| `app/api/admin/health` (baru) | endpoint overview: count per tabel (service_role), usage Cloudinary, antrian pengajuan, maintenance mode; hanya system admin. |
+| `app/api/admin/health` (baru) | endpoint overview: status sehat/tidak untuk DB & Cloudinary (tanpa angka teknis), jumlah pengajuan menunggu, jumlah admin, mode maintenance; hanya system admin. |
 | `components/pageview-beacon.tsx` (baru) | beacon first-party ke `record_pageview` (1×/hari/path via sessionStorage; skip admin/api). |
 | `app/page.tsx` | server fetch `hero_banners` (revalidate 5m), fallback lokal. |
 | `components/hero-section.tsx` | terima prop `banners` (url+alt). |
 | `components/dokumentasi-section.tsx` | baca `dokumentasi_foto` (is_visible=true, limit 40) bukan fs. |
 | `app/organisasi/page.tsx` | fetch `pj_*` dari `laboratorium` + `organisasi_pimpinan`; fallback data lama; tetap static 5m. |
-| `/admin/system` + 3 tab baru | `OverviewTab`, `HeroOrganisasiTab` (hero max 4 + urutan, 3 pimpinan, 18 PJ lab), `DokumentasiAdminTab` (toggle is_visible + hapus). |
+| `/admin/system` + 3 tab baru | `OverviewTab` (status Sehat/Bermasalah untuk Database & Penyimpanan + info umum: pengajuan menunggu, jumlah admin, maintenance, status website), `HeroOrganisasiTab` (hero max 4 + urutan, 3 pimpinan, 18 PJ lab — nama & email PJ **wajib diisi**), `DokumentasiAdminTab` (toggle is_visible + hapus). |
 | `/admin/dashboard` + tab `DokumentasiTab` | PJ/admin lab unggah foto → tampil langsung di beranda; hapus foto milik lab-nya. |
 | `app/api/delete-cloudinary` | +`requireAuth()` (401), validasi host cloud_name (403), resource_type image/raw fallback. |
 | Email Resend | `app/api/send-email` + caller dihapus (`git rm -r`); `resend` dibuang dari `package.json`/lock. |
