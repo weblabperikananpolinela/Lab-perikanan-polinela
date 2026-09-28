@@ -36,13 +36,13 @@ export async function GET() {
     const latencyMs = Date.now() - dbStarted;
     const dbHealthy = !dbError && latencyMs < 3000;
 
-    let storage: { healthy: boolean; resources: number } | null = null;
+    let storage: { healthy: boolean; usedPercent: number } | null = null;
     try {
       const usage = await cloudinary.api.usage();
       const usedPercent = Number(usage.credits?.used_percent ?? 0);
       storage = {
         healthy: usedPercent < 80,
-        resources: usage.resources ?? 0,
+        usedPercent,
       };
     } catch (err) {
       console.error('Cloudinary usage lookup failed:', err);

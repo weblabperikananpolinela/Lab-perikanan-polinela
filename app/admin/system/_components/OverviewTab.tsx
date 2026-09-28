@@ -6,8 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { APP_VERSION_LABEL } from '@/lib/version';
 
 type HealthData = {
-  db: { healthy: boolean; latencyMs: number };
-  storage: { healthy: boolean; resources: number } | null;
+  db: { healthy: boolean };
+  storage: { healthy: boolean; usedPercent: number } | null;
   pengajuanMenunggu: number;
   adminCount: number;
   maintenanceMode: boolean;
@@ -24,14 +24,11 @@ export default function OverviewTab() {
         const res = await fetch('/api/admin/health', { cache: 'no-store' });
         const json = await res.json();
         setData({
-          db: {
-            healthy: Boolean(json.db?.healthy),
-            latencyMs: json.db?.latencyMs ?? 0,
-          },
+          db: { healthy: Boolean(json.db?.healthy) },
           storage: json.storage
             ? {
                 healthy: Boolean(json.storage.healthy),
-                resources: json.storage.resources ?? 0,
+                usedPercent: Number(json.storage.usedPercent ?? 0),
               }
             : null,
           pengajuanMenunggu: json.pengajuanMenunggu ?? 0,
@@ -82,6 +79,9 @@ export default function OverviewTab() {
 
   const { db, storage, pengajuanMenunggu, adminCount, maintenanceMode } = data;
 
+  const fmtPercent = (value: number) =>
+    `${value.toLocaleString('id-ID', { maximumFractionDigits: 1 })}%`;
+
   return (
     <div className='space-y-4'>
       <div className='grid gap-4 md:grid-cols-2 lg:grid-cols-3'>
@@ -99,7 +99,7 @@ export default function OverviewTab() {
               {db.healthy ? 'Sehat' : 'Bermasalah'}
             </p>
             <p className='text-xs text-slate-500'>
-              Latency: {db.latencyMs}ms • {new Date(data.generatedAt).toLocaleDateString('id-ID')}
+              {db.healthy ? 'Layanan data berjalan normal' : 'Perlu perhatian'}
             </p>
           </CardContent>
         </Card>
@@ -121,15 +121,23 @@ export default function OverviewTab() {
           </CardHeader>
           <CardContent>
             <p className='text-lg font-bold'>
-              {storage
-                ? storage.healthy
-                  ? 'Sehat'
-                  : 'Bermasalah'
-                : 'Tidak tersedia'}
+              {storage ? fmtPercent(storage.usedPercent) : '—'}
             </p>
             <p className='text-xs text-slate-500'>
-              {storage ? `${storage.resources} aset` : '—'}
+              {storage ? 'Pemakaian dari kapasitas tersedia' : 'Tidak tersedia'}
             </p>
+            {storage && (
+              <div className='mt-2 h-1.5 w-full overflow-hidden rounded-full bg-slate-100'>
+                <div
+                  className={`h-full rounded-full ${
+                    storage.healthy ? 'bg-purple-500' : 'bg-rose-500'
+                  }`}
+                  style={{
+                    width: `${Math.min(100, Math.max(0, storage.usedPercent))}%`,
+                  }}
+                />
+              </div>
+            )}
           </CardContent>
         </Card>
 
