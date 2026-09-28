@@ -93,7 +93,7 @@ tetap memakai fallback lokal (hero/dokumentasi/pimpinan tidak berubah).
 |---|---|---|
 | LOCAL-READY | PASS | `npx tsc --noEmit` (0 error) + `next build --webpack` (18 rute; `/` & `/organisasi` static 5m ISR) |
 | DB MIGRATION | PASS | migrasi `v530_media_organisasi_overview` applied; advisors 0 ERROR; set RLS/GRANT diverifikasi |
-| GITHUB-BACKUP | AVOIT | commit+push setelah build final (menunggu ACC PM sesuai aturan) |
+| GITHUB-BACKUP | PASS | commit `3461c7d` di-push ke `origin/master` (28 Sep 2026) |
 | DEPLOYED | BELUM | butuh env server (service key + preset) |
 | MANUAL-TEST (PM) | PENDING | lihat daftar uji di bawah |
 
