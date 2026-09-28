@@ -10,7 +10,9 @@ cloudinary.config({
   secure: true,
 });
 
-const SYSTEM_ADMIN_EMAIL = 'dolphinperikanan@polinela.ac.id';
+// Otorisasi via whitelist_admin (bukan hardcode email), agar admin tambahan
+// tidak perlu ubah kode. Role system_admin = akses penuh.
+const SYSTEM_ADMIN_ROLE = 'system_admin';
 
 // Kapasitas referensi (bukan hard limit): Postgres project Supabase free tier
 // ±500 MB. Dipakai hanya untuk menampilkan persentase pemakaian. Ubah bila
@@ -28,7 +30,16 @@ export async function GET() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user || user.email !== SYSTEM_ADMIN_EMAIL) {
+    if (!user?.email) {
+      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    }
+    const { data: adminRow } = await supabase
+      .from('whitelist_admin')
+      .select('role')
+      .eq('email', user.email)
+      .eq('role', SYSTEM_ADMIN_ROLE)
+      .maybeSingle();
+    if (!adminRow) {
       return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
     }
 
