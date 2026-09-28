@@ -25,13 +25,15 @@ export default function OverviewTab() {
         const json = await res.json();
         setData({
           db: {
-            healthy: json.ok && json.db?.latencyMs < 500,
-            latencyMs: json.db?.latencyMs ?? 9999,
+            healthy: Boolean(json.db?.healthy),
+            latencyMs: json.db?.latencyMs ?? 0,
           },
-          storage: json.storage ? {
-            healthy: json.storage.usedPercent < 80,
-            resources: json.storage.resources,
-          } : null,
+          storage: json.storage
+            ? {
+                healthy: Boolean(json.storage.healthy),
+                resources: json.storage.resources ?? 0,
+              }
+            : null,
           pengajuanMenunggu: json.pengajuanMenunggu ?? 0,
           adminCount: json.adminCount ?? 0,
           maintenanceMode: json.maintenanceMode ?? false,
