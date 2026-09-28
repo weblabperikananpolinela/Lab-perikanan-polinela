@@ -83,44 +83,13 @@ export async function subscribeToPushNotifications(
   console.log("3. PushManager sukses, mengirim ke Supabase...");
 
   const supabase = createClient();
-
-  // Payload yang sesuai skema JSONB
-  const subscriptionPayload = {
-    identifier,
-    role,
-    lab_id: labId,
-    subscription: JSON.parse(JSON.stringify(subscriptionJson)), // Simpan seluruh objek ke kolom JSONB
-  };
-
-  // Memeriksa apakah endpoint ini sudah ada di database (query JSONB)
-  const { data: existing, error: selectError } = await supabase
-    .from('push_subscriptions')
-    .select('id')
-    .eq('subscription->>endpoint', subscriptionJson.endpoint)
-    .maybeSingle();
-
-  if (selectError && selectError.code !== 'PGRST116') {
-    // PGRST116 = no rows found, yang memang expected
-    console.error('Error saat cek existing subscription:', selectError);
-    throw new Error('Gagal memeriksa data langganan: ' + selectError.message);
-  }
-
-  if (existing) {
-    // Update jika sudah ada
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .update(subscriptionPayload)
-      .eq('id', existing.id);
-
-    if (error) throw error;
-  } else {
-    // Insert jika belum ada
-    const { error } = await supabase
-      .from('push_subscriptions')
-      .insert(subscriptionPayload);
-
-    if (error) throw error;
-  }
+  const { error } = await supabase.rpc('register_push_subscription', {
+    p_identifier: identifier,
+    p_role: role,
+    p_lab_id: labId ?? null,
+    p_subscription: JSON.parse(JSON.stringify(subscriptionJson)),
+  });
+  if (error) throw error;
 
   console.log("4. Sukses menyimpan ke Supabase!");
 

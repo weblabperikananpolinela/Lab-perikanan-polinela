@@ -5,36 +5,36 @@ import { Calendar, ClipboardList } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link'; // <-- Tambahkan import ini
 import { useEffect, useState } from 'react';
+import { FALLBACK_HERO, type HeroBanner } from '@/lib/site-media';
 
-const heroImages = [
-  '/banner/hero-1.webp',
-  '/banner/hero-2.webp',
-  '/banner/hero-3.webp',
-  '/banner/hero-4.webp',
-];
-
-export function HeroSection() {
+export function HeroSection({
+  banners,
+}: {
+  banners?: HeroBanner[];
+}) {
+  const heroImages = banners && banners.length > 0 ? banners : FALLBACK_HERO;
   const [currentIndex, setCurrentIndex] = useState(0);
 
   useEffect(() => {
+    if (heroImages.length <= 1) return;
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % heroImages.length);
     }, 5000);
     return () => clearInterval(interval);
-  }, []);
+  }, [heroImages.length]);
 
   return (
     <section className='relative flex min-h-screen items-center justify-center overflow-hidden'>
       {/* Background Image Carousel */}
-      {heroImages.map((src, index) => (
+      {heroImages.map((banner, index) => (
         <div
-          key={src}
+          key={banner.url}
           className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
             index === currentIndex ? 'opacity-100' : 'opacity-0'
           }`}>
           <Image
-            src={src}
-            alt={`Laboratory background ${index + 1}`}
+            src={banner.url}
+            alt={banner.alt}
             fill
             className='object-cover'
             priority={index === 0}

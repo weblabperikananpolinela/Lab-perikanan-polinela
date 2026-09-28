@@ -1,37 +1,27 @@
-import fs from 'fs';
-import path from 'path';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { createPublicClient } from '@/lib/supabase/public';
+import { FALLBACK_DOKUMENTASI } from '@/lib/site-media';
 
 export async function DokumentasiSection() {
-  // 1. Baca folder public/dokumentasi secara otomatis (Server Side)
   let images: string[] = [];
   try {
-    const dirPath = path.join(process.cwd(), 'public', 'dokumentasi');
-    const files = fs.readdirSync(dirPath);
-
-    // Utamakan WebP. Jika suatu foto belum punya versi WebP, gunakan sumber
-    // JPEG/PNG-nya sebagai fallback agar galeri tetap utuh.
-    const webpBases = new Set(
-      files
-        .filter((file) => /\.webp$/i.test(file))
-        .map((file) => file.replace(/\.webp$/i, '')),
-    );
-    images = files
-      .filter((file) => {
-        if (/\.webp$/i.test(file)) return true;
-        const match = file.match(/^(.*)\.(jpg|jpeg|png)$/i);
-        return Boolean(match && !webpBases.has(match[1]));
-      })
-      .sort((a, b) => a.localeCompare(b, 'id', { numeric: true }))
-      .map((file) => `/dokumentasi/${file}`);
+    const supabase = createPublicClient();
+    const { data } = await supabase
+      .from('dokumentasi_foto')
+      .select('file_url')
+      .eq('is_visible', true)
+      .order('created_at', { ascending: false })
+      .limit(40);
+    images = (data || [])
+      .map((row) => row.file_url)
+      .filter((url): url is string => Boolean(url));
   } catch (error) {
-    console.error('Gagal membaca direktori dokumentasi:', error);
+    console.error('Gagal membaca dokumentasi:', error);
   }
 
-  // Fallback jika folder kosong atau belum ada foto
   if (images.length === 0) {
-    images = ['/dokumentasi/foto-1.webp', '/dokumentasi/foto-2.webp']; // Sesuaikan jika perlu
+    images = FALLBACK_DOKUMENTASI;
   }
 
   // 2. Gandakan array 4 kali agar bisa looping sempurna tanpa putus di layar lebar

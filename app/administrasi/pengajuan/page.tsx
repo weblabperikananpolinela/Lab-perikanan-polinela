@@ -505,62 +505,7 @@ export default function PengajuanForm() {
         if (errorItem) throw new Error(errorItem.message);
       }
 
-      // --- SEND EMAILS ---
-      try {
-        const { data: adminData } = await supabase
-          .from('whitelist_admin')
-          .select('email')
-          .eq('lab_id', resolvedLabId)
-          .single();
-        const targetEmailAdmin =
-          adminData?.email || 'admin_pusat@polinela.ac.id';
-
-        await fetch('/api/send-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            type: 'ADMIN_NOTIFICATION',
-            to: targetEmailAdmin,
-            data: {
-              judul_kegiatan: data.judulPenelitian,
-              nama_pengaju: data.nama,
-              tanggal: data.tanggal,
-              lab_id: resolvedLabId,
-              kategori_pemohon: data.kategori_pemohon,
-              is_berbayar: requirePayment,
-              overlap_info:
-                overlapInfo.length > 0
-                  ? overlapInfo
-                      .map(
-                        (o: any) =>
-                          `${o.judul_kegiatan || '-'} oleh ${o.nama_lengkap || '-'} (${o.jam_mulai}-${o.jam_selesai}, ${o.status})`,
-                      )
-                      .join('; ')
-                  : null,
-            },
-          }),
-        });
-
-        if (data.email && data.email.trim() !== '') {
-          await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'USER_CONFIRMATION',
-              to: data.email,
-              data: {
-                judul_kegiatan: data.judulPenelitian,
-                nama_pengaju: data.nama,
-                kategori_pemohon: data.kategori_pemohon,
-                is_berbayar: requirePayment,
-              },
-            }),
-          });
-        }
-      } catch (emailErr) {
-        console.error('Gagal mengirim email:', emailErr);
-      }
-
+      // --- PUSH NOTIFICATION (admin lab) ---
       try {
         await fetch('/api/send-notification', {
           method: 'POST',

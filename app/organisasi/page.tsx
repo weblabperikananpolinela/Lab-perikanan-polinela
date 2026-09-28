@@ -1,191 +1,72 @@
-'use client';
-
 import Link from 'next/link';
-import {
-  ArrowLeft,
-  Users,
-  Building2,
-  Anchor,
-  FlaskConical,
-  ShieldCheck,
-} from 'lucide-react';
+import { ArrowLeft, ShieldCheck, Users } from 'lucide-react';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Card, CardContent } from '@/components/ui/card';
+import { createPublicClient } from '@/lib/supabase/public';
+import {
+  FALLBACK_PIMPINAN,
+  initialsFromName,
+  parsePimpinan,
+  type Pimpinan,
+} from '@/lib/site-media';
 
-const leaders = {
-  kajur: {
-    name: 'Pindo Witoko, S.Pi., M.P',
-    role: 'Ketua Jurusan',
-    initials: 'PW',
-    image: '/foto-organisasi/organisasi-1.webp',
-  },
-  kalabPerikanan: {
-    name: 'Rahmadi Azis, S.Pi., M.Si',
-    role: 'Kepala Lab. Perikanan',
-    initials: 'RA',
-    image: '/foto-organisasi/org-2.webp',
-  },
-  kalabTangkap: {
-    name: 'Dona Setya, S.Tr.Pi., M.Si',
-    role: 'Kepala Lab. Perikanan Tangkap',
-    initials: 'DS',
-    image: '/foto-organisasi/org-4.webp',
-  },
+export const revalidate = 300;
+
+type Coordinator = {
+  lab: string;
+  name: string;
+  type: 'perikanan' | 'tangkap';
+  facility: string;
+  initials: string;
+  image: string;
 };
 
-// Data Koordinator ditambahkan image, initials, dan status facility (LAB/TEFA)
-const coordinators = [
-  {
-    lab: 'Lab. Kesehatan Ikan',
-    name: 'Mulya Septika, S.Tr.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'MS',
-    image: '/foto-organisasi/org-10.webp',
-  },
-  {
-    lab: 'Lab. Kualitas Air',
-    name: 'Citra Mulia, S.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'CM',
-    image: '/foto-organisasi/org-6.webp',
-  },
-  {
-    lab: 'Lab. Pengolahan',
-    name: 'Ririn Ramadhani, S.Tr.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'RR',
-    image: '/foto-organisasi/org-11.webp',
-  },
-  {
-    lab: 'Bangsal Pakan Alami',
-    name: 'Nurma Elwinda, S.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'NE',
-    image: '/foto-organisasi/org-12.webp',
-  },
-  {
-    lab: 'Lab. Perikanan (SFS)',
-    name: 'Agung Kurniawan, M.Tr.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'AK',
-    image: '/foto-organisasi/org-8.webp',
-  },
-  {
-    lab: 'Lab. Pembenihan',
-    name: 'Iwan Haryadi, A.Md',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'IH',
-    image: '/foto-organisasi/org-5.webp',
-  },
-  {
-    lab: 'Lab. Ikan Hias',
-    name: 'Riky Andri Saputra, S.Tr.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'RA',
-    image: '/foto-organisasi/org-7.webp',
-  },
-  {
-    lab: 'Lab. Nutrisi',
-    name: 'MP. Irsan, S.Tr.Pi',
-    type: 'perikanan',
-    facility: 'LAB',
-    initials: 'MI',
-    image: '/foto-organisasi/org-9.webp',
-  },
-  {
-    lab: 'Polyfeed',
-    name: 'Dr. Rakhmawati, S.Pi., M.Si.',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'DR',
-    image: '/foto-organisasi/org-13.webp',
-  },
-  {
-    lab: 'POFA',
-    name: 'Pindo Witoko, S.Pi., M.P.',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'PW',
-    image: '/foto-organisasi/organisasi-1.webp',
-  },
-  {
-    lab: 'Galangan Kapal',
-    name: 'Dona Setya, S.Tr.Pi., M.Si.',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'DS',
-    image: '/foto-organisasi/org-4.webp',
-  },
-  {
-    lab: 'Alat Tangkap Ikan',
-    name: 'Dona Setya, S.Tr.Pi., M.Si.',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'DS',
-    image: '/foto-organisasi/org-4.webp',
-  },
-  {
-    lab: 'KJA',
-    name: 'Dona Setya, S.Tr.Pi., M.Si.',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'DS',
-    image: '/foto-organisasi/org-4.webp',
-  },
-  {
-    lab: 'FISHTECH',
-    name: 'Epro Baradez',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'EB',
-    image: '/foto-organisasi/org-3.webp',
-  },
-  {
-    lab: 'FISH MARKET',
-    name: 'Rahmadi Azis, S.Pi., M.Si',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'R',
-    image: '/foto-organisasi/org-2.webp',
-  },
-  {
-    lab: 'Polyfish',
-    name: 'Iwan Haryadi, A.Md',
-    type: 'perikanan',
-    facility: 'TEFA',
-    initials: 'IH',
-    image: '/foto-organisasi/org-5.webp',
-  },
-  {
-    lab: 'Lab Simulator',
-    name: 'Ari Setiawan, S.Tr.Pi.',
-    type: 'tangkap',
-    facility: 'TEFA',
-    initials: 'AS',
-    image: '/foto-organisasi/org-14.webp',
-  },
-  {
-    lab: 'Lab Radar',
-    name: 'Ari Setiawan, S.Tr.Pi.',
-    type: 'tangkap',
-    facility: 'TEFA',
-    initials: 'AS',
-    image: '/foto-organisasi/org-14.webp',
-  },
-];
+async function loadOrganisasi(): Promise<{
+  pimpinan: Pimpinan[];
+  coordinators: Coordinator[];
+}> {
+  try {
+    const supabase = createPublicClient();
+    const [{ data: setting }, { data: labs }] = await Promise.all([
+      supabase
+        .from('app_settings')
+        .select('value')
+        .eq('key', 'organisasi_pimpinan')
+        .maybeSingle(),
+      supabase
+        .from('laboratorium')
+        .select('id, nama_lab, jenis, kategori, pj_nama, pj_foto_url')
+        .order('id'),
+    ]);
+    const parsed = parsePimpinan(setting?.value);
+    const pimpinan = parsed.length > 0 ? parsed : FALLBACK_PIMPINAN;
+    const coordinators: Coordinator[] = (labs || [])
+      .filter((lab) => lab.pj_nama)
+      .map((lab) => ({
+        lab: lab.nama_lab,
+        name: lab.pj_nama as string,
+        type: (lab.kategori || '').toLowerCase().includes('tangkap')
+          ? 'tangkap'
+          : 'perikanan',
+        facility: lab.jenis === 'TEFA' ? 'TEFA' : 'LAB',
+        initials: initialsFromName(lab.pj_nama as string),
+        image: lab.pj_foto_url || '',
+      }));
+    return { pimpinan, coordinators };
+  } catch {
+    return { pimpinan: FALLBACK_PIMPINAN, coordinators: [] };
+  }
+}
 
-export default function OrganisasiPage() {
+export default async function OrganisasiPage() {
+  const { pimpinan, coordinators } = await loadOrganisasi();
+  const kajur = pimpinan[0];
+  const kalabPerikanan = pimpinan[1];
+  const kalabTangkap = pimpinan[2];
+
   return (
     <div className='min-h-screen bg-slate-50 pt-24 pb-20 px-4 md:px-8'>
       <div className='max-w-7xl mx-auto'>
-        {/* Header */}
         <div className='mb-12'>
           <Link
             href='/'
@@ -207,11 +88,20 @@ export default function OrganisasiPage() {
           </div>
         </div>
 
-        {/* --- STRUKTUR PIMPINAN --- */}
         <div className='flex flex-col items-center mb-24 relative'>
-          <div className='w-full max-w-[340px] z-10'>
-            <BigProfileCard member={leaders.kajur} color='bg-slate-900' />
-          </div>
+          {kajur && (
+            <div className='w-full max-w-[340px] z-10'>
+              <BigProfileCard
+                member={{
+                  name: kajur.nama,
+                  role: kajur.jabatan,
+                  initials: initialsFromName(kajur.nama),
+                  image: kajur.foto_url,
+                }}
+                color='bg-slate-900'
+              />
+            </div>
+          )}
 
           <div className='hidden md:flex flex-col items-center w-full'>
             <div className='w-0.5 h-12 bg-slate-200' />
@@ -223,15 +113,31 @@ export default function OrganisasiPage() {
           <div className='md:hidden h-10 w-0.5 bg-slate-200 my-2' />
 
           <div className='grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-32 w-full max-w-5xl md:mt-12'>
-            <BigProfileCard
-              member={leaders.kalabPerikanan}
-              color='bg-blue-600'
-            />
-            <BigProfileCard member={leaders.kalabTangkap} color='bg-cyan-600' />
+            {kalabPerikanan && (
+              <BigProfileCard
+                member={{
+                  name: kalabPerikanan.nama,
+                  role: kalabPerikanan.jabatan,
+                  initials: initialsFromName(kalabPerikanan.nama),
+                  image: kalabPerikanan.foto_url,
+                }}
+                color='bg-blue-600'
+              />
+            )}
+            {kalabTangkap && (
+              <BigProfileCard
+                member={{
+                  name: kalabTangkap.nama,
+                  role: kalabTangkap.jabatan,
+                  initials: initialsFromName(kalabTangkap.nama),
+                  image: kalabTangkap.foto_url,
+                }}
+                color='bg-cyan-600'
+              />
+            )}
           </div>
         </div>
 
-        {/* --- GRID KOORDINATOR LENGKAP DENGAN FOTO --- */}
         <div className='pt-12 border-t border-slate-200'>
           <div className='text-center mb-10'>
             <h2 className='text-2xl font-bold text-slate-800 flex items-center justify-center gap-3'>
@@ -245,15 +151,14 @@ export default function OrganisasiPage() {
           </div>
 
           <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4'>
-            {coordinators.map((coord, idx) => (
+            {coordinators.map((coord) => (
               <Card
-                key={idx}
+                key={coord.lab}
                 className='border border-slate-200 shadow-sm hover:shadow-md transition-all group overflow-hidden bg-white'>
                 <div
                   className={`h-1 w-full ${coord.type === 'tangkap' ? 'bg-cyan-500' : 'bg-blue-600'}`}
                 />
                 <CardContent className='p-4 flex items-center gap-4'>
-                  {/* Foto Profil Koordinator */}
                   <Avatar
                     className={`size-14 ring-2 transition-transform group-hover:scale-105 ${coord.type === 'tangkap' ? 'ring-cyan-100' : 'ring-blue-100'}`}>
                     <AvatarImage src={coord.image} className='object-cover' />
@@ -262,21 +167,17 @@ export default function OrganisasiPage() {
                       {coord.initials}
                     </AvatarFallback>
                   </Avatar>
-
-                  {/* Informasi Dosen & Badge */}
                   <div className='overflow-hidden flex-1'>
                     <p
                       className='font-bold text-slate-800 text-sm truncate'
-                      title={coord.lab}>
+                      title={coord.name}>
                       {coord.name}
                     </p>
                     <p
                       className='text-xs font-medium text-slate-500 truncate mt-0.5'
-                      title={coord.name}>
+                      title={coord.lab}>
                       {coord.lab}
                     </p>
-
-                    {/* Badge LAB atau TEFA */}
                     <div className='mt-2'>
                       <span
                         className={`inline-flex items-center text-[9px] px-2 py-0.5 rounded-full font-bold tracking-wider uppercase ${
@@ -298,7 +199,13 @@ export default function OrganisasiPage() {
   );
 }
 
-function BigProfileCard({ member, color }: { member: any; color: string }) {
+function BigProfileCard({
+  member,
+  color,
+}: {
+  member: { name: string; role: string; initials: string; image: string };
+  color: string;
+}) {
   return (
     <Card className='border-0 shadow-xl shadow-slate-200 overflow-hidden group hover:-translate-y-2 transition-all duration-300'>
       <div className={`h-2 w-full ${color}`} />

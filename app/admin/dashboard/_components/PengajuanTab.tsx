@@ -240,24 +240,10 @@ export default function PengajuanTab({
         confirmButtonColor: '#ef4444',
       });
     } else {
-      try {
-        if (selectedPengajuan.email_pemohon) {
-          await fetch('/api/send-email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              type: 'STATUS_UPDATE',
-              to: selectedPengajuan.email_pemohon,
-              data: {
-                status_baru: newStatus,
-                judul_kegiatan: selectedPengajuan.judul_kegiatan,
-              },
-            }),
-          });
-        }
-        const pushIdentifier =
-          selectedPengajuan.device_id || selectedPengajuan.email_pemohon;
-        if (pushIdentifier) {
+      const pushIdentifier =
+        selectedPengajuan.device_id || selectedPengajuan.email_pemohon;
+      if (pushIdentifier) {
+        try {
           await fetch('/api/send-notification', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -268,9 +254,9 @@ export default function PengajuanTab({
               url: '/administrasi/status',
             }),
           });
+        } catch (err) {
+          console.error('Gagal mengirim notifikasi', err);
         }
-      } catch (err) {
-        console.error('Gagal mengirim notifikasi', err);
       }
       Swal.fire({
         icon: 'success',

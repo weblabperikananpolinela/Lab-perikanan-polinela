@@ -21,6 +21,7 @@ import {
   FolderKanban,
   Activity,
   ShieldCheck,
+  ImagePlus,
 } from 'lucide-react';
 
 import OverviewTab from './_components/OverviewTab';
@@ -30,6 +31,7 @@ import PengajuanTab from './_components/PengajuanTab';
 import SettingRekening from './_components/SettingRekening';
 import KelolaJadwal from './_components/KelolaJadwal';
 import MateriTab from './_components/MateriTab';
+import DokumentasiTab from './_components/DokumentasiTab';
 import LayananTab from './_components/LayananTab'; // Import Tab Layanan
 import NotifButton from '@/app/_components/NotifButton';
 import { APP_VERSION_LABEL } from '@/lib/version';
@@ -72,6 +74,8 @@ const getDynamicHeader = (tab: string, labId: number) => {
       return { title: `Layanan Uji: ${labName}`, desc: null };
     case 'materi':
       return { title: `Materi & Kelas: ${labName}`, desc: null };
+    case 'dokumentasi':
+      return { title: `Dokumentasi: ${labName}`, desc: null };
     case 'riwayat':
       return { title: `Riwayat Pemakaian: ${labName}`, desc: null };
     case 'inventaris':
@@ -280,6 +284,10 @@ function DashboardContent() {
         );
       case 'materi':
         return <MateriTab adminProfile={activeProfile} supabase={supabase} />;
+      case 'dokumentasi':
+        return (
+          <DokumentasiTab adminProfile={activeProfile} supabase={supabase} />
+        );
       default:
         return <p>Modul dalam pengembangan.</p>;
     }
@@ -377,6 +385,13 @@ function DashboardContent() {
             className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'materi' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
             <FolderKanban className='size-5 flex-shrink-0' />{' '}
             {!isSidebarCollapsed && <span>Manajemen Materi</span>}
+          </button>
+          <button
+            onClick={() => handleTabChange('dokumentasi')}
+            title='Dokumentasi Kegiatan'
+            className={`w-full flex items-center ${isSidebarCollapsed ? 'justify-center px-0' : 'gap-4 px-4'} py-3.5 rounded-xl transition-all ${activeTab === 'dokumentasi' ? 'bg-blue-600 text-white shadow-md shadow-blue-900/20' : 'text-slate-300 hover:bg-slate-800 hover:text-white'}`}>
+            <ImagePlus className='size-5 flex-shrink-0' />{' '}
+            {!isSidebarCollapsed && <span>Dokumentasi</span>}
           </button>
           <button
             onClick={() => handleTabChange('riwayat')}

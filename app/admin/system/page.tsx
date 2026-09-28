@@ -13,11 +13,19 @@ import {
   LogOut,
   ShieldCheck,
   LayoutDashboard,
+  Activity,
+  Image as ImageIcon,
+  Camera,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { APP_VERSION_LABEL } from '@/lib/version';
 
 import KelolaUserTab from './_components/KelolaUserTab';
+import OverviewTab from './_components/OverviewTab';
+import HeroOrganisasiTab from './_components/HeroOrganisasiTab';
+import DokumentasiAdminTab from './_components/DokumentasiAdminTab';
+
+type SystemTab = 'overview' | 'akun' | 'hero' | 'dokumentasi' | 'labs';
 
 interface LabRow {
   id: number;
@@ -28,7 +36,7 @@ interface LabRow {
 function SystemAdminContent() {
   const [labs, setLabs] = useState<LabRow[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'akun' | 'labs'>('akun');
+  const [activeTab, setActiveTab] = useState<SystemTab>('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -66,17 +74,21 @@ function SystemAdminContent() {
     init();
   }, [supabase, router]);
 
-  const handleTabChange = (tab: 'akun' | 'labs') => {
+  const handleTabChange = (tab: SystemTab) => {
     setActiveTab(tab);
     setIsMobileOpen(false);
   };
+
+  const labMap: Record<number, string> = Object.fromEntries(
+    labs.map((lab) => [lab.id, lab.nama_lab]),
+  );
 
   const openLab = (labId: number) => {
     router.push(`/admin/dashboard?lab_id=${labId}`);
   };
 
   const sidebarBtn = (
-    tab: 'akun' | 'labs',
+    tab: SystemTab,
     label: string,
     icon: React.ReactNode,
   ) => {
@@ -106,16 +118,28 @@ function SystemAdminContent() {
     );
   }
 
-  const headerInfo =
-    activeTab === 'akun'
-      ? {
-          title: 'Manajemen Akun',
-          desc: 'Atur email pengelola lab. Satu email bisa memegang banyak lab; satu lab bisa dipegang lebih dari satu email.',
-        }
-      : {
-          title: 'Semua Laboratorium',
-          desc: 'Pilih laboratorium untuk membuka dashboard lab dengan hak penuh System Admin.',
-        };
+  const headerInfo: Record<SystemTab, { title: string; desc: string }> = {
+    overview: {
+      title: 'Overview Sistem',
+      desc: 'Kesehatan database, penyimpanan Cloudinary, antrian pengajuan, dan mode maintenance dalam satu panel.',
+    },
+    akun: {
+      title: 'Manajemen Akun',
+      desc: 'Atur email pengelola lab. Satu email bisa memegang banyak lab; satu lab bisa dipegang lebih dari satu email.',
+    },
+    hero: {
+      title: 'Hero & Organisasi',
+      desc: 'Kelola foto hero beranda, pimpinan jurusan, dan penanggung jawab masing-masing laboratorium.',
+    },
+    dokumentasi: {
+      title: 'Dokumentasi Kegiatan',
+      desc: 'Kurasi foto dokumentasi yang tampil di marquee beranda. Sembunyikan tanpa menghapus, atau hapus permanen.',
+    },
+    labs: {
+      title: 'Semua Laboratorium',
+      desc: 'Pilih laboratorium untuk membuka dashboard lab dengan hak penuh System Admin.',
+    },
+  };
 
   return (
     <div className='min-h-screen flex bg-slate-50 relative'>
@@ -174,9 +198,24 @@ function SystemAdminContent() {
         <nav
           className={`flex-1 overflow-y-auto px-4 space-y-2 mt-2 text-base font-medium ${isSidebarCollapsed ? 'px-3' : ''} custom-scrollbar`}>
           {sidebarBtn(
+            'overview',
+            'Overview',
+            <Activity className='size-5 flex-shrink-0' />,
+          )}
+          {sidebarBtn(
             'akun',
             'Manajemen Akun',
             <Users className='size-5 flex-shrink-0' />,
+          )}
+          {sidebarBtn(
+            'hero',
+            'Hero & Organisasi',
+            <ImageIcon className='size-5 flex-shrink-0' />,
+          )}
+          {sidebarBtn(
+            'dokumentasi',
+            'Dokumentasi',
+            <Camera className='size-5 flex-shrink-0' />,
           )}
           {sidebarBtn(
             'labs',
@@ -219,21 +258,27 @@ function SystemAdminContent() {
         <div className='flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 pb-24 custom-scrollbar'>
           <div className='max-w-6xl mx-auto w-full'>
             <div
-              className={`pb-4 md:pb-5 border-b border-slate-200 flex flex-col items-start ${activeTab === 'akun' ? 'mb-6 md:mb-8' : 'mb-5 md:mb-6'}`}>
+              className={`pb-4 md:pb-5 border-b border-slate-200 flex flex-col items-start ${activeTab === 'akun' || activeTab === 'hero' ? 'mb-6 md:mb-8' : 'mb-5 md:mb-6'}`}>
               <div className='inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs md:text-sm font-semibold text-purple-700 tracking-wide border border-purple-200 shadow-sm mb-3'>
                 <Circle className='size-2.5 fill-purple-500 text-purple-500' />
                 System Admin
               </div>
               <h1 className='font-extrabold text-slate-900 tracking-tight leading-tight text-2xl md:text-3xl lg:text-4xl'>
-                {headerInfo.title}
+                {headerInfo[activeTab].title}
               </h1>
               <p className='mt-2.5 text-slate-500 text-sm md:text-base lg:text-lg max-w-3xl leading-relaxed'>
-                {headerInfo.desc}
+                {headerInfo[activeTab].desc}
               </p>
             </div>
 
-            {activeTab === 'akun' ? (
+            {activeTab === 'overview' ? (
+              <OverviewTab />
+            ) : activeTab === 'akun' ? (
               <KelolaUserTab supabase={supabase} />
+            ) : activeTab === 'hero' ? (
+              <HeroOrganisasiTab supabase={supabase} />
+            ) : activeTab === 'dokumentasi' ? (
+              <DokumentasiAdminTab supabase={supabase} labMap={labMap} />
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                 {labs.map((lab) => (

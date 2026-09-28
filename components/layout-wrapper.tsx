@@ -3,6 +3,7 @@
 import { usePathname } from 'next/navigation';
 import { Navbar } from '@/components/navbar';
 import { Footer } from '@/components/footer';
+import { PageviewBeacon } from '@/components/pageview-beacon';
 
 export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -14,6 +15,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   const hideChrome = isMaintenance || isAdminDashboard || isAdminSystem;
   return (
     <>
+      <PageviewBeacon />
       {/* Navbar disembunyikan di dashboard admin & maintenance (punya sidebar sendiri) */}
       {!hideChrome && <Navbar />}
 

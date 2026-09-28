@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
+import { createClient } from '@/lib/supabase/server';
 
 // Konfigurasi Cloudinary SDK
 cloudinary.config({
@@ -7,6 +8,21 @@ cloudinary.config({
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
+
+/**
+ * Harus login untuk menghapus file Cloudinary — mencegah siapa pun
+ * menghapus aset milik orang lain (audit keamanan K1, v5.3.0).
+ * Cloudinary itu sendiri tidak punya sesi aplikasi kita, jadi auth
+ * dilakukan di sini; ownership row DB tetap dijaga RLS masing-masing
+ * tabel (uploaded_by / lab_id / system admin).
+ */
+async function requireAuth() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return { supabase, user };
+}
 
 /**
  * Fungsi utilitas untuk membedah URL dan mengambil public_id Cloudinary
@@ -38,6 +54,14 @@ function extractPublicId(url: string) {
 
 export async function POST(req: Request) {
   try {
+    const { user } = await requireAuth();
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'Anda harus login untuk menghapus file.' },
+        { status: 401 },
+      );
+    }
+
     const { fileUrl, fileType } = await req.json();
 
     if (!fileUrl) {
@@ -55,6 +79,22 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    // Hanya izinkan URL milik cloud_name aplikasi kita (anti-arbitrary delete).
+    const ownCloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+    if (
+      ownCloudName &&
+      !fileUrl.includes(`res.cloudinary.com/${ownCloudName}/`)
+    ) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'URL Cloudinary tidak sesuai dengan akun aplikasi.',
+        },
+        { status: 403 },
+      );
+    }
+
 
     // Tentukan resource_type
     // File dokumen seperti PDF biasanya tersimpan sebagai 'raw' (kecuali diupload dengan 'auto' image ke page render, namun 'raw' / 'image' harus tepat)
