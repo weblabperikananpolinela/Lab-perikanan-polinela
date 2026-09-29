@@ -39,3 +39,7 @@ tsconfig.tsbuildinfo
 tmp-slimtest/
 tmp-slimedge/
 
+
+# python cache
+__pycache__/
+*.pyc

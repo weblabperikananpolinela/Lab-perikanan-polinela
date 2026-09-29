@@ -200,13 +200,15 @@ Catatan:
   = DELETE semua rows email + re-INSERT (re-sync, hati-hati race).
   1 lab boleh dipegang 2+ email. Footer sidebar dashboard lab
   menampilkan 'Kembali ke System Admin' saat role system_admin.
-- RLS: email system_admin DIHARDCODE di policy (anti-rekursi RLS —
-  subquery ke tabel policy sendiri dilarang). Ganti email system_admin
-  = update row + ubah semua policy 'System admin%'.
-- Tabel dengan policy bypass system_admin: whitelist_admin,
-  jadwal_lab, layanan_lab, rekening_admin, materi_dosen,
-  akses_dosen_materi, laboratorium. Tabel lain (peminjaman,
-  inventaris, dst.) sudah USING true = otomatis lolos.
+- RLS: otorisasi system admin memakai fungsi `public.is_system_admin()`
+  (SECURITY DEFINER, `search_path=''`, anti-rekursi) — email tidak lagi
+  di-hardcode di policy. Menambah/ganti system admin cukup ubah row
+  `whitelist_admin.role='system_admin'`, policy tidak perlu disentuh.
+- Tabel dengan policy system admin via `is_system_admin()`:
+  whitelist_admin, jadwal_lab, layanan_lab, rekening_admin, materi_dosen,
+  akses_dosen_materi, laboratorium, app_settings, dokumentasi_foto,
+  page_views. Tabel lain (peminjaman, inventaris, dst.) sudah USING true
+  = otomatis lolos.
 
 ## Versi, Patch Log & Backup GitHub (WAJIB — fitur 2026-09)
 
