@@ -83,10 +83,16 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.4.0` (hero 4–6, seleksi massal dokumentasi, modal unggah lab).
-  LOCAL-READY (tsc+build `XT0ksLsTZt2P1_jQGczSX`). Commit lokal, belum push.
+- Versi aplikasi: `5.4.0` (hero 4–6, seleksi massal dokumentasi, modal unggah lab,
+  konfirmasi hapus seragam). **Terdeploy** 29 Sep 2026 ~16:56 UTC ke
+  dolphinperikanan.polinela.ac.id; BUILD_ID `XT0ksLsTZt2P1_jQGczSX`;
+  commit `9dfeed1` di `origin/master`; smoke 9/10 HTTP 200 (403 hanya
+  `/api/admin/health` = proteksi auth).
 - Versi sebelumnya: `5.3.0` (media kelola admin + overview + hardening).
-  ACC PM 29 Sep 2026. Deploy server masih pending.
+  ACC PM 29 Sep 2026 — kode-nya sudah ikut terpasang di server bersama rilis
+  v5.4.0 (satu paket deploy).
+- **Versi terdeploy aktif: `5.4.0`** (BUILD_ID `XT0ksLsTZt2P1_jQGczSX`).
+  Rollback terdekat: `httpdocs.old-deploy-20260929-165452` (generasi v5.3.0).
 - **Laporan PM (26 Sep WIB):** tombol Tambah Kelas di MateriTab diam pada
   akun Gmail whitelisted, tetapi berfungsi untuk `system_admin`; kelas antar
   admin tidak saling terlihat. Keduanya diperbaiki di v5.1.0.

@@ -41,9 +41,9 @@ Spesifikasi: brainstorming bounded 29 Sep 2026 — tiga perubahan terpilih
 |---|---|---|
 | LOCAL-READY | PASS | tsc + build webpack (BUILD_ID `XT0ksLsTZt2P1_jQGczSX`) |
 | DB MIGRATION | PASS | `v540_dokumentasi_metadata` applied; advisors tetap 0 ERROR (hanya WARN anon SECURITY DEFINER yang disengaja) |
-| GITHUB-BACKUP | LOKAL | commit akan dibuat di lokal, belum push |
-| DEPLOYED | BELUM | menunggu commit lokal + push terpisah |
-| MANUAL-TEST (PM) | PENDING | lihat uji di bawah |
+| GITHUB-BACKUP | PASS | commit `9dfeed1` di-push ke `origin/master` (29 Sep 2026) |
+| DEPLOYED | PASS | 2026-09-29 ~16:56 UTC; ZIP `deploy-dolphin-XT0ksLsTZt2P1_jQGczSX.zip` (27,7 MB, SHA `83c9e097…5383e`); `httpdocs/.next/BUILD_ID = XT0ksLsTZt2P1_jQGczSX`; smoke 9/10 (403 hanya `/api/admin/health` = proteksi auth, bukan error) |
+| MANUAL-TEST (PM) | PASS | PM ACC 29 Sep 2026 + uji lanjut konten |
 
 ## Uji PM
 
@@ -53,9 +53,17 @@ Spesifikasi: brainstorming bounded 29 Sep 2026 — tiga perubahan terpilih
 4. System Admin > Dokumentasi: cek foto baru menampilkan Nama kegiatan + Deskripsi.
 5. Setiap tombol hapus (hero, dokumentasi per-kartu, dokumentasi massal, materi, mata kuliah, inventaris, jadwal, layanan, riwayat, admin lab) harus memunculkan dialog konfirmasi Swal sebelum data dihapus.
 
+## Bukti deploy (server)
+
+- Upload ZIP: `scp` 27,7 MB, SHA-256 server cocok (`83c9e097…5383e`).
+- Backup generasi aktif: `httpdocs.old-deploy-20260929-165452` (copy). Stray extract ke root (`app.js/.next/node_modules/public/package.json`) dikarantina ke `.trash/stray-20260929`.
+- Extract ke `httpdocs/`, `chmod 644 app.js`, restart via `touch httpdocs/tmp/restart.txt`.
+- HTML beranda tersaji `DOLPHIN System v5.4.0` + referensi BUILD_ID `XT0ksLsTZt2P1_jQGczSX`.
+- Smoke: 9/10 HTTP 200; `/api/admin/health` 403 karena butuh auth.
+
 ## Rollback
 
-- Kode: revert commit 5.4.0.
+- Kode/server: kembalikan `httpdocs.old-deploy-20260929-165452` lalu `touch httpdocs/tmp/restart.txt`; atau `git revert 9dfeed1`, build + deploy ulang.
 - DB: `alter table public.dokumentasi_foto drop column nama_kegiatan; alter table ... drop column deskripsi;` (opsional; kolom nullable, aman dibiarkan).
 
 ## Referensi
