@@ -36,7 +36,8 @@ type LabRow = {
   pj_foto_url: string | null;
 };
 
-const MAX_HERO = 4;
+const MAX_HERO = 6;
+const MIN_HERO = 4;
 const PIMPINAN_SLOTS = [
   { key: 0, label: 'Ketua Jurusan', color: 'bg-slate-900' },
   { key: 1, label: 'Kepala Lab. Perikanan', color: 'bg-blue-600' },
@@ -131,6 +132,14 @@ export default function HeroOrganisasiTab({ supabase }: { supabase: any }) {
   };
 
   const removeHero = async (index: number) => {
+    if (heroes.length <= MIN_HERO) {
+      Swal.fire(
+        'Minimal 4 foto',
+        `Carousel beranda dijaga minimal ${MIN_HERO} foto. Tambahkan foto baru dulu bila ingin mengganti.`,
+        'info',
+      );
+      return;
+    }
     const target = heroes[index];
     const confirm = await Swal.fire({
       title: 'Hapus foto hero?',
@@ -274,7 +283,8 @@ export default function HeroOrganisasiTab({ supabase }: { supabase: any }) {
         <CardHeader>
           <CardTitle>Foto Beranda</CardTitle>
           <CardDescription>
-            Maksimal {MAX_HERO} foto untuk slide besar halaman utama.
+            Minimal {MIN_HERO} dan maksimal {MAX_HERO} foto untuk slide besar
+            halaman utama.
           </CardDescription>
         </CardHeader>
         <CardContent className='space-y-4'>
@@ -309,6 +319,7 @@ export default function HeroOrganisasiTab({ supabase }: { supabase: any }) {
                     size='icon'
                     variant='destructive'
                     className='size-7'
+                    disabled={heroes.length <= MIN_HERO}
                     onClick={() => removeHero(index)}
                     aria-label='Hapus foto'>
                     <Trash2 className='size-3.5' />

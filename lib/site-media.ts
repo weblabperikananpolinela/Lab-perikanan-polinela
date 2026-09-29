@@ -60,7 +60,7 @@ export function parseHeroBanners(value: unknown): HeroBanner[] {
       return { url, alt };
     })
     .filter((row): row is HeroBanner => Boolean(row))
-    .slice(0, 4);
+    .slice(0, 6);
 }
 
 export function parsePimpinan(value: unknown): Pimpinan[] {

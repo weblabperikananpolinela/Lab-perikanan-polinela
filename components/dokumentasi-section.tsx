@@ -4,28 +4,34 @@ import { createPublicClient } from '@/lib/supabase/public';
 import { FALLBACK_DOKUMENTASI } from '@/lib/site-media';
 
 export async function DokumentasiSection() {
-  let images: string[] = [];
+  let items: { url: string; alt: string }[] = [];
   try {
     const supabase = createPublicClient();
     const { data } = await supabase
       .from('dokumentasi_foto')
-      .select('file_url')
+      .select('file_url, nama_kegiatan')
       .eq('is_visible', true)
       .order('created_at', { ascending: false })
       .limit(40);
-    images = (data || [])
-      .map((row) => row.file_url)
-      .filter((url): url is string => Boolean(url));
+    items = (data || [])
+      .filter((row) => Boolean(row.file_url))
+      .map((row) => ({
+        url: row.file_url as string,
+        alt: row.nama_kegiatan || 'Dokumentasi kegiatan laboratorium',
+      }));
   } catch (error) {
     console.error('Gagal membaca dokumentasi:', error);
   }
 
-  if (images.length === 0) {
-    images = FALLBACK_DOKUMENTASI;
+  if (items.length === 0) {
+    items = FALLBACK_DOKUMENTASI.map((url) => ({
+      url,
+      alt: 'Dokumentasi kegiatan laboratorium',
+    }));
   }
 
   // 2. Gandakan array 4 kali agar bisa looping sempurna tanpa putus di layar lebar
-  const infiniteImages = [...images, ...images, ...images, ...images];
+  const infiniteItems = [...items, ...items, ...items, ...items];
 
   // Fungsi untuk ngasih gaya miring/ukuran acak supaya terkesan "unik"
   const getStyles = (index: number) => {
@@ -91,16 +97,16 @@ export async function DokumentasiSection() {
 
         {/* Track yang berjalan */}
         <div className='animate-marquee items-center gap-4 px-4 sm:gap-6'>
-          {infiniteImages.map((src, index) => (
+          {infiniteItems.map((item, index) => (
             <div
-              key={`${index}-${src}`}
+              key={`${index}-${item.url}`}
               className={cn(
                 'group relative w-[220px] md:w-[280px] lg:w-[320px] flex-shrink-0 overflow-hidden rounded-2xl bg-slate-200 shadow-md transition-all duration-500 ease-out hover:z-20 hover:scale-110 hover:shadow-2xl cursor-pointer',
                 getStyles(index),
               )}>
               <Image
-                src={src}
-                alt={`Dokumentasi ${index}`}
+                src={item.url}
+                alt={item.alt}
                 width={400}
                 height={400}
                 className='h-full w-full object-cover transition-all duration-500 group-hover:brightness-110'
