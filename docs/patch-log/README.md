@@ -83,11 +83,10 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 
 ## Status saat ini
 
-- Versi aplikasi: `5.1.0` (perbaikan MateriTab + halaman publik `/materi`).
-  Local-ready, menunggu ACC PM untuk commit/push/deploy.
-- Versi terdeploy: `5.0.3` (favicon + apple-icon memakai logo DOLPHIN).
-  Terdeploy 2026-09-26 07:35 UTC dengan BUILD_ID `waRbtoTz544HLAz6QwlY4`;
-  smoke 9/9 HTTP 200.
+- Versi aplikasi: `5.4.0` (hero 4–6, seleksi massal dokumentasi, modal unggah lab).
+  LOCAL-READY (tsc+build `bmwAvXB-SdjgXqVDaHGdF`). Commit lokal, belum push.
+- Versi sebelumnya: `5.3.0` (media kelola admin + overview + hardening).
+  ACC PM 29 Sep 2026. Deploy server masih pending.
 - **Laporan PM (26 Sep WIB):** tombol Tambah Kelas di MateriTab diam pada
   akun Gmail whitelisted, tetapi berfungsi untuk `system_admin`; kelas antar
   admin tidak saling terlihat. Keduanya diperbaiki di v5.1.0.

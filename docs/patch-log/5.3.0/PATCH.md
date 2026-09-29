@@ -93,9 +93,9 @@ tetap memakai fallback lokal (hero/dokumentasi/pimpinan tidak berubah).
 |---|---|---|
 | LOCAL-READY | PASS | `npx tsc --noEmit` (0 error) + `next build --webpack` (18 rute; `/` & `/organisasi` static 5m ISR) |
 | DB MIGRATION | PASS | migrasi `v530_media_organisasi_overview` applied; advisors 0 ERROR; set RLS/GRANT diverifikasi |
-| GITHUB-BACKUP | PASS | commit `3461c7d` di-push ke `origin/master` (28 Sep 2026) |
-| DEPLOYED | BELUM | butuh env server (service key + preset) |
-| MANUAL-TEST (PM) | PENDING | lihat daftar uji di bawah |
+| GITHUB-BACKUP | PASS | commit `3461c7d` di-push ke `origin/master` (28 Sep 2026); tindak lanjut `600d5b9` |
+| DEPLOYED | PENDING | env server (service key + 3 preset) sudah diisi PM; deploy server belum dijalankan |
+| MANUAL-TEST (PM) | PASS | PM ACC 29 Sep 2026 |
 
 ## Uji yang harus dilakukan PM
 
@@ -111,6 +111,14 @@ tetap memakai fallback lokal (hero/dokumentasi/pimpinan tidak berubah).
 6. Push notification pengajuan (broadcast admin + direct) masih berfungsi.
 7. Beranda & `/organisasi` tetap tampil benar memakai fallback lokal hingga
    foto kustom diunggah.
+
+## Catatan ACC
+
+- **PM ACC 29 September 2026.** Catatan penyempurnaan yang **sengaja tidak**
+  ditumpuk ke 5.3.0 dan dilanjutkan terpisah: system admin berakun
+  Google/Gmail belum melihat seluruh daftar admin karena RLS masih memakai
+  hardcode email Polinela. Perbaikan (fungsi `is_system_admin()`) sudah
+  diterapkan di database.
 
 ## Rollback
 
