@@ -190,7 +190,16 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
   };
 
   const deleteMateri = async (file: any) => {
-    if (!confirm(`Yakin ingin menghapus dokumen "${file.title}"?`)) return;
+    const confirmResult = await Swal.fire({
+      title: 'Hapus materi?',
+      text: `"${file.title}" akan dihapus permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Ya, hapus',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirmResult.isConfirmed) return;
     
     try {
       // 1. DELETE from Cloudinary
@@ -214,7 +223,16 @@ export default function MateriTab({ adminProfile, supabase }: { adminProfile: an
   };
 
   const deleteKategori = async (id: number, nama: string) => {
-    if (!confirm(`Yakin ingin HAPUS MATA KULIAH "${nama}"? Semua file di dalamnya akan terhapus juga!`)) return;
+    const confirmResult = await Swal.fire({
+      title: 'Hapus mata kuliah?',
+      html: `Kategori <b>"${nama}"</b> beserta <b>semua file</b> di dalamnya akan dihapus permanen.`,
+      icon: 'warning',
+      showCancelButton: true,
+      confirmButtonColor: '#dc2626',
+      confirmButtonText: 'Ya, hapus semua',
+      cancelButtonText: 'Batal',
+    });
+    if (!confirmResult.isConfirmed) return;
     
     try {
       // 1. Ambil file di dalam kategori

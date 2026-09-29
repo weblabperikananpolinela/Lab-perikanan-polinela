@@ -84,7 +84,7 @@ tidak boleh mengeksekusi perintah, script deploy, atau JavaScript berisiko.
 ## Status saat ini
 
 - Versi aplikasi: `5.4.0` (hero 4–6, seleksi massal dokumentasi, modal unggah lab).
-  LOCAL-READY (tsc+build `bmwAvXB-SdjgXqVDaHGdF`). Commit lokal, belum push.
+  LOCAL-READY (tsc+build `XT0ksLsTZt2P1_jQGczSX`). Commit lokal, belum push.
 - Versi sebelumnya: `5.3.0` (media kelola admin + overview + hardening).
   ACC PM 29 Sep 2026. Deploy server masih pending.
 - **Laporan PM (26 Sep WIB):** tombol Tambah Kelas di MateriTab diam pada

@@ -27,18 +27,19 @@ Spesifikasi: brainstorming bounded 29 Sep 2026 — tiga perubahan terpilih
 | `DokumentasiAdminTab.tsx` | Checkbox terpilih (ring ungu), pilih semua/batal, toolbar sticky dengan Tampilkan/Sembunyikan (`UPDATE … in(ids)`) dan Hapus massal (delete rows + best-effort delete Cloudinary). Aksi per-kartu tetap ada. |
 | `DokumentasiTab.tsx` (lab) | Modal Dialog: preview foto (object URL, 5 MB guard via `isAllowedImage`), input Nama kegiatan* (120) + Deskripsi (500), tombol Unggah nonaktif sampai valid, insert `nama_kegiatan` + `deskripsi`. |
 | `dokumentasi-section.tsx` | Ambil `nama_kegiatan` untuk `alt` gambar; fallback `'Dokumentasi kegiatan laboratorium'` bila kosong. |
+| `MateriTab.tsx` | Hapus materi + hapus mata kuliah memakai dialog Swal (bukan `confirm()` browser) — seragam dengan seluruh aksi hapus lain. |
 | `lib/version.ts` | `5.4.0`, tanggal `2026-09-29`. |
 
 ## Verifikasi
 
 - `npx tsc --noEmit` → EXIT=0.
-- `npm run build` → 18 rute, `/` & `/organisasi` static ISR 5m, BUILD_ID `bmwAvXB-SdjgXqVDaHGdF`.
+- `npm run build` → 18 rute, `/` & `/organisasi` static ISR 5m, BUILD_ID `XT0ksLsTZt2P1_jQGczSX`.
 
 ## Checkpoint & status
 
 | Checkpoint | Status | Bukti |
 |---|---|---|
-| LOCAL-READY | PASS | tsc + build webpack (BUILD_ID `bmwAvXB-SdjgXqVDaHGdF`) |
+| LOCAL-READY | PASS | tsc + build webpack (BUILD_ID `XT0ksLsTZt2P1_jQGczSX`) |
 | DB MIGRATION | PASS | `v540_dokumentasi_metadata` applied; advisors tetap 0 ERROR (hanya WARN anon SECURITY DEFINER yang disengaja) |
 | GITHUB-BACKUP | LOKAL | commit akan dibuat di lokal, belum push |
 | DEPLOYED | BELUM | menunggu commit lokal + push terpisah |
@@ -50,6 +51,7 @@ Spesifikasi: brainstorming bounded 29 Sep 2026 — tiga perubahan terpilih
 2. System Admin > Dokumentasi: pilih beberapa foto → Tampilkan/Sembunyikan/Hapus massal; Pilih semua/Batal pilih; konfirmasi hapus muncul.
 3. Dashboard lab > Dokumentasi: buka modal, pilih foto, isi Nama kegiatan → Unggah; Nama wajib, Deskripsi opsional; cek nama muncul sebagai alt di marquee beranda.
 4. System Admin > Dokumentasi: cek foto baru menampilkan Nama kegiatan + Deskripsi.
+5. Setiap tombol hapus (hero, dokumentasi per-kartu, dokumentasi massal, materi, mata kuliah, inventaris, jadwal, layanan, riwayat, admin lab) harus memunculkan dialog konfirmasi Swal sebelum data dihapus.
 
 ## Rollback
 
