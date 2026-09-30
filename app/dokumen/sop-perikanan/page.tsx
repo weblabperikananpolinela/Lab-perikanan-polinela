@@ -1,39 +1,34 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowLeft, FileText, Download, Droplets } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createPublicClient } from '@/lib/supabase/public';
+import {
+  FALLBACK_SOP_PERIKANAN,
+  dokumenToItem,
+  fetchDokumenPublik,
+  type PublicDocItem,
+} from '@/lib/dokumen';
 
-// Daftar SOP berdasarkan gambar
-// Pastikan href sesuai dengan nama file di dalam folder public/dokumen/ kamu
-const sopList = [
-  {
-    id: 1,
-    title: 'SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan',
-    size: 'PDF Document',
-    href: '/dokumen/SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan.pdf',
-  },
-  {
-    id: 2,
-    title: 'SOP Peminjaman Alat dan Penggunaan Bahan untuk Penelitian',
-    size: 'PDF Document',
-    href: '/dokumen/SOP Pemeliharaan dan Perbaikan Alat-Alat Laboratorium Perikanan.pdf',
-  },
-  {
-    id: 3,
-    title: 'SOP Penanganan Limbah Laboratorium Perikanan',
-    size: 'PDF Document',
-    href: '/dokumen/SOP Penanganan Limbah Laboratorium Perikanan .pdf',
-  },
-  {
-    id: 4,
-    title: 'STANDAR OPERASIONAL PROSEDUR (Umum)',
-    size: 'PDF Document',
-    href: '/dokumen/STANDAR OPERASIONAL PROSEDUR OK.pdf',
-  },
-];
+export const revalidate = 300;
 
-export default function SOPPerikananPage() {
+export default async function SOPPerikananPage() {
+  let items: PublicDocItem[] = FALLBACK_SOP_PERIKANAN.map((row, index) => ({
+    id: `fallback-${index}`,
+    judul: row.judul,
+    sub: row.size,
+    deskripsi: null as string | null,
+    href: row.href,
+  }));
+  try {
+    const supabase = createPublicClient();
+    const rows = await fetchDokumenPublik(supabase, 'sop-perikanan');
+    if (rows.length > 0) {
+      items = rows.map(dokumenToItem);
+    }
+  } catch {
+    // Fallback statis tetap dipakai.
+  }
+
   return (
     <div className='min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8'>
       <div className='max-w-5xl mx-auto'>
@@ -60,7 +55,7 @@ export default function SOPPerikananPage() {
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-8'>
-          {sopList.map((sop) => (
+          {items.map((sop) => (
             <div
               key={sop.id}
               className='bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-cyan-300 transition-all flex items-start gap-4 group'>
@@ -69,10 +64,13 @@ export default function SOPPerikananPage() {
               </div>
               <div className='flex-1'>
                 <h3 className='font-bold text-slate-800 leading-tight mb-2 group-hover:text-cyan-700 transition-colors'>
-                  {sop.title}
+                  {sop.judul}
                 </h3>
+                {sop.deskripsi && (
+                  <p className='text-sm text-slate-600 mb-2'>{sop.deskripsi}</p>
+                )}
                 <p className='text-xs font-medium text-slate-400 mb-4'>
-                  {sop.size}
+                  {sop.sub || 'PDF Document'}
                 </p>
                 <div className='flex gap-2'>
                   <Button

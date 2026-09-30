@@ -1,67 +1,34 @@
-'use client';
-
 import Link from 'next/link';
 import { ArrowLeft, FileText, Download, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { createPublicClient } from '@/lib/supabase/public';
+import {
+  FALLBACK_SOP_TANGKAP,
+  dokumenToItem,
+  fetchDokumenPublik,
+  type PublicDocItem,
+} from '@/lib/dokumen';
 
-const sopList = [
-  {
-    id: 1,
-    title: 'SOP Manajemen Laboratorium',
-    size: '324 KB',
-    href: '/dokumen/SOP MANAJEMEN LABORATORIUM.pdf',
-  },
-  {
-    id: 2,
-    title: 'SOP Pengelolaan Limbah',
-    size: '325 KB',
-    href: '/dokumen/SOP PENGELOLAAN LIMBAH.pdf',
-  },
-  {
-    id: 3,
-    title: 'SOP Penggunaan Lab untuk Praktikum',
-    size: '337 KB',
-    href: '/dokumen/SOP PENGGUNAAN LAB UNTUK PRAKTIKUM.pdf',
-  },
-  {
-    id: 4,
-    title: 'SOP Penggunaan Lab untuk Penelitian',
-    size: '338 KB',
-    href: '/dokumen/SOP PENGGUNAAN LAB UNTUK PENELITIAN.pdf',
-  },
-  {
-    id: 5,
-    title: 'SOP Pengusulan Pengadaan Alat & Bahan',
-    size: '297 KB',
-    href: '/dokumen/SOP PENGUSULAN PENGADAAN ALAT DAN BAHAN LABORATORIUM.pdf',
-  },
-  {
-    id: 6,
-    title: 'SOP Pemeliharaan, Perbaikan & Kalibrasi Alat',
-    size: '280 KB',
-    href: '/dokumen/SOP PEMELIHARAAN, PERBAIKAN, DAN KALIBRASI ALAT.pdf',
-  },
-  {
-    id: 7,
-    title: 'SOP Evaluasi Kepuasan Pengguna',
-    size: '323 KB',
-    href: '/dokumen/SOP EVALUASI KEPUASAN PENGGUNA.pdf',
-  },
-  {
-    id: 8,
-    title: 'SOP Jadwal Pemeliharaan dan Perawatan',
-    size: '314 KB',
-    href: '/dokumen/SOP JADWAL PEMELIHARAAN DAN PERAWATAN.pdf',
-  },
-  {
-    id: 9,
-    title: 'SOP Peminjaman dan Pengembalian Alat',
-    size: '310 KB',
-    href: '/dokumen/SOP Peminjaman dan Pengembalian alat.pdf',
-  },
-];
+export const revalidate = 300;
 
-export default function SOPTangkapPage() {
+export default async function SOPTangkapPage() {
+  let items: PublicDocItem[] = FALLBACK_SOP_TANGKAP.map((row, index) => ({
+    id: `fallback-${index}`,
+    judul: row.judul,
+    sub: `PDF Document · ${row.size}`,
+    deskripsi: null as string | null,
+    href: row.href,
+  }));
+  try {
+    const supabase = createPublicClient();
+    const rows = await fetchDokumenPublik(supabase, 'sop-tangkap');
+    if (rows.length > 0) {
+      items = rows.map(dokumenToItem);
+    }
+  } catch {
+    // Fallback statis tetap dipakai.
+  }
+
   return (
     <div className='min-h-screen bg-slate-50 pt-24 pb-12 px-4 md:px-8'>
       <div className='max-w-5xl mx-auto'>
@@ -88,7 +55,7 @@ export default function SOPTangkapPage() {
         </div>
 
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-2 gap-4 mt-8'>
-          {sopList.map((sop) => (
+          {items.map((sop) => (
             <div
               key={sop.id}
               className='bg-white p-5 rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:border-blue-300 transition-all flex items-start gap-4 group'>
@@ -97,10 +64,13 @@ export default function SOPTangkapPage() {
               </div>
               <div className='flex-1'>
                 <h3 className='font-bold text-slate-800 leading-tight mb-1 group-hover:text-blue-700 transition-colors'>
-                  {sop.title}
+                  {sop.judul}
                 </h3>
+                {sop.deskripsi && (
+                  <p className='text-sm text-slate-600 mb-2'>{sop.deskripsi}</p>
+                )}
                 <p className='text-xs font-medium text-slate-400 mb-4'>
-                  PDF Document • {sop.size}
+                  {sop.sub || 'PDF Document'}
                 </p>
                 <div className='flex gap-2'>
                   <Button
@@ -120,7 +90,6 @@ export default function SOPTangkapPage() {
                     variant='ghost'
                     size='sm'
                     className='h-8 w-8 p-0 text-slate-400 hover:text-blue-600'>
-                    {/* Atribut download akan memaksa browser mengunduh file */}
                     <a href={sop.href} download>
                       <Download className='size-4' />
                       <span className='sr-only'>Download</span>

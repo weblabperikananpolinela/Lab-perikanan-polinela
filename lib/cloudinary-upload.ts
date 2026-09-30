@@ -1,7 +1,11 @@
 const CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const DEFAULT_PRESET = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
 
-export type MediaFolder = 'dolphin_hero' | 'dolphin_dokumentasi' | 'dolphin_organisasi';
+export type MediaFolder =
+  | 'dolphin_hero'
+  | 'dolphin_dokumentasi'
+  | 'dolphin_organisasi'
+  | 'dolphin_dokumen';
 
 const FOLDER_PRESET: Record<MediaFolder, string | undefined> = {
   dolphin_hero: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_HERO,
@@ -9,6 +13,7 @@ const FOLDER_PRESET: Record<MediaFolder, string | undefined> = {
     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_DOKUMENTASI,
   dolphin_organisasi:
     process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_ORGANISASI,
+  dolphin_dokumen: process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET_DOKUMEN,
 };
 
 export const IMAGE_ACCEPT = 'image/jpeg,image/png,image/webp,.jpg,.jpeg,.png,.webp';
@@ -46,6 +51,49 @@ export async function uploadImageToCloudinary(
   }
   const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
   return { url: cloudData.secure_url as string, fileType: ext };
+}
+
+export const DOC_ACCEPT = 'application/pdf,.pdf';
+export const DOC_MAX_BYTES = 10 * 1024 * 1024;
+
+/** Validasi dokumen PDF sebelum unggah. Mengembalikan pesan error atau null. */
+export function isAllowedPdf(file: File): string | null {
+  if (file.size > DOC_MAX_BYTES) return 'Ukuran file maksimal 10 MB.';
+  const ok =
+    /application\/pdf/i.test(file.type) || /\.pdf$/i.test(file.name);
+  if (!ok) return 'Format yang diizinkan hanya PDF.';
+  return null;
+}
+
+/**
+ * Unggah dokumen PDF ke Cloudinary sebagai resource `raw` (pola yang sama
+ * dengan materi dosen). Cloudinary tidak memproses PDF raw sebagai gambar,
+ * jadi URL-nya bisa dibuka/diunduh langsung tanpa transformasi.
+ */
+export async function uploadPdfToCloudinary(
+  file: File,
+  folder: MediaFolder = 'dolphin_dokumen',
+): Promise<{ url: string; fileType: string }> {
+  const preset = FOLDER_PRESET[folder] || DEFAULT_PRESET;
+  if (!CLOUD_NAME || !preset) {
+    throw new Error('Konfigurasi Cloudinary tidak ditemukan pada server.');
+  }
+  const typeError = isAllowedPdf(file);
+  if (typeError) throw new Error(typeError);
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('upload_preset', preset);
+
+  const res = await fetch(
+    `https://api.cloudinary.com/v1_1/${CLOUD_NAME}/raw/upload`,
+    { method: 'POST', body: formData },
+  );
+  const cloudData = await res.json();
+  if (!res.ok) {
+    throw new Error(cloudData.error?.message || 'Gagal unggah dokumen ke Cloudinary');
+  }
+  return { url: cloudData.secure_url as string, fileType: 'pdf' };
 }
 
 export function isOwnCloudinaryUrl(url: string): boolean {

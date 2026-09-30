@@ -363,6 +363,21 @@ export function Navbar() {
                 </Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild className='p-3 cursor-pointer rounded-md transition-all focus:bg-slate-50 hover:bg-slate-50'>
+                <Link href='/dokumen/sk-lab' className='flex items-start gap-4'>
+                  <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-violet-50 text-violet-600'>
+                    <ShieldCheck className='size-5' />
+                  </div>
+                  <div>
+                    <h4 className='text-sm font-semibold text-slate-900'>
+                      SK Lab
+                    </h4>
+                    <p className='text-sm text-slate-500 mt-1'>
+                      Surat Keputusan pengelolaan dan tata kerja laboratorium.
+                    </p>
+                  </div>
+                </Link>
+              </DropdownMenuItem>
+              <DropdownMenuItem asChild className='p-3 cursor-pointer rounded-md transition-all focus:bg-slate-50 hover:bg-slate-50'>
                 <Link href='/materi' className='flex items-start gap-4'>
                   <div className='flex size-10 shrink-0 items-center justify-center rounded-lg bg-blue-50 text-blue-600'>
                     <BookOpen className='size-5' />
@@ -554,6 +569,13 @@ export function Navbar() {
                           className='flex items-center gap-3 py-3 px-4 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-all font-medium'>
                           <Anchor className='size-5 text-blue-500' />
                           SOP Lab. Tangkap
+                        </Link>
+                        <Link
+                          href='/dokumen/sk-lab'
+                          onClick={() => setIsOpen(false)}
+                          className='flex items-center gap-3 py-3 px-4 rounded-xl text-slate-600 hover:text-blue-700 hover:bg-blue-50 transition-all font-medium'>
+                          <ShieldCheck className='size-5 text-violet-500' />
+                          SK Lab
                         </Link>
                         <Link
                           href='/materi'

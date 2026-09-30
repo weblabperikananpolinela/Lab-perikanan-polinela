@@ -16,6 +16,7 @@ import {
   Activity,
   Image as ImageIcon,
   Camera,
+  FileStack,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { APP_VERSION_LABEL } from '@/lib/version';
@@ -24,8 +25,9 @@ import KelolaUserTab from './_components/KelolaUserTab';
 import OverviewTab from './_components/OverviewTab';
 import HeroOrganisasiTab from './_components/HeroOrganisasiTab';
 import DokumentasiAdminTab from './_components/DokumentasiAdminTab';
+import DokumenAdminTab from './_components/DokumenAdminTab';
 
-type SystemTab = 'overview' | 'akun' | 'hero' | 'dokumentasi' | 'labs';
+type SystemTab = 'overview' | 'akun' | 'hero' | 'dokumentasi' | 'dokumen' | 'labs';
 
 interface LabRow {
   id: number;
@@ -39,6 +41,7 @@ function SystemAdminContent() {
   const [activeTab, setActiveTab] = useState<SystemTab>('overview');
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [isMobileOpen, setIsMobileOpen] = useState(false);
+  const [userEmail, setUserEmail] = useState('');
 
   const router = useRouter();
   const supabase = createClient();
@@ -63,6 +66,7 @@ function SystemAdminContent() {
         router.push('/');
         return;
       }
+      setUserEmail(session.user.email || '');
 
       const { data: labData } = await supabase
         .from('laboratorium')
@@ -134,6 +138,10 @@ function SystemAdminContent() {
     dokumentasi: {
       title: 'Dokumentasi Kegiatan',
       desc: 'Kurasi foto dokumentasi yang tampil di marquee beranda. Sembunyikan tanpa menghapus, atau hapus permanen.',
+    },
+    dokumen: {
+      title: 'Dokumen Publik',
+      desc: 'Kelola SOP Lab. Perikanan, SOP Lab. Perikanan Tangkap, dan SK Lab yang tampil di halaman publik, termasuk unggah PDF baru.',
     },
     labs: {
       title: 'Semua Laboratorium',
@@ -218,6 +226,11 @@ function SystemAdminContent() {
             <Camera className='size-5 flex-shrink-0' />,
           )}
           {sidebarBtn(
+            'dokumen',
+            'Dokumen',
+            <FileStack className='size-5 flex-shrink-0' />,
+          )}
+          {sidebarBtn(
             'labs',
             'Semua Lab',
             <Building2 className='size-5 flex-shrink-0' />,
@@ -258,7 +271,7 @@ function SystemAdminContent() {
         <div className='flex-1 overflow-y-auto p-4 md:p-8 lg:p-10 pb-24 custom-scrollbar'>
           <div className='max-w-6xl mx-auto w-full'>
             <div
-              className={`pb-4 md:pb-5 border-b border-slate-200 flex flex-col items-start ${activeTab === 'akun' || activeTab === 'hero' ? 'mb-6 md:mb-8' : 'mb-5 md:mb-6'}`}>
+              className={`pb-4 md:pb-5 border-b border-slate-200 flex flex-col items-start ${activeTab === 'akun' || activeTab === 'hero' || activeTab === 'dokumen' ? 'mb-6 md:mb-8' : 'mb-5 md:mb-6'}`}>
               <div className='inline-flex items-center gap-1.5 rounded-full bg-purple-100 px-3 py-1 text-xs md:text-sm font-semibold text-purple-700 tracking-wide border border-purple-200 shadow-sm mb-3'>
                 <Circle className='size-2.5 fill-purple-500 text-purple-500' />
                 System Admin
@@ -279,6 +292,8 @@ function SystemAdminContent() {
               <HeroOrganisasiTab supabase={supabase} />
             ) : activeTab === 'dokumentasi' ? (
               <DokumentasiAdminTab supabase={supabase} labMap={labMap} />
+            ) : activeTab === 'dokumen' ? (
+              <DokumenAdminTab supabase={supabase} userEmail={userEmail} />
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                 {labs.map((lab) => (
