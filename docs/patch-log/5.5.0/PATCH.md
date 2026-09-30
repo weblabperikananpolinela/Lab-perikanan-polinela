@@ -78,9 +78,9 @@ Seed: 13 baris (4 `sop-perikanan`, 9 `sop-tangkap`), `is_visible = true`, `sort_
 |---|---|---|
 | LOCAL-READY | PASS | tsc EXIT=0 + build webpack (BUILD_ID `TLXxw7tcmZxMg2FhKLemA`) |
 | DB MIGRATION | PASS | `v550_dokumen_cms`; tabel + index + RLS + 3 policy + seed 13 baris |
-| GITHUB-BACKUP | PENDING | menunggu commit/push (butuh ACC PM) |
-| DEPLOYED | PENDING | menunggu ACC PM |
-| MANUAL-TEST (PM) | PENDING | menunggu uji PM |
+| GITHUB-BACKUP | PASS | commit `9390c16` di-push ke `origin/master` (30 Sep 2026) |
+| DEPLOYED | PASS | 2026-09-30 ~17:44 UTC; ZIP `deploy-dolphin-TLXxw7tcmZxMg2FhKLemA.zip` (27,8 MB, SHA `0425b4c8…7394a`); `httpdocs/.next/BUILD_ID = TLXxw7tcmZxMg2FhKLemA`; smoke origin 4/4 (200) via IP origin + Host header; footer `DOLPHIN System v5.5.0` |
+| MANUAL-TEST (PM) | PENDING | menunggu uji PM di production |
 
 ## Uji PM
 
@@ -96,9 +96,19 @@ Seed: 13 baris (4 `sop-perikanan`, 9 `sop-tangkap`), `is_visible = true`, `sort_
    - **Hapus**: muncul konfirmasi Swal; setelah hapus, baris hilang dan file Cloudinary ikut terhapus.
 5. Pastikan semua aksi hapus memakai dialog Swal (tidak ada `confirm()` browser).
 
+## Bukti deploy (server)
+
+- Upload ZIP: `scp` 27,8 MB, SHA-256 server cocok (`0425b4c80e94eddbb8795645903ded35e720fd0c432767a43b442c8bfd07394a`).
+- Backup generasi aktif: `httpdocs.old-deploy-20260930-174258` (hardlink copy).
+- Extract ke `httpdocs/`, `chmod 644 app.js`, restart via `touch httpdocs/tmp/restart.txt` (17:44 UTC).
+- HTML beranda tersaji `DOLPHIN System v5.5.0` (footer) + `x-nextjs-cache: HIT` ISR 5m.
+- Smoke origin (bypass Cloudflare, `Host: dolphinperikanan.polinela.ac.id` ke `https://103.151.63.111`):
+  `/` 200, `/dokumen/sop-perikanan` 200, `/dokumen/sop-tangkap` 200, `/dokumen/sk-lab` 200 (empty-state "Belum ada SK Lab").
+- Cloudflare WAF mengembalikan 403 challenge untuk UA non-browser dari jaringan luar (bukan error aplikasi).
+
 ## Rollback
 
-- Kode: `git revert <commit>` lalu build + deploy ulang.
+- Kode/server: kembalikan `httpdocs.old-deploy-20260930-174258` lalu `touch httpdocs/tmp/restart.txt`; atau `git revert 9390c16`, build + deploy ulang.
 - DB: `drop table public.dokumen;` (halaman publik otomatis kembali memakai fallback statis). Seed tidak menyentuh tabel lain.
 - Cloudinary: file PDF yang sudah diunggah dapat dihapus manual dari dashboard; seed memakai file lokal sehingga tidak terpengaruh.
 
