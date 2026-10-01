@@ -103,7 +103,7 @@ App Router tidak mengizinkan `export const metadata` di client component.
 | LOCAL-READY | PASS | tsc EXIT=0 + build; verifikasi curl 15/15 sesuai |
 | GITHUB-BACKUP | PASS | commit `4a381e7` + `6369c90` di-push ke `origin/master` (1 Okt 2026) |
 | DEPLOYED | PASS | 2026-10-01 ~06:58 UTC; ZIP `deploy-dolphin-OtEhZRn7mfXLAimFBzRjB.zip` (28,0 MB, SHA `63969ab2…89c2`); `httpdocs/.next/BUILD_ID = OtEhZRn7mfXLAimFBzRjB`; smoke origin 5/5 HTTP 200 (`/`, `/robots.txt`, `/sitemap.xml`, `/dokumen/sk-lab`, `/og-image.png`); footer `DOLPHIN System v5.6.0`; title memuat "Lab Perikanan Polinela"; canonical Polinela; sitemap 8 URL |
-| VERCEL-NOINDEX | PENDING | menunggu PM trigger redeploy di dashboard Vercel |
+| VERCEL-NOINDEX | PASS | push `master` auto-redeploy Vercel 1 Okt; `robots.txt` = `Disallow: /`; header `x-robots-tag: noindex, nofollow`; meta robots `noindex`; canonical tetap Polinela |
 | MANUAL-TEST (PM) | PENDING | menunggu uji PM + Search Console |
 
 ## Langkah PM setelah deploy
