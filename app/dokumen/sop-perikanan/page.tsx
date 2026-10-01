@@ -8,6 +8,14 @@ import {
   fetchDokumenPublik,
   type PublicDocItem,
 } from '@/lib/dokumen';
+import { pageMetadata } from '@/lib/site-seo';
+
+export const metadata = pageMetadata({
+  title: 'SOP Lab Perikanan Polinela',
+  description:
+    'Kumpulan Standar Operasional Prosedur Lab Perikanan Polinela: pemeliharaan alat, peminjaman bahan penelitian, dan penanganan limbah laboratorium Jurusan Perikanan dan Kelautan Politeknik Negeri Lampung.',
+  path: '/dokumen/sop-perikanan',
+});
 
 export const revalidate = 300;
 

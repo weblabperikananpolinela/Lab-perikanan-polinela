@@ -8,6 +8,14 @@ import {
   fetchDokumenPublik,
   type PublicDocItem,
 } from '@/lib/dokumen';
+import { pageMetadata } from '@/lib/site-seo';
+
+export const metadata = pageMetadata({
+  title: 'SOP Lab Perikanan Tangkap Polinela',
+  description:
+    'Standar Operasional Prosedur Lab Perikanan Tangkap Polinela: manajemen laboratorium, penggunaan lab untuk praktikum dan penelitian, pemeliharaan alat, serta evaluasi kepuasan pengguna.',
+  path: '/dokumen/sop-tangkap',
+});
 
 export const revalidate = 300;
 

@@ -8,6 +8,7 @@ import {
   slimSessionValue,
   staleAuthCookieNames,
 } from '@/lib/supabase/slim-session';
+import { SEO_FILE_PATHS } from '@/lib/site-seo';
 
 const MAINTENANCE_CACHE_SECONDS = 30;
 
@@ -99,7 +100,13 @@ function slimAuthCookies(request: NextRequest, response: NextResponse) {
 }
 
 export async function middleware(request: NextRequest) {
-  if (request.nextUrl.pathname !== '/maintenance') {
+  // Berkas SEO harus tetap 200 walau maintenance ON — kalau ikut ter-redirect
+  // ke /maintenance, Google membaca robots.txt / sitemap.xml sebagai tidak
+  // tersedia tepat ketika situs sedang tidak stabil.
+  if (
+    !SEO_FILE_PATHS.has(request.nextUrl.pathname) &&
+    request.nextUrl.pathname !== '/maintenance'
+  ) {
     const isMaintenanceMode = await isMaintenanceModeEnabled();
     if (isMaintenanceMode) {
       return NextResponse.redirect(new URL('/maintenance', request.url));
@@ -134,6 +141,14 @@ export async function middleware(request: NextRequest) {
   await supabase.auth.getUser();
 
   slimAuthCookies(request, response);
+
+  // Deployment demo Vercel tetap hidup (PM) tapi tidak boleh diindeks.
+  // Canonical HTML tetap ke Polinela; header ini lapisan kedua saat crawler
+  // membaca HEAD tanpa mengeksekusi JS. Production host tidak kena rule.
+  const host = request.headers.get('host') || '';
+  if (host.endsWith('.vercel.app')) {
+    response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+  }
 
   return response;
 }

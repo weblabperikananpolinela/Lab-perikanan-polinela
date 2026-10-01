@@ -7,6 +7,14 @@ import {
   fetchDokumenPublik,
   type PublicDocItem,
 } from '@/lib/dokumen';
+import { pageMetadata } from '@/lib/site-seo';
+
+export const metadata = pageMetadata({
+  title: 'SK Lab Perikanan Polinela',
+  description:
+    'Kumpulan Surat Keputusan pengelolaan dan tata kerja laboratorium Jurusan Perikanan dan Kelautan Politeknik Negeri Lampung.',
+  path: '/dokumen/sk-lab',
+});
 
 export const revalidate = 300;
 

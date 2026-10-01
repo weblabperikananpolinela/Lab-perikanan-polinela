@@ -9,6 +9,14 @@ import {
   parsePimpinan,
   type Pimpinan,
 } from '@/lib/site-media';
+import { pageMetadata } from '@/lib/site-seo';
+
+export const metadata = pageMetadata({
+  title: 'Organisasi Lab Perikanan Polinela',
+  description:
+    'Struktur organisasi laboratorium Jurusan Perikanan dan Kelautan Politeknik Negeri Lampung: pimpinan jurusan dan penanggung jawab 18 laboratorium serta teaching factory.',
+  path: '/organisasi',
+});
 
 export const revalidate = 300;
 
