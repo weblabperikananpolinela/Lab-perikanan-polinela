@@ -101,10 +101,10 @@ App Router tidak mengizinkan `export const metadata` di client component.
 | Checkpoint | Status | Bukti |
 |---|---|---|
 | LOCAL-READY | PASS | tsc EXIT=0 + build; verifikasi curl 15/15 sesuai |
-| GITHUB-BACKUP | PASS | commit `4a381e7` (lihat log) |
-| DEPLOYED | PENDING | menunggu deploy ZIP |
-| VERCEL-NOINDEX | PENDING | menunggu redeploy Vercel |
-| MANUAL-TEST (PM) | PENDING | menunggu uji PM |
+| GITHUB-BACKUP | PASS | commit `4a381e7` + `6369c90` di-push ke `origin/master` (1 Okt 2026) |
+| DEPLOYED | PASS | 2026-10-01 ~06:58 UTC; ZIP `deploy-dolphin-OtEhZRn7mfXLAimFBzRjB.zip` (28,0 MB, SHA `63969ab2…89c2`); `httpdocs/.next/BUILD_ID = OtEhZRn7mfXLAimFBzRjB`; smoke origin 5/5 HTTP 200 (`/`, `/robots.txt`, `/sitemap.xml`, `/dokumen/sk-lab`, `/og-image.png`); footer `DOLPHIN System v5.6.0`; title memuat "Lab Perikanan Polinela"; canonical Polinela; sitemap 8 URL |
+| VERCEL-NOINDEX | PENDING | menunggu PM trigger redeploy di dashboard Vercel |
+| MANUAL-TEST (PM) | PENDING | menunggu uji PM + Search Console |
 
 ## Langkah PM setelah deploy
 
@@ -125,6 +125,17 @@ App Router tidak mengizinkan `export const metadata` di client component.
 
 Ekspektasi: Google memindahkan cuplikan dalam **1–4 minggu** setelah noindex +
 removal + sitemap terpasang. Tidak instan.
+
+## Bukti deploy (server)
+
+- Upload ZIP: `scp` 28,0 MB, SHA-256 server cocok (`63969ab2fb6f13eb7fc2b3d483025cdb8f8e263dd374c36fa0dad52de34289c2`).
+- Backup generasi aktif: `httpdocs.old-deploy-20261001-065833` (hardlink copy).
+- Extract ke `httpdocs/`, `chmod 644 app.js`, restart via `touch httpdocs/tmp/restart.txt` (06:58 UTC).
+- HTML beranda tersaji `DOLPHIN System v5.6.0` (footer) + title `Lab Perikanan Polinela | DOLPHIN…` + canonical Polinela.
+- `/robots.txt` 200 (Allow `/`, Disallow 5 path, Host + Sitemap Polinela).
+- `/sitemap.xml` 200, 8 `<loc>` ke origin Polinela.
+- `/og-image.png` 200 · 140.669 byte.
+- Cloudflare WAF tetap 403 untuk UA non-browser dari jaringan luar (bukan error aplikasi).
 
 ## Rollback
 
