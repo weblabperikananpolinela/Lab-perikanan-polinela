@@ -26,6 +26,7 @@ import OverviewTab from './_components/OverviewTab';
 import HeroOrganisasiTab from './_components/HeroOrganisasiTab';
 import DokumentasiAdminTab from './_components/DokumentasiAdminTab';
 import DokumenAdminTab from './_components/DokumenAdminTab';
+import LabAdminTab from './_components/LabAdminTab';
 
 type SystemTab = 'overview' | 'akun' | 'hero' | 'dokumentasi' | 'dokumen' | 'labs';
 
@@ -33,6 +34,7 @@ interface LabRow {
   id: number;
   nama_lab: string;
   jenis: string | null;
+  is_active?: boolean;
 }
 
 function SystemAdminContent() {
@@ -70,7 +72,7 @@ function SystemAdminContent() {
 
       const { data: labData } = await supabase
         .from('laboratorium')
-        .select('id, nama_lab, jenis')
+        .select('id, nama_lab, jenis, is_active')
         .order('id');
       setLabs(labData || []);
       setLoading(false);
@@ -144,8 +146,8 @@ function SystemAdminContent() {
       desc: 'Kelola SOP Lab. Perikanan, SOP Lab. Perikanan Tangkap, dan SK Lab yang tampil di halaman publik, termasuk unggah PDF baru.',
     },
     labs: {
-      title: 'Semua Laboratorium',
-      desc: 'Pilih laboratorium untuk membuka dashboard lab dengan hak penuh System Admin.',
+      title: 'Semua Laboratorium & TEFA',
+      desc: 'Tambah lab/TEFA baru, ubah nama atau penanggung jawab, dan nonaktifkan lab tanpa menghapus data. Buka dashboard lab untuk kontrol penuh sebagai System Admin.',
     },
   };
 
@@ -294,6 +296,8 @@ function SystemAdminContent() {
               <DokumentasiAdminTab supabase={supabase} labMap={labMap} />
             ) : activeTab === 'dokumen' ? (
               <DokumenAdminTab supabase={supabase} userEmail={userEmail} />
+            ) : activeTab === 'labs' ? (
+              <LabAdminTab supabase={supabase} onOpen={openLab} />
             ) : (
               <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6'>
                 {labs.map((lab) => (

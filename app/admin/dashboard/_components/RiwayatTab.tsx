@@ -16,6 +16,8 @@ import {
   ChevronRight,
   X,
 } from 'lucide-react';
+import { LAB_MAP } from '@/lib/lab-map';
+
 import Swal from 'sweetalert2';
 
 import ExportExcelButton from '@/components/export-excel-button';
@@ -51,26 +53,7 @@ import {
 } from '@/components/ui/dialog';
 
 // Daftar 18 Lab/TEFA Terbaru
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'Politeknik Ornamental Fish Farm (POFA)',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
+
 
 // --- Tipe untuk form pengembalian per-item ---
 interface ReturnItemForm {
@@ -786,7 +769,7 @@ export default function RiwayatTab({
                     {item.judul_kegiatan}
                   </TableCell>
                   <TableCell className='text-slate-600 text-xs'>
-                    {labMap[item.lab_id]}
+                    {LAB_MAP[item.lab_id]}
                   </TableCell>
                   <TableCell className='text-center'>
                     {item.status === 'Dibatalkan' ? (
@@ -902,7 +885,7 @@ export default function RiwayatTab({
                       Laboratorium
                     </p>
                     <p className='font-bold text-slate-900 text-base truncate'>
-                      {labMap[selectedRiwayat.lab_id] ||
+                      {LAB_MAP[selectedRiwayat.lab_id] ||
                         `Lab ${selectedRiwayat.lab_id}`}
                     </p>
                   </div>

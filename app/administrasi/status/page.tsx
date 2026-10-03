@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import {
@@ -12,6 +12,8 @@ import {
   XCircle,
   Eye,
   MessageSquareWarning,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -23,34 +25,20 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { fetchLabs, resolveLabName, type LabRow } from '@/lib/labs';
+import { LAB_MAP } from '@/lib/lab-map';
 
 // Telah diperbarui menjadi 18 Lab/TEFA terbaru
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'Politeknik Ornamental Fish Farm (POFA)',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
 
 export default function StatusRiwayatPage() {
   const [riwayat, setRiwayat] = useState<any[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [page, setPage] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
+  const [labs, setLabs] = useState<LabRow[]>([]);
+  const rowsPerPage = 20;
 
   // State untuk Modal Detail
   const [selectedItem, setSelectedItem] = useState<any>(null);
@@ -60,10 +48,24 @@ export default function StatusRiwayatPage() {
   // tidak ada query sama sekali — halaman publik tidak lagi menyedot
   // seluruh tabel. Kolom sensitif (email/npm/nik/device_id/bukti)
   // TIDAK diambil: hemat egress + tutup bocor PII.
+  // Muat daftar lab aktif untuk dipakai menerjemahkan lab_id ke nama.
+  useEffect(() => {
+    const supabase = createClient();
+    fetchLabs(supabase)
+      .then((rows) => setLabs(rows))
+      .catch(() => setLabs([]));
+  }, []);
+
+  // Reset ke halaman 1 setiap kata kunci berubah.
+  useEffect(() => {
+    setPage(1);
+  }, [searchQuery]);
+
   useEffect(() => {
     const keyword = searchQuery.trim();
     if (keyword.length < 3) {
       setRiwayat([]);
+      setTotalCount(0);
       setHasSearched(false);
       setLoading(false);
       return;
@@ -71,20 +73,24 @@ export default function StatusRiwayatPage() {
     setLoading(true);
     const timer = setTimeout(async () => {
       const supabase = createClient();
-      const { data } = await supabase
+      const from = (page - 1) * rowsPerPage;
+      const to = from + rowsPerPage - 1;
+      const { data, count } = await supabase
         .from('peminjaman')
         .select(
           'id, nama_lengkap, lab_id, tanggal, jam_mulai, jam_selesai, status, judul_kegiatan, kategori_pemohon, pesan_feedback, pesan_pembatalan',
+          { count: 'exact' },
         )
         .ilike('nama_lengkap', `%${keyword}%`)
         .order('created_at', { ascending: false })
-        .limit(20);
+        .range(from, to);
       setRiwayat(data || []);
+      if (count !== null) setTotalCount(count);
       setHasSearched(true);
       setLoading(false);
     }, 500);
     return () => clearTimeout(timer);
-  }, [searchQuery]);
+  }, [searchQuery, page]);
 
   const filteredRiwayat = riwayat;
 
@@ -201,7 +207,7 @@ export default function StatusRiwayatPage() {
                         {item.nama_lengkap}
                       </td>
                       <td className='p-4'>
-                        {labMap[item.lab_id] || 'Lab Tidak Diketahui'}
+                        {resolveLabName(labs, item.lab_id)}
                       </td>
                       <td className='p-4'>
                         {item.tanggal
@@ -231,6 +237,40 @@ export default function StatusRiwayatPage() {
               </tbody>
             </table>
           </div>
+
+          {/* PAGINATION — 20 per halaman, pola sama dengan RiwayatTab */}
+          {hasSearched && totalCount > rowsPerPage && (
+            <div className='px-4 py-3 border-t border-slate-200 bg-slate-50 flex flex-col sm:flex-row items-center justify-between gap-2 text-sm text-slate-600'>
+              <span className='font-medium'>
+                Total Data: {totalCount} | Halaman {page} dari{' '}
+                {Math.max(1, Math.ceil(totalCount / rowsPerPage))}
+              </span>
+              <div className='flex gap-2 w-full sm:w-auto'>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page === 1 || loading}
+                  className='flex-1 sm:flex-none h-10 font-bold'>
+                  <ChevronLeft className='size-4 mr-1' /> Sebelumnya
+                </Button>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  onClick={() =>
+                    setPage((p) =>
+                      Math.min(Math.ceil(totalCount / rowsPerPage), p + 1),
+                    )
+                  }
+                  disabled={
+                    page === Math.ceil(totalCount / rowsPerPage) || loading
+                  }
+                  className='flex-1 sm:flex-none h-10 font-bold'>
+                  Berikutnya <ChevronRight className='size-4 ml-1' />
+                </Button>
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
@@ -268,7 +308,7 @@ export default function StatusRiwayatPage() {
                     Laboratorium
                   </p>
                   <p className='font-semibold text-slate-800'>
-                    {labMap[selectedItem.lab_id]}
+                    {resolveLabName(labs, selectedItem.lab_id)}
                   </p>
                 </div>
                 <div>

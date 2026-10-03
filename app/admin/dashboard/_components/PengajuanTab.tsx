@@ -21,6 +21,8 @@ import {
   X,
   FileStack,
 } from 'lucide-react';
+import { LAB_MAP } from '@/lib/lab-map';
+
 import Swal from 'sweetalert2';
 
 import { Button } from '@/components/ui/button';
@@ -43,26 +45,7 @@ import {
 } from '@/components/ui/dialog';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'Politeknik Ornamental Fish Farm (POFA)',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
+
 
 const formatRupiah = (angka: number) => {
   return new Intl.NumberFormat('id-ID', {
@@ -779,7 +762,7 @@ export default function PengajuanTab({
                             Lab Target
                           </p>
                           <p className='font-black text-slate-900 text-lg'>
-                            {labMap[selectedPengajuan.lab_id] ||
+                            {LAB_MAP[selectedPengajuan.lab_id] ||
                               selectedPengajuan.lab_id}
                           </p>
                         </div>

@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { PackageSearch, Plus, Pencil, FolderPlus, Trash2, X, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
+import { LAB_MAP } from '@/lib/lab-map';
+
 import Swal from 'sweetalert2';
 
 import ExportExcelButton from '@/components/export-excel-button';
@@ -36,26 +38,7 @@ import {
 } from '@/components/ui/dialog';
 
 // Daftar 18 Lab & TEFA terbaru
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'Politeknik Ornamental Fish Farm (POFA)',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
+
 
 // --- Tipe Data ---
 interface Kategori {
@@ -465,7 +448,7 @@ export default function InventarisTab({
           <div>
             <CardTitle className='text-xl flex items-center gap-2'>
               <PackageSearch className='size-5 text-purple-600' />
-              Inventaris {labMap[adminProfile.lab_id] || 'Laboratorium'}
+              Inventaris {LAB_MAP[adminProfile.lab_id] || 'Laboratorium'}
             </CardTitle>
             <CardDescription className='text-base text-slate-600 mt-1'>
               Kelola daftar aset, alat tangkap, atau perlengkapan lab di sini.

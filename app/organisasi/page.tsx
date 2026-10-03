@@ -43,7 +43,10 @@ async function loadOrganisasi(): Promise<{
         .maybeSingle(),
       supabase
         .from('laboratorium')
-        .select('id, nama_lab, jenis, kategori, pj_nama, pj_foto_url')
+        .select(
+          'id, nama_lab, jenis, kategori, pj_nama, pj_foto_url, is_active',
+        )
+        .eq('is_active', true)
         .order('id'),
     ]);
     const parsed = parsePimpinan(setting?.value);

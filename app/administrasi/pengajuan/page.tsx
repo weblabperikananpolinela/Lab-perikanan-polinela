@@ -25,6 +25,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import Swal from 'sweetalert2';
 import { createClient } from '@/lib/supabase/client';
+import { fetchLabs, type LabRow } from '@/lib/labs';
 
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -131,59 +132,45 @@ const formSchema = z
 
 type FormData = z.infer<typeof formSchema>;
 
-const labMap: Record<string, number> = {
-  'Lab. Kesehatan Ikan': 1,
-  'Lab. Kualitas Air': 2,
-  'Lab. Pengolahan': 3,
-  'Bangsal Pakan Alami': 4,
-  'Lab. Perikanan (SFS)': 5,
-  'Lab. Pembenihan': 6,
-  'Lab. Ikan Hias': 7,
-  'Lab. Nutrisi': 8,
-  Polyfeed: 9,
-  'Politeknik Ornamental Fish Farm (POFA)': 10,
-  'Galangan Kapal': 11,
-  'Alat Tangkap Ikan': 12,
-  KJA: 13,
-  FISHTECH: 14,
-  'FISH MARKET': 15,
-  Polyfish: 16,
-  'Lab Simulator': 17,
-  'Lab Radar': 18,
-};
+// Daftar fallback 18 lab lama dipakai HANYA bila fetch laboratorium gagal
+// (agar form tetap bisa dipakai saat DB tak terjangkau). Saat DB normal,
+// daftar lab diambil dari tabel `laboratorium` (v5.8.0), sehingga lab baru
+// otomatis muncul & lab nonaktif otomatis hilang.
+const LEGACY_LABS: { nama: string; jenis: string; kategori: string }[] = [
+  { nama: 'Lab. Kesehatan Ikan', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Kualitas Air', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Pengolahan', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Bangsal Pakan Alami', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Perikanan (SFS)', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Pembenihan', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Ikan Hias', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Lab. Nutrisi', jenis: 'Laboratorium', kategori: 'Lab Perikanan' },
+  { nama: 'Polyfeed', jenis: 'TEFA', kategori: 'Lab Perikanan' },
+  { nama: 'Politeknik Ornamental Fish Farm (POFA)', jenis: 'TEFA', kategori: 'Lab Perikanan' },
+  { nama: 'Galangan Kapal', jenis: 'TEFA', kategori: 'Lab Perikanan Tangkap' },
+  { nama: 'Alat Tangkap Ikan', jenis: 'TEFA', kategori: 'Lab Perikanan Tangkap' },
+  { nama: 'KJA', jenis: 'TEFA', kategori: 'Lab Perikanan Tangkap' },
+  { nama: 'FISHTECH', jenis: 'TEFA', kategori: 'Lab Perikanan' },
+  { nama: 'FISH MARKET', jenis: 'TEFA', kategori: 'Lab Perikanan' },
+  { nama: 'Polyfish', jenis: 'TEFA', kategori: 'Lab Perikanan' },
+  { nama: 'Lab Simulator', jenis: 'TEFA', kategori: 'Lab Perikanan Tangkap' },
+  { nama: 'Lab Radar', jenis: 'TEFA', kategori: 'Lab Perikanan Tangkap' },
+];
 
-const labKategoriData = {
-  'Lab Perikanan': [
-    { nama: 'Lab. Kesehatan Ikan', jenis: 'Laboratorium' },
-    { nama: 'Lab. Kualitas Air', jenis: 'Laboratorium' },
-    { nama: 'Lab. Pengolahan', jenis: 'Laboratorium' },
-    { nama: 'Bangsal Pakan Alami', jenis: 'Laboratorium' },
-    { nama: 'Lab. Perikanan (SFS)', jenis: 'Laboratorium' },
-    { nama: 'Lab. Pembenihan', jenis: 'Laboratorium' },
-    { nama: 'Lab. Ikan Hias', jenis: 'Laboratorium' },
-    { nama: 'Lab. Nutrisi', jenis: 'Laboratorium' },
-    { nama: 'Polyfeed', jenis: 'TEFA' },
-    { nama: 'Politeknik Ornamental Fish Farm (POFA)', jenis: 'TEFA' },
-    { nama: 'Galangan Kapal', jenis: 'TEFA' },
-    { nama: 'Alat Tangkap Ikan', jenis: 'TEFA' },
-    { nama: 'KJA', jenis: 'TEFA' },
-    { nama: 'FISHTECH', jenis: 'TEFA' },
-    { nama: 'FISH MARKET', jenis: 'TEFA' },
-    { nama: 'Polyfish', jenis: 'TEFA' },
-  ],
-  'Lab Perikanan Tangkap': [
-    { nama: 'Lab Simulator', jenis: 'TEFA' },
-    { nama: 'Lab Radar', jenis: 'TEFA' },
-  ],
-};
+const KATEGORI_LAB_OPTIONS: ('Lab Perikanan' | 'Lab Perikanan Tangkap')[] = [
+  'Lab Perikanan',
+  'Lab Perikanan Tangkap',
+];
 
-const freeUmumLabs = [
+// Lab yang boleh dipilih pemohon kategori "Umum" tanpa biaya (kebijakan; nama
+// dibandingkan dengan nama lab aktif dari DB).
+const FREE_UMUM_NAMA = new Set([
   'Lab. Perikanan (SFS)',
   'Lab. Pengolahan',
   'Lab. Kualitas Air',
   'Lab. Kesehatan Ikan',
   'Lab. Nutrisi',
-];
+]);
 
 const CLOUDINARY_CLOUD_NAME = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
 const CLOUDINARY_UPLOAD_PRESET =
@@ -206,6 +193,7 @@ export default function PengajuanForm() {
   const [isUploadingPayment, setIsUploadingPayment] = useState(false);
   const [bankInfo, setBankInfo] = useState<any>(null);
   const [isFetchingBank, setIsFetchingBank] = useState(false);
+  const [labs, setLabs] = useState<LabRow[]>([]);
   const {
     register,
     control,
@@ -224,6 +212,33 @@ export default function PengajuanForm() {
   const kategoriPemohon = watch('kategori_pemohon');
   const labTargetValue = watch('labTarget');
   const judulPenelitianValue = watch('judulPenelitian');
+
+  // Daftar lab aktif dari DB (v5.8.0). Fallback ke 18 lab lama jika fetch gagal.
+  useEffect(() => {
+    const supabase = createClient();
+    fetchLabs(supabase)
+      .then((rows) => setLabs(rows))
+      .catch(() => setLabs([]));
+  }, []);
+
+  const labOptions = labs.length > 0
+    ? labs
+    : LEGACY_LABS.map((l, i) => ({
+        id: i + 1,
+        nama_lab: l.nama,
+        jenis: l.jenis,
+        kategori: l.kategori,
+        pj_nama: null,
+        pj_email: null,
+        pj_foto_url: null,
+        is_active: true,
+      }));
+
+  const labIdByName = (nama: string | undefined): number | null => {
+    if (!nama) return null;
+    const found = labOptions.find((l) => l.nama_lab === nama);
+    return found ? found.id : null;
+  };
   const tanggalValue = watch('tanggal');
   const jamMulaiValue = watch('jam_mulai');
   const jamSelesaiValue = watch('jam_selesai');
@@ -243,7 +258,7 @@ export default function PengajuanForm() {
       setOverlapList([]);
       return;
     }
-    const lab_id = labMap[labTargetValue];
+    const lab_id = labIdByName(labTargetValue);
     if (!lab_id) {
       setOverlapList([]);
       return;
@@ -287,7 +302,7 @@ export default function PengajuanForm() {
   const isRestrictedUmum =
     kategoriPemohon === 'Umum' &&
     labTargetValue &&
-    !freeUmumLabs.includes(labTargetValue);
+    !FREE_UMUM_NAMA.has(labTargetValue);
 
   // LOGIKA BARU: Tentukan apakah user Wajib Bayar (Hanya muncul jika ada layanan uji yang dipilih)
   const requirePayment = selectedLayanan.length > 0;
@@ -301,7 +316,7 @@ export default function PengajuanForm() {
       setAvailableItems([]);
       return;
     }
-    const lab_id = labMap[labTargetValue];
+    const lab_id = labIdByName(labTargetValue);
     if (!lab_id) return;
 
     const fetchInventaris = async () => {
@@ -334,7 +349,7 @@ export default function PengajuanForm() {
       setBankInfo(null);
       return;
     }
-    const lab_id = labMap[labTargetValue as keyof typeof labMap];
+    const lab_id = labIdByName(labTargetValue);
     if (!lab_id) return;
 
     const fetchBankInfo = async () => {
@@ -358,7 +373,7 @@ export default function PengajuanForm() {
       setSelectedLayanan([]);
       return;
     }
-    const lab_id = labMap[labTargetValue as keyof typeof labMap];
+    const lab_id = labIdByName(labTargetValue);
     if (!lab_id) return;
 
     const fetchLayanan = async () => {
@@ -437,7 +452,10 @@ export default function PengajuanForm() {
       }
 
       const supabase = createClient();
-      const resolvedLabId = labMap[data.labTarget] || 1;
+      const resolvedLabId = labIdByName(data.labTarget);
+      if (!resolvedLabId) {
+        throw new Error('Laboratorium tidak ditemukan atau sudah dinonaktifkan.');
+      }
 
       // Cek overlap hanya untuk info (non-blocking). Tidak ada penolakan
       // otomatis — keputusan ACC/tolak ada di tangan admin lab.
@@ -770,52 +788,36 @@ export default function PengajuanForm() {
                   <DropdownMenuContent
                     className='w-[--radix-dropdown-menu-trigger-width] max-h-80 overflow-y-auto'
                     align='start'>
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50'>
-                        Lab Perikanan
-                      </DropdownMenuLabel>
-                      {labKategoriData['Lab Perikanan'].map((lab) => (
-                        <DropdownMenuItem
-                          key={lab.nama}
-                          className='py-2.5 cursor-pointer ml-1'
-                          onClick={() =>
-                            setValue('labTarget', lab.nama, {
-                              shouldValidate: true,
-                            })
-                          }>
-                          <div className='flex items-center justify-between w-full'>
-                            <span>{lab.nama}</span>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${lab.jenis === 'TEFA' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {lab.jenis}
-                            </span>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
-                    <DropdownMenuGroup>
-                      <DropdownMenuLabel className='font-bold text-blue-700 bg-slate-50 mt-2 border-t pt-2'>
-                        Lab Perikanan Tangkap
-                      </DropdownMenuLabel>
-                      {labKategoriData['Lab Perikanan Tangkap'].map((lab) => (
-                        <DropdownMenuItem
-                          key={lab.nama}
-                          className='py-2.5 cursor-pointer ml-1'
-                          onClick={() =>
-                            setValue('labTarget', lab.nama, {
-                              shouldValidate: true,
-                            })
-                          }>
-                          <div className='flex items-center justify-between w-full'>
-                            <span>{lab.nama}</span>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${lab.jenis === 'TEFA' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
-                              {lab.jenis}
-                            </span>
-                          </div>
-                        </DropdownMenuItem>
-                      ))}
-                    </DropdownMenuGroup>
+                    {KATEGORI_LAB_OPTIONS.map((kategori, idx) => (
+                      <DropdownMenuGroup key={kategori}>
+                        <DropdownMenuLabel
+                          className={`font-bold text-blue-700 bg-slate-50 ${
+                            idx > 0 ? 'mt-2 border-t pt-2' : ''
+                          }`}>
+                          {kategori}
+                        </DropdownMenuLabel>
+                        {labOptions
+                          .filter((lab) => lab.kategori === kategori)
+                          .map((lab) => (
+                            <DropdownMenuItem
+                              key={lab.id}
+                              className='py-2.5 cursor-pointer ml-1'
+                              onClick={() =>
+                                setValue('labTarget', lab.nama_lab, {
+                                  shouldValidate: true,
+                                })
+                              }>
+                              <div className='flex items-center justify-between w-full'>
+                                <span>{lab.nama_lab}</span>
+                                <span
+                                  className={`text-[10px] px-2 py-0.5 rounded-full font-medium ml-2 shrink-0 ${lab.jenis === 'TEFA' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                                  {lab.jenis}
+                                </span>
+                              </div>
+                            </DropdownMenuItem>
+                          ))}
+                      </DropdownMenuGroup>
+                    ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
                 {errors.labTarget && (

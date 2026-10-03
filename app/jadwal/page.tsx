@@ -4,39 +4,22 @@ import { useState, useEffect } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { fetchLabs, type LabRow } from '@/lib/labs';
 import { CalendarDays, ArrowLeft, Maximize2, CalendarX2 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 
 // DAFTAR LAB BARU (Sesuai List)
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'Politeknik Ornamental Fish Farm (POFA)',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
 
 export default function JadwalPage() {
   const [jadwalData, setJadwalData] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [labs, setLabs] = useState<LabRow[]>([]);
 
   useEffect(() => {
+    const supabase = createClient();
+
     const fetchSemuaJadwal = async () => {
-      const supabase = createClient();
       // Hanya kolom yang dirender (lab_id + file_url). uploaded_by /
       // file_type / updated_at tidak dipakai halaman ini.
       const { data, error } = await supabase
@@ -49,6 +32,11 @@ export default function JadwalPage() {
       }
       setLoading(false);
     };
+
+    // Lab aktif dari DB (v5.8.0); jadwal lab nonaktif otomatis tidak tampil.
+    fetchLabs(supabase)
+      .then((rows) => setLabs(rows))
+      .catch(() => setLabs([]));
 
     fetchSemuaJadwal();
   }, []);
@@ -102,8 +90,8 @@ export default function JadwalPage() {
           </div>
         ) : (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
-            {Object.entries(labMap).map(([idStr, namaLab]) => {
-              const labId = parseInt(idStr);
+            {labs.map((lab) => {
+              const labId = lab.id;
               const jadwalObj = jadwalData.find((j) => j.lab_id === labId);
               const hasJadwal = jadwalObj && jadwalObj.file_url;
 
@@ -114,7 +102,7 @@ export default function JadwalPage() {
                   <CardContent className='p-6 flex flex-col h-full bg-white'>
                     <div className='flex-1 flex flex-col items-center justify-center text-center space-y-4'>
                       <h3 className='text-lg font-bold text-slate-800 min-h-[56px] flex items-center justify-center'>
-                        {namaLab}
+                        {lab.nama_lab}
                       </h3>
 
                       {hasJadwal ? (

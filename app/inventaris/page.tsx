@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import { fetchLabs, type LabRow } from '@/lib/labs';
 // 1. Ikon digabung jadi satu baris agar tidak duplikat
 import {
   ArrowLeft,
@@ -20,37 +21,32 @@ import {
 // 2. Import Button ditambahkan di sini
 import { Button } from '@/components/ui/button';
 
-// Daftar 18 Lab/TEFA terbaru
-const labData = [
-  { id: 1, nama: 'Lab. Kesehatan Ikan', jenis: 'Laboratorium' },
-  { id: 2, nama: 'Lab. Kualitas Air', jenis: 'Laboratorium' },
-  { id: 3, nama: 'Lab. Pengolahan', jenis: 'Laboratorium' },
-  { id: 4, nama: 'Bangsal Pakan Alami', jenis: 'Laboratorium' },
-  { id: 5, nama: 'Lab. Perikanan (SFS)', jenis: 'Laboratorium' },
-  { id: 6, nama: 'Lab. Pembenihan', jenis: 'Laboratorium' },
-  { id: 7, nama: 'Lab. Ikan Hias', jenis: 'Laboratorium' },
-  { id: 8, nama: 'Lab. Nutrisi', jenis: 'Laboratorium' },
-  { id: 9, nama: 'Polyfeed', jenis: 'TEFA' },
-  { id: 10, nama: 'Politeknik Ornamental Fish Farm (POFA)', jenis: 'TEFA' },
-  { id: 11, nama: 'Galangan Kapal', jenis: 'TEFA' },
-  { id: 12, nama: 'Alat Tangkap Ikan', jenis: 'TEFA' },
-  { id: 13, nama: 'KJA', jenis: 'TEFA' },
-  { id: 14, nama: 'FISHTECH', jenis: 'TEFA' },
-  { id: 15, nama: 'FISH MARKET', jenis: 'TEFA' },
-  { id: 16, nama: 'Polyfish', jenis: 'TEFA' },
-  { id: 17, nama: 'Lab Simulator', jenis: 'TEFA' },
-  { id: 18, nama: 'Lab Radar', jenis: 'TEFA' },
-];
 
 export default function PublikInventarisPage() {
   const [inventaris, setInventaris] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  // Default menampilkan Lab ID 1 (Lab. Kesehatan Ikan)
-  const [selectedLabId, setSelectedLabId] = useState<number>(1);
+  // Default menampilkan lab aktif pertama (bukan hardcode id 1).
+  const [selectedLabId, setSelectedLabId] = useState<number | null>(null);
+  const [labs, setLabs] = useState<LabRow[]>([]);
+
+  useEffect(() => {
+    const supabase = createClient();
+    fetchLabs(supabase)
+      .then((rows) => {
+        setLabs(rows);
+        if (rows.length > 0) setSelectedLabId(rows[0].id);
+      })
+      .catch(() => setLabs([]));
+  }, []);
 
   useEffect(() => {
     const fetchInventaris = async () => {
       setLoading(true);
+      if (selectedLabId == null) {
+        setInventaris([]);
+        setLoading(false);
+        return;
+      }
       const supabase = createClient();
 
       // Melakukan relasi dengan !inner agar bisa difilter berdasarkan lab_id
@@ -111,7 +107,7 @@ export default function PublikInventarisPage() {
               <Button
                 variant='outline'
                 className='w-full sm:w-80 justify-between h-11 px-4 bg-slate-50 border-slate-300 font-medium'>
-                {labData.find((l) => l.id === selectedLabId)?.nama ||
+                {labs.find((l) => l.id === selectedLabId)?.nama_lab ||
                   'Pilih Lab'}
                 <ChevronDown className='ml-2 h-4 w-4 opacity-50' />
               </Button>
@@ -119,12 +115,12 @@ export default function PublikInventarisPage() {
             <DropdownMenuContent
               className='w-80 max-h-80 overflow-y-auto'
               align='end'>
-              {labData.map((lab) => (
+              {labs.map((lab) => (
                 <DropdownMenuItem
                   key={lab.id}
                   onClick={() => setSelectedLabId(lab.id)}
                   className='flex items-center justify-between py-2.5 cursor-pointer'>
-                  <span className='font-medium text-slate-700'>{lab.nama}</span>
+                  <span className='font-medium text-slate-700'>{lab.nama_lab}</span>
                   <span
                     className={`text-[10px] px-2 py-0.5 rounded-full font-bold tracking-wider shrink-0 ml-2 ${
                       lab.jenis === 'TEFA'

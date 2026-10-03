@@ -23,6 +23,8 @@ import {
   LockKeyhole,
   ShieldCheck,
 } from 'lucide-react';
+import { LAB_MAP } from '@/lib/lab-map';
+
 import { Button } from '@/components/ui/button';
 import {
   Sheet,
@@ -51,26 +53,6 @@ const navLinks = [
 ];
 
 // Peta nama Lab untuk ditampilkan di Dropdown
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'POFA',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
 
 export function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -456,7 +438,7 @@ export function Navbar() {
                         <Building2 className='size-4 mr-2 text-slate-400' />
                         <span className='truncate'>
                           Dashboard{' '}
-                          {labMap[profile.lab_id] || `Lab ${profile.lab_id}`}
+                          {LAB_MAP[profile.lab_id] || `Lab ${profile.lab_id}`}
                         </span>
                       </Link>
                     </DropdownMenuItem>
@@ -656,7 +638,7 @@ export function Navbar() {
                               <Building2 className='size-4 mr-2 text-blue-500' />
                               <span className='truncate'>
                                 Dashboard{' '}
-                                {labMap[profile.lab_id]?.split(' ')[1] ||
+                                {LAB_MAP[profile.lab_id]?.split(' ')[1] ||
                                   `Lab ${profile.lab_id}`}
                               </span>
                             </Link>

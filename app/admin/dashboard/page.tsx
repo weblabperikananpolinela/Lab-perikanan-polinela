@@ -23,6 +23,8 @@ import {
   ShieldCheck,
   ImagePlus,
 } from 'lucide-react';
+import { LAB_MAP } from '@/lib/lab-map';
+
 
 import OverviewTab from './_components/OverviewTab';
 import InventarisTab from './_components/InventarisTab';
@@ -37,30 +39,10 @@ import NotifButton from '@/app/_components/NotifButton';
 import { APP_VERSION_LABEL } from '@/lib/version';
 
 // --- CONFIG & HELPERS ---
-const labMap: Record<number, string> = {
-  1: 'Lab. Kesehatan Ikan',
-  2: 'Lab. Kualitas Air',
-  3: 'Lab. Pengolahan',
-  4: 'Bangsal Pakan Alami',
-  5: 'Lab. Perikanan (SFS)',
-  6: 'Lab. Pembenihan',
-  7: 'Lab. Ikan Hias',
-  8: 'Lab. Nutrisi',
-  9: 'Polyfeed',
-  10: 'POFA',
-  11: 'Galangan Kapal',
-  12: 'Alat Tangkap Ikan',
-  13: 'KJA',
-  14: 'FISHTECH',
-  15: 'FISH MARKET',
-  16: 'Polyfish',
-  17: 'Lab Simulator',
-  18: 'Lab Radar',
-};
 
 // FITUR BARU: Header Dinamis dan Minimalis[cite: 3]
 const getDynamicHeader = (tab: string, labId: number) => {
-  const labName = labMap[labId] || 'Laboratorium';
+  const labName = LAB_MAP[labId] || 'Laboratorium';
 
   switch (tab) {
     case 'overview':
@@ -224,7 +206,7 @@ function DashboardContent() {
                   <Building2 size={24} />
                 </div>
                 <h3 className='text-xl font-bold text-slate-800 mb-2'>
-                  {labMap[profile.lab_id]}
+                  {LAB_MAP[profile.lab_id]}
                 </h3>
                 <p className='text-sm text-slate-500 mt-auto flex items-center gap-2 group-hover:text-blue-600 font-medium transition-colors'>
                   Buka Dashboard <ArrowRight size={16} />
@@ -337,7 +319,7 @@ function DashboardContent() {
                     {activeProfile.nama_dosen}
                   </p>
                   <p className='text-xs text-amber-500 font-medium truncate'>
-                    {labMap[activeProfile.lab_id]}
+                    {LAB_MAP[activeProfile.lab_id]}
                   </p>
                 </div>
               </div>
