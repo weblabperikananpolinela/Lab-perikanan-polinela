@@ -55,13 +55,14 @@ berat, dan keterangan.
 | SPEC | PASS | Spec disetujui PM pada 3 Okt 2026. |
 | LOCAL-READY | PASS | TypeScript + production build webpack lulus; route dynamic; smoke 401/400; fixture XLSX valid. |
 | GITHUB-BACKUP | PASS | commit `b2b5cfc` di-push ke `origin/master` (3 Okt 2026). |
-| DEPLOYED | PASS | 3 Okt 2026 14:41 UTC; BUILD_ID `ZqV5i3FwufQNt-UQs4ajM`; SHA-256 `d6bdb7dcfb95c52d3d09d1e252ff448402fdc96a9c3af7cba2835c0c36e03e76`; smoke origin 4/4 HTTP 200. |
-| MANUAL-TEST | PASS | Smoke origin: `/`, kedua route export (401 tanpa login), file GSC verifikasi 200. Uji download dengan akun login tetap menunggu PM. |
+| DEPLOYED | PASS | 3 Okt 2026 14:41 UTC; BUILD_ID `e80DDU6GRjd7OBEzBdSIB`; SHA-256 `086649d1ecafa89c9105b894b56ce8d60a17a1486d3cac2d18755e254139fe27`; smoke origin 4/4 HTTP 200. |
+| MANUAL-TEST | PASS | Smoke origin: `/` 200 (footer `DOLPHIN System v5.7.0`), file GSC 53 byte 200, kedua route export 401 tanpa login. Uji download dengan akun login menunggu PM. |
 
 ## Catatan deploy
 
-Deploy production selesai. BUILD_ID aktif `ZqV5i3FwufQNt-UQs4ajM`; backup server dibuat
-sebelum replace sebagai `httpdocs.old-deploy-20261003-143957`.
+Deploy production selesai. BUILD_ID aktif `e80DDU6GRjd7OBEzBdSIB`; deploy pertama (`ZqV5i3FwufQNt-UQs4ajM`)
+diganti karena build itu dibuat sebelum bump versi. Backup server dibuat sebelum
+replace.
 
 ## Manual test PM
 
