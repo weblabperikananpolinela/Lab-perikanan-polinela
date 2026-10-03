@@ -7,6 +7,7 @@ import { JsonLd } from '@/components/json-ld';
 import {
   DEFAULT_DESCRIPTION,
   DEFAULT_TITLE,
+  GSC_VERIFICATION,
   OG_IMAGE,
   SITE_KEYWORDS,
   SITE_NAME,
@@ -53,8 +54,8 @@ export const metadata: Metadata = {
     process.env.VERCEL === '1'
       ? { index: false, follow: false }
       : { index: true, follow: true },
-  verification: process.env.NEXT_PUBLIC_GSC_VERIFICATION
-    ? { google: process.env.NEXT_PUBLIC_GSC_VERIFICATION }
+  verification: GSC_VERIFICATION
+    ? { google: GSC_VERIFICATION }
     : undefined,
   icons: {
     icon: [

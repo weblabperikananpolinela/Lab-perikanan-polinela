@@ -56,6 +56,18 @@ export const PUBLIC_ROUTES: { path: string; priority: number }[] = [
 /** Berkas SEO yang tidak boleh terkena gerbang maintenance. */
 export const SEO_FILE_PATHS = new Set(['/robots.txt', '/sitemap.xml']);
 
+/**
+ * Token verifikasi Google Search Console.
+ *
+ * Token ini BUKAN rahasia — Google mensyaratkan ia tampil di HTML halaman,
+ * jadi aman di-commit. Nilai env dipakai lebih dulu supaya bisa diganti tanpa
+ * ubah kode; fallback konstanta memastikan meta tag tetap ter-emit walau env
+ * Plesk belum diisi.
+ */
+export const GSC_VERIFICATION =
+  process.env.NEXT_PUBLIC_GSC_VERIFICATION ||
+  'W0TteqiVo7gYtPRGgBzmjK02WdJb1OGGTLWhHEwyxSI';
+
 /** URL absolut dari sebuah path (tanpa slash ganda). */
 export function canonicalUrl(path: string): string {
   if (!path || path === '/') return `${SITE_ORIGIN}/`;
