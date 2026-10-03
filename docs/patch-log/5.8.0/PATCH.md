@@ -66,8 +66,8 @@ tambah/edit/nonaktifkan lab dari tab **Semua Lab** di `/admin/system`.
 | Tahap | Status | Bukti |
 |---|---|---|
 | LOCAL-READY | PASS | tsc EXIT=0 + build webpack lulus; smoke 7/7 halaman 200; footer v5.8.0. |
-| GITHUB-BACKUP | PENDING | Commit masih lokal. |
-| DEPLOYED | PENDING | Belum terdeploy — menunggu ACC PM. |
+| GITHUB-BACKUP | PASS | commit `0ecfbb2` di-push origin/master (4 Okt 2026). |
+| DEPLOYED | PASS | 4 Okt 2026; BUILD_ID `OAIJEx_T68C5ANlHPvIKX`; SHA-256 `d5035539b2b9c32bda349ec2c063c6c61d882caa323af171d4105cbef7ed786a`; ZIP 28.0 MB; smoke origin 200 + footer v5.8.0. Backup server `httpdocs.old-deploy-20261003-185310`. |
 | MANUAL-TEST | PENDING | Uji PM: tambah/edit/nonaktifkan lab, dropdown dinamis, pagination 20, RLS publik. |
 
 ## Risiko & rollback
