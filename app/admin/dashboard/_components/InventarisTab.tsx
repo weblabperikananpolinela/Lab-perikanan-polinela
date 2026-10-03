@@ -4,6 +4,8 @@ import { useEffect, useState, useCallback } from 'react';
 import { PackageSearch, Plus, Pencil, FolderPlus, Trash2, X, ChevronLeft, ChevronRight, Activity } from 'lucide-react';
 import Swal from 'sweetalert2';
 
+import ExportExcelButton from '@/components/export-excel-button';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -470,12 +472,15 @@ export default function InventarisTab({
             </CardDescription>
           </div>
 
-          <Button
-            onClick={openAdd}
-            disabled={activeKategoriId === null}
-            className='bg-purple-600 hover:bg-purple-700 font-bold shadow-md text-base py-5'>
-            <Plus className='size-4 mr-2' /> Tambah Alat &amp; Bahan
-          </Button>
+          <div className='flex flex-col sm:flex-row gap-3'>
+            <ExportExcelButton kind='inventaris' labId={adminProfile.lab_id} />
+            <Button
+              onClick={openAdd}
+              disabled={activeKategoriId === null}
+              className='bg-purple-600 hover:bg-purple-700 font-bold shadow-md text-base py-5'>
+              <Plus className='size-4 mr-2' /> Tambah Alat &amp; Bahan
+            </Button>
+          </div>
         </div>
 
         <div className='flex items-center gap-2 overflow-x-auto pb-1 -mb-2 scrollbar-thin'>

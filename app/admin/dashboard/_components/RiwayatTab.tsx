@@ -18,6 +18,8 @@ import {
 } from 'lucide-react';
 import Swal from 'sweetalert2';
 
+import ExportExcelButton from '@/components/export-excel-button';
+
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -554,12 +556,14 @@ export default function RiwayatTab({
           </CardDescription>
         </div>
 
-        <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-          <DialogTrigger asChild>
-            <Button className='bg-blue-600 hover:bg-blue-700 font-bold shadow-md text-base py-5'>
-              <Plus className='size-4 mr-2' /> Tambah Riwayat Manual
-            </Button>
-          </DialogTrigger>
+        <div className='flex flex-col sm:flex-row gap-3'>
+          <ExportExcelButton kind='riwayat' labId={adminProfile.lab_id} />
+          <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+            <DialogTrigger asChild>
+              <Button className='bg-blue-600 hover:bg-blue-700 font-bold shadow-md text-base py-5'>
+                <Plus className='size-4 mr-2' /> Tambah Riwayat Manual
+              </Button>
+            </DialogTrigger>
           <DialogContent className='sm:max-w-md'>
             <DialogHeader>
               <DialogTitle className='text-xl'>
@@ -658,6 +662,7 @@ export default function RiwayatTab({
             </form>
           </DialogContent>
         </Dialog>
+        </div>
       </CardHeader>
 
       <CardContent>
