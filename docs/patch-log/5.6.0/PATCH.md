@@ -104,16 +104,47 @@ App Router tidak mengizinkan `export const metadata` di client component.
 | GITHUB-BACKUP | PASS | commit `4a381e7` + `6369c90` di-push ke `origin/master` (1 Okt 2026) |
 | DEPLOYED | PASS | 2026-10-01 ~06:58 UTC; ZIP `deploy-dolphin-OtEhZRn7mfXLAimFBzRjB.zip` (28,0 MB, SHA `63969ab2…89c2`); `httpdocs/.next/BUILD_ID = OtEhZRn7mfXLAimFBzRjB`; smoke origin 5/5 HTTP 200 (`/`, `/robots.txt`, `/sitemap.xml`, `/dokumen/sk-lab`, `/og-image.png`); footer `DOLPHIN System v5.6.0`; title memuat "Lab Perikanan Polinela"; canonical Polinela; sitemap 8 URL |
 | VERCEL-NOINDEX | PASS | push `master` auto-redeploy Vercel 1 Okt; `robots.txt` = `Disallow: /`; header `x-robots-tag: noindex, nofollow`; meta robots `noindex`; canonical tetap Polinela |
+| GSC-VERIFY (kode) | PASS | file `public/google80bae56b1afb808e.html` (53 byte, `cmp` identik dengan unduhan Google) + meta tag fallback `W0TteqiVo7gYtPRGgBzmjK02WdJb1OGGTLWhHEwyxSI`; keduanya terverifikasi lokal (`node app.js`) |
+| GSC-VERIFY (server) | BLOCKED | SSH `103.151.63.111:22` timeout sejak 1 Okt ~13:5x WIB (semua port origin tidak terjangkau; tracert berhenti di hop Moratelindo). File/meta tag sudah siap di repo, menunggu deploy |
 | MANUAL-TEST (PM) | PENDING | menunggu uji PM + Search Console |
+
+## Verifikasi Google Search Console (properti dibuat PM 1 Okt 2026)
+
+Token dari dashboard Google: `W0TteqiVo7gYtPRGgBzmjK02WdJb1OGGTLWhHEwyxSI`
+(berkas: `google80bae56b1afb808e.html`, 53 byte, **bukan rahasia** — Google
+mensyaratkan isinya tampil di HTML).
+
+Dua jalur sudah disiapkan di repo, keduanya terverifikasi lokal:
+
+| Jalur | Berkas | Cara aktif |
+|---|---|---|
+| Berkas HTML | `public/google80bae56b1afb808e.html` | ikut deploy ZIP berikutnya; tersaji di `/google80bae56b1afb808e.html` |
+| Meta tag | `app/layout.tsx` (`verification`) + `lib/site-seo.ts` (`GSC_VERIFICATION`) | otomatis ter-emit di `<head>` semua halaman setelah rebuild |
+
+### Cara mengaktifkan TANPA SSH (Plesk File Manager)
+
+Karena SSH origin sedang tidak terjangkau, berkas verifikasi bisa diunggah lewat
+panel Plesk:
+
+1. Plesk → **Files** → buka `dolphinperikanan.polinela.ac.id` → `httpdocs`.
+2. Unggah `google80bae56b1afb808e.html` ke dalam folder **`public/`**
+   (jalur yang sama dengan `og-image.png`) — atau langsung ke `httpdocs/`
+   sebagai jalur alternatif yang disajikan Apache tanpa app.
+3. Verifikasi URL-nya bisa dibuka:
+   `https://dolphinperikanan.polinela.ac.id/google80bae56b1afb808e.html`
+   harus menampilkan teks:
+   `google-site-verification: google80bae56b1afb808e.html`
+4. Kembali ke Search Console → **Verify**.
+
+Meta tag dipakai lewat Plesk env `NEXT_PUBLIC_GSC_VERIFICATION` (isi token di
+atas) **atau** langsung efektif dari konstanta fallback di `lib/site-seo.ts`
+tanpa env apa pun — cukup rebuild + deploy.
 
 ## Langkah PM setelah deploy
 
-1. **Google Search Console** (belum ada properti):
-   - Tambah properti URL-prefix `https://dolphinperikanan.polinela.ac.id/`.
-   - Verifikasi via **HTML tag** → salin token ke Plesk env
-     `NEXT_PUBLIC_GSC_VERIFICATION`, rebuild + deploy; **atau** verifikasi DNS TXT
-     (tanpa rebuild, butuh admin DNS Polinela).
-   - Submit sitemap `https://dolphinperikanan.polinela.ac.id/sitemap.xml`.
+1. **Google Search Console**: tambah properti URL-prefix
+   `https://dolphinperikanan.polinela.ac.id/`, verifikasi (lihat bagian di atas),
+   lalu submit sitemap `https://dolphinperikanan.polinela.ac.id/sitemap.xml`.
 2. **Vercel**: trigger redeploy project `lab-perikanan-polinela` (build di Vercel
    → `VERCEL=1`). Verifikasi `curl -sI https://lab-perikanan-polinela.vercel.app/`
    memuat `x-robots-tag: noindex, nofollow` dan `/robots.txt` memuat `Disallow: /`.
