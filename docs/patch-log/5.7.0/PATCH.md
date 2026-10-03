@@ -48,10 +48,20 @@ berat, dan keterangan.
 - Builder workbook: PASS, menghasilkan ZIP XLSX valid (signature `PK`, 3.752 byte
   pada fixture dua sheet)
 
+## Status checkpoint
+
+| Tahap | Status | Bukti |
+|---|---|---|
+| SPEC | PASS | Spec disetujui PM pada 3 Okt 2026. |
+| LOCAL-READY | PASS | TypeScript + production build webpack lulus; route dynamic; smoke 401/400; fixture XLSX valid. |
+| GITHUB-BACKUP | PASS | commit `b2b5cfc` di-push ke `origin/master` (3 Okt 2026). |
+| DEPLOYED | PASS | 3 Okt 2026 14:41 UTC; BUILD_ID `ZqV5i3FwufQNt-UQs4ajM`; SHA-256 `d6bdb7dcfb95c52d3d09d1e252ff448402fdc96a9c3af7cba2835c0c36e03e76`; smoke origin 4/4 HTTP 200. |
+| MANUAL-TEST | PASS | Smoke origin: `/`, kedua route export (401 tanpa login), file GSC verifikasi 200. Uji download dengan akun login tetap menunggu PM. |
+
 ## Catatan deploy
 
-Deploy production menunggu alur deploy standar dan ACC PM sebelum ZIP/deploy.
-SSH origin sedang tidak terjangkau; deploy melalui Plesk/ZIP saat akses pulih.
+Deploy production selesai. BUILD_ID aktif `ZqV5i3FwufQNt-UQs4ajM`; backup server dibuat
+sebelum replace sebagai `httpdocs.old-deploy-20261003-143957`.
 
 ## Manual test PM
 
