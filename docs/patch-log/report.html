@@ -1,49 +1,1186 @@
 <!doctype html>
-<html lang="id">
+<html lang="id" data-theme="light">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="description" content="Dashboard riwayat patch dan release DOLPHIN System">
-  <title>DOLPHIN · Patch History</title>
-  <style>
-    :root{--ink:#102a43;--muted:#627d98;--line:#d9e2ec;--paper:#f6f9fc;--card:#fff;--blue:#0b69a3;--cyan:#11a5a5;--green:#147d64;--amber:#b7791f;--rose:#b83280;--shadow:0 16px 40px rgba(16,42,67,.09)}
-    *{box-sizing:border-box} body{margin:0;color:var(--ink);background:var(--paper);font:15px/1.6 Inter,ui-sans-serif,system-ui,-apple-system,sans-serif}a{color:var(--blue)}
-    .masthead{position:relative;overflow:hidden;color:#e6fffa;background:#102a43;border-bottom:5px solid var(--cyan)}.masthead:after{content:'';position:absolute;width:520px;height:520px;right:-180px;top:-300px;border:1px solid rgba(126,231,217,.28);border-radius:50%;box-shadow:0 0 0 28px rgba(126,231,217,.06),0 0 0 56px rgba(126,231,217,.04)}
-    .hero,.shell{max-width:1120px;margin:auto;padding-left:24px;padding-right:24px}.hero{padding-top:46px;padding-bottom:44px;position:relative;z-index:1}.kicker{color:#7fe7d6;font-size:12px;font-weight:800;letter-spacing:.14em;text-transform:uppercase}h1{margin:8px 0 10px;max-width:720px;font-size:clamp(34px,6vw,64px);line-height:1.02;letter-spacing:-.05em}.hero p{max-width:680px;margin:0;color:#b9d7e5;font-size:17px}.hero-meta{display:flex;flex-wrap:wrap;gap:10px;margin-top:26px}.chip{border:1px solid rgba(127,231,214,.35);color:#d9fffa;border-radius:999px;padding:5px 11px;font-size:12px;font-weight:700}
-    main{padding-top:28px;padding-bottom:72px}.status-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:24px}.status{background:var(--card);border:1px solid var(--line);border-top:4px solid var(--blue);padding:17px;box-shadow:var(--shadow)}.status:nth-child(2){border-top-color:var(--green)}.status:nth-child(3){border-top-color:var(--amber)}.status:nth-child(4){border-top-color:var(--rose)}.status small{color:var(--muted);display:block;font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}.status strong{display:block;margin-top:3px;font-size:18px}.status span{color:var(--muted);font-size:13px}
-    .card{background:var(--card);border:1px solid var(--line);box-shadow:var(--shadow);padding:25px;margin-bottom:20px}h2{margin:0 0 15px;font-size:23px;letter-spacing:-.025em}h3{margin:22px 0 8px;font-size:16px}.lede{color:var(--muted);margin-top:-7px}ul{padding-left:20px}li+li{margin-top:7px}.table-wrap{overflow-x:auto}table{width:100%;min-width:720px;border-collapse:collapse}th,td{padding:12px 10px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}th{color:var(--muted);font-size:11px;letter-spacing:.08em;text-transform:uppercase}code{background:#edf2f7;border:1px solid #e2e8f0;border-radius:4px;padding:1px 5px;font-size:.9em}.badge{display:inline-flex;align-items:center;gap:6px;padding:3px 9px;border-radius:999px;font-size:11px;font-weight:800;letter-spacing:.05em;text-transform:uppercase}.pass{color:#075e54;background:#d5f5ef}.pending{color:#7b4d09;background:#fff2c6}.muted{color:var(--muted)}.callout{border-left:4px solid var(--cyan);background:#e6fffa;padding:14px 16px;color:#234e52}.version-title{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}.version-title h2{margin:0}.grid{display:grid;grid-template-columns:1.4fr .8fr;gap:20px}.metric{display:flex;justify-content:space-between;gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}.metric:last-child{border-bottom:0}.metric b{font-size:18px}.timeline{list-style:none;padding:0;margin:0}.timeline li{display:grid;grid-template-columns:140px 1fr;gap:12px;padding:13px 0;border-bottom:1px solid var(--line)}.timeline li:last-child{border-bottom:0}.timeline time{color:var(--muted);font:700 12px/1.4 ui-monospace,SFMono-Regular,monospace}.history-nav{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 20px}.history-nav a{background:#e6fffa;border:1px solid #b2f5ea;border-radius:999px;padding:5px 11px;text-decoration:none;font-size:12px;font-weight:800}
-    footer{border-top:1px solid var(--line);color:var(--muted);padding:22px 24px;text-align:center;font-size:13px}@media(max-width:820px){.status-grid{grid-template-columns:repeat(2,1fr)}.grid{grid-template-columns:1fr}}@media(max-width:500px){.hero,.shell{padding-left:16px;padding-right:16px}.hero{padding-top:34px}.status-grid{grid-template-columns:1fr}.card{padding:19px}.timeline li{grid-template-columns:1fr;gap:2px}}@media print{body{background:#fff}.card,.status{box-shadow:none;break-inside:avoid}.masthead{color:#102a43;background:#fff;border-bottom:2px solid #102a43}.hero p,.chip{color:#102a43}}
-  </style>
+  <title>DOLPHIN · Rekam Rilis &amp; Patch</title>
+  <meta name="description" content="Rekam teknis DOLPHIN System: setiap versi, status pengujian otomatis, backup GitHub, dan status deploy.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600;700&family=Fira+Sans:wght@400;500;600;700;800&display=swap">
+  <link rel="stylesheet" href="report.css">
+  <script>
+    // Terapkan tema SEBELUM render agar tidak berkedip (FOUC).
+    (function () {
+      try {
+        var saved = localStorage.getItem('dolphin-patch-theme');
+        var prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        var theme = saved || (prefersDark ? 'dark' : 'light');
+        document.documentElement.setAttribute('data-theme', theme);
+      } catch (e) { /* localStorage diblokir: tetap tema light */ }
+    })();
+  </script>
 </head>
 <body>
-  <header class="masthead"><div class="hero"><div class="kicker">DOLPHIN / engineering record</div><h1>Patch history<br>semua versi</h1><p>Satu dashboard untuk membaca perkembangan fitur, status pengujian, backup GitHub, dan deployment DOLPHIN secara kronologis.</p><div class="hero-meta"><span class="chip">Versi aktif: 5.8.0 (terdeploy 4 Okt 2026)</span><span class="chip">v5.7.0 terdeploy 3 Okt 2026</span><span class="chip">Format: release.major.minor</span><span class="chip">Diperbarui: 3 Oktober 2026</span></div></div></header>
-  <main><div class="shell">
-    <nav class="history-nav" aria-label="Navigasi versi"><a href="#v5-8-0">v5.8.0 · terbaru</a><a href="#v5-7-0">v5.7.0</a><a href="#v5-6-0">v5.6.0</a><a href="#v5-5-0">v5.5.0</a><a href="#v5-4-0">v5.4.0</a><a href="#v5-3-0">v5.3.0</a><a href="#v5-2-1">v5.2.1</a><a href="#v5-2-0">v5.2.0</a><a href="#v5-1-0">v5.1.0</a><a href="#v5-0-3">v5.0.3</a><a href="#v5-0-2">v5.0.2</a><a href="#v5-0-1">v5.0.1</a><a href="#v5-0-0">v5.0.0</a></nav>
-    <section class="status-grid" aria-label="Status v5.8.0"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build; smoke 7/7</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit 0ecfbb2</span></div><div class="status"><small>Deploy Polinela</small><strong>PASS</strong><span>4 Okt · origin 200 · v5.8.0</span></div><div class="status"><small>Manual PM</small><strong>PENDING</strong><span>menunggu uji PM</span></div></section>
-    <section class="card" id="v5-8-0"><div class="version-title"><h2>v5.8.0 · Master Lab/TEFA Dinamis + CRUD System Admin</h2><span class="badge pass">Terdeploy</span></div><p class="lede">3 Oktober 2026 · Hapus <code>labMap</code> hardcode (18 lab) dari seluruh situs → baca tabel <code>laboratorium</code>; kolom baru <code>is_active</code> untuk nonaktifkan tanpa hapus; tab <strong>Semua Lab</strong> (tambah/edit/nonaktifkan) di <code>/admin/system</code>; pagination 20/baris di <code>/administrasi/status</code>.</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><strong>Master Lab dari DB</strong>: <code>lib/labs.ts</code> (fetchLabs / fetchLabsCached, KATEGORI/JENIS_LAB, resolveLabName + fallback LAB_MAP). Diganti di navbar, dashboard (+ tabs), jadwal (grid lab aktif), inventaris publik (dropdown dinamis), organisasi (<code>is_active=true</code>), pengajuan (<code>labIdByName</code> tanpa fallback <code>||1</code>).</li><li><strong>Migration <code>v580_laboratorium_is_active</code></strong>: kolom <code>is_active boolean NOT NULL DEFAULT true</code> (18 lab = true); unique index atas <code>lower(nama_lab)</code>; policy publik <code>USING (is_active = true)</code>; system admin tetap semua via <code>is_system_admin()</code>.</li><li><strong>CRUD Lab/TEFA</strong>: <code>LabAdminTab</code> — tambah (jenis + kategori + PJ manual, tanpa insert whitelist_admin), edit, nonaktifkan (konfirmasi Swal + ringkasan data terkait), aktifkan kembali; tombol Buka Dashboard tetap.</li><li><strong>Pagination</strong>: <code>/administrasi/status</code> 20/halaman + tombol Sebelumnya/Berikutnya + count exact + reset page saat search.</li><li>Detail: <a href="5.8.0/PATCH.md">5.8.0/PATCH.md</a> · spec: <code>docs/superpowers/specs/2026-10-03-lab-master-is-active-design.md</code>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc EXIT=0 + build webpack lulus; smoke standalone 7/7 halaman 200; footer v5.8.0; migration + RLS diterapkan.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>0ecfbb2</code> di-push origin/master (4 Okt 2026).</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>4 Okt 2026; BUILD_ID <code>OAIJEx_T68C5ANlHPvIKX</code>; SHA-256 <code>d5035539b2b9c32bda349ec2c063c6c61d882caa323af171d4105cbef7ed786a</code>; ZIP 28.0 MB; smoke origin 200 + footer v5.8.0. Backup <code>httpdocs.old-deploy-20261003-185310</code>.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pending">Pending</span></td><td>Uji PM: tambah/edit/nonaktifkan lab, dropdown dinamis, pagination 20, RLS publik.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.8.0</h3><div class="metric"><span>labMap dihapus</span><b>10+ file</b></div><div class="metric"><span>Kolom baru</span><b>is_active</b></div><div class="metric"><span>CRUD lab</span><b>LabAdminTab</b></div><div class="metric"><span>Pagination</span><b>20/halaman</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DESAIN</time><span>3 Okt — spec master is_active: disable bukan hapus, PJ manual, RLS anon aktif-only.</span></li><li><time>DB</time><span>Migration v580 + unique index; get_advisors bersih.</span></li><li><time>KODE</time><span>lib/labs, refactor 10+ file, LabAdminTab CRUD, pagination status.</span></li><li><time>BUILD</time><span>tsc + build webpack lulus; smoke 7/7 halaman 200.</span></li><li><time>NEXT</time><span>Commit+push (ACC PM) → deploy → uji PM.</span></li></ul></aside></div></section>
-    <section class="status-grid" aria-label="Status v5.6.0"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build; verifikasi 15/15</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit 4a381e7</span></div><div class="status"><small>Deploy Polinela</small><strong>PASS</strong><span>1 Okt 06:58 UTC · origin 5/5</span></div><div class="status"><small>Vercel noindex</small><strong>PASS</strong><span>auto-redeploy 1 Okt</span></div><div class="status"><small>Manual PM</small><strong>PENDING</strong><span>menunggu uji PM</span></div></section>
-    <section class="card" id="v5-7-0"><div class="version-title"><h2>v5.7.0 · Export Excel Riwayat &amp; Inventaris per Lab</h2><span class="badge pass">Terdeploy</span></div><p class="lede">3 Oktober 2026 · Tombol unduh .xlsx di dashboard tiap PJ lab: Riwayat peminjaman yang di-ACC (2 sheet) dan Inventaris (1 sheet), dibangkitkan server dengan <code>write-excel-file</code>, otorisasi via <code>whitelist_admin</code>.</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><code>GET /api/export/riwayat?lab_id=&lt;id&gt;</code> &amp; <code>GET /api/export/inventaris?lab_id=&lt;id&gt;</code> — otorisasi sesi + <code>whitelist_admin</code>; admin lab hanya lab miliknya, system admin bebas.</li><li>Riwayat: sheet <strong>Riwayat</strong> (peminjam, judul, tanggal/jam, status, biaya, bukti, feedback) + sheet <strong>Detail Barang</strong> (alat, jumlah, kondisi kembali, catatan).</li><li>Inventaris: kategori, jenis alat, spesifikasi, jumlah baik/rusak ringan/rusak berat, keterangan.</li><li>Sel teks diamankan dari formula injection Excel; query paging 1.000 baris; nama file <code>*-<nama lab>-YYYY-MM-DD.xlsx</code>.</li><li>Tombol <strong>Unduh Riwayat (Excel)</strong> &amp; <strong>Unduh Inventaris (Excel)</strong> di header tab; loading + error toast Swal.</li><li>Detail: <a href="5.7.0/PATCH.md">5.7.0/PATCH.md</a> · spec: <code>docs/superpowers/specs/2026-10-03-export-excel-riwayat-inventaris-design.md</code>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>SPEC</td><td><span class="badge pass">Pass</span></td><td>Spec design disetujui PM (ACC 2026-10-03).</td></tr><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc EXIT=0 + build webpack lulus; route table 2 endpoint dynamic; smoke 401/400; builder xlsx valid (signature PK).</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>b2b5cfc</code> di-push origin/master (3 Okt 2026).</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>3 Okt 2026 14:41 UTC; BUILD_ID <code>e80DDU6GRjd7OBEzBdSIB</code>; SHA-256 <code>086649d1ec...</code>; smoke origin 4/4 HTTP 200; file GSC verifikasi aktif di <code>/google80bae56b1afb808e.html</code>.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>Smoke origin: <code>/</code>, kedua route export (401 tanpa login), file GSC 200.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.7.0</h3><div class="metric"><span>Format</span><b>.xlsx (2+1 sheet)</b></div><div class="metric"><span>Library</span><b>write-excel-file 4.1.1</b></div><div class="metric"><span>Endpoints baru</span><b>2 route</b></div><div class="metric"><span>Tombol baru</span><b>2 tab admin</b></div><div class="metric"><span>Auth</span><b>whitelist_admin</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DESAIN</time><span>3 Okt — brainstorming fokus: PJ lab unduh riwayat ACC + inventaris (.xlsx).</span></li><li><time>SPEC</time><span>Spec disetujui; keputusan lib <code>write-excel-file</code> (bukan CSV).</span></li><li><time>KODE</time><span>Builder workbook, 2 route API, tombol di RiwayatTab &amp; InventarisTab.</span></li><li><time>BUILD</time><span>tsc + build webpack lulus; smoke 401/400 + fixture xlsx valid.</span></li><li><time>NEXT</time><span>Commit+push, acc PM, deploy saat SSH pulih / via Plesk.</span></li></ul></aside></div></section>
+  <a class="skip-link" href="#releases">Lompat ke daftar versi</a>
 
-<section class="card" id="v5-6-0"><div class="version-title"><h2>v5.6.0 · SEO kanonik Polinela + noindex demo Vercel</h2><span class="badge pass">Terdeploy</span></div><p class="lede">1 Oktober 2026 · Build <code>OtEhZRn7mfXLAimFBzRjB</code> · Deployed 06:58 UTC · Canonical tunggal ke dolphinperikanan.polinela.ac.id, title memuat kata kunci, robots.txt + sitemap.xml, OG image, JSON-LD, demo Vercel noindex</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><strong>Canonical tunggal</strong> di semua halaman publik ke <code>https://dolphinperikanan.polinela.ac.id{path}</code> — termasuk HTML yang disajikan dari Vercel. Origin di-hardcode di <code>lib/site-seo.ts</code> (bukan env) agar tidak salah arah ke localhost/Vercel.</li><li><strong>Title memuat kata kunci</strong>: "Lab Perikanan Polinela"; description menyebut laboratorium, jurusan, dan Polinela. Tiap halaman publik punya title + canonical sendiri.</li><li><strong><code>/robots.txt</code> + <code>/sitemap.xml</code></strong> via route handler (bukan file statis yang ditimpa Apache Plesk). Sitemap 8 URL publik.</li><li><strong>Open Graph + Twitter Card</strong> + <code>public/og-image.png</code> (1200×630) untuk cuplikan sosial &amp; ringkasan AI.</li><li><strong>JSON-LD</strong> Organization + WebSite (alamat, parentOrganization Polinela) dirender di HTML awal tanpa JS.</li><li><strong>Noindex demo Vercel</strong> dua lapis: build-time (<code>VERCEL=1</code>) + runtime (<code>X-Robots-Tag</code> untuk Host <code>*.vercel.app</code>). Demo tetap hidup untuk manusia.</li><li><strong>Perbaikan bug maintenance</strong>: gerbang maintenance tidak lagi me-redirect <code>/robots.txt</code> &amp; <code>/sitemap.xml</code> (sebelumnya ikut 307 ke <code>/maintenance</code>).</li><li>Detail: <a href="5.6.0/PATCH.md">5.6.0/PATCH.md</a> · spec: <code>docs/superpowers/specs/2026-10-01-seo-kanonik-polikonsolidasi-design.md</code>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc EXIT=0 + build; <code>robots.txt</code>/<code>sitemap.xml</code> static; verifikasi curl 15/15 sesuai (canonical, title, OG, JSON-LD, noindex admin, X-Robots-Tag Vercel, bypass maintenance).</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>4a381e7</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>1 Okt 2026 06:58 UTC; BUILD_ID <code>OtEhZRn7mfXLAimFBzRjB</code>; SHA-256 <code>63969ab2…89c2</code>; smoke origin 5/5 HTTP 200 (bypass Cloudflare).</td></tr><tr><td>VERCEL-NOINDEX</td><td><span class="badge pass">Pass</span></td><td>Auto-redeploy dari push; <code>robots.txt</code> <code>Disallow: /</code>; <code>X-Robots-Tag: noindex, nofollow</code>; canonical tetap Polinela.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pending">Pending</span></td><td>Menunggu uji PM + Search Console.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.6.0</h3><div class="metric"><span>Canonical</span><b>1 origin Polinela</b></div><div class="metric"><span>URL sitemap</span><b>8 publik</b></div><div class="metric"><span>OG image</span><b>1200×630 · 137 KB</b></div><div class="metric"><span>JSON-LD</span><b>Organization + WebSite</b></div><div class="metric"><span>Halaman noindex</span><b>admin/dosen/administrasi/maintenance</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DIAGNOSIS</time><span>1 Okt — 6 temuan: duplikat tanpa canonical, Vercel terindeks, robots/sitemap 404, title tanpa kata kunci.</span></li><li><time>SPEC</time><span>Spec arsitektural disetujui PM; temuan bug maintenance pada <code>robots.txt</code>.</span></li><li><time>KODE</time><span>site-seo lib, robots/sitemap, layout segmen, JSON-LD, OG image, middleware.</span></li><li><time>BUILD</time><span>tsc + build lulus; verifikasi lokal 15/15.</span></li><li><time>GITHUB</time><span>Checkpoint <code>4a381e7</code> + docs <code>6369c90</code> di-push.</span></li><li><time>DEPLOY</time><span>BUILD_ID <code>OtEhZRn7mfXLAimFBzRjB</code>; smoke origin 5/5 HTTP 200.</span></li><li><time>NEXT</time><span>Redeploy Vercel (noindex) → Search Console + submit sitemap.</span></li></ul></aside></div></section>
-    <section class="status-grid" aria-label="Status v5.5.0"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build, 20 rute</span></div><div class="status"><small>Deploy</small><strong>PASS</strong><span>30 Sep 17:44 UTC · origin 4/4</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit 9390c16</span></div><div class="status"><small>Vercel noindex</small><strong>PASS</strong><span>auto-redeploy 1 Okt</span></div><div class="status"><small>Manual PM</small><strong>PENDING</strong><span>menunggu uji PM</span></div></section>
-    <section class="card" id="v5-5-0"><div class="version-title"><h2>v5.5.0 · CMS Dokumen: SOP terkelola + menu SK Lab</h2><span class="badge pass">Terdeploy</span></div><p class="lede">30 September 2026 · Build <code>TLXxw7tcmZxMg2FhKLemA</code> · Deployed 17:44 UTC · SOP perikanan &amp; tangkap pindah ke database (ISR 5 menit), halaman SK Lab baru, panel kelola PDF di System Admin</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Tabel baru <code>public.dokumen</code> melayani tiga kategori: <code>sop-perikanan</code>, <code>sop-tangkap</code>, <code>sk-lab</code> — RLS via <code>public.is_system_admin()</code>, 13 PDF lama di-seed dengan URL lokal <code>/dokumen/*.pdf</code>.</li><li><strong>System Admin › Dokumen</strong>: chip kategori, unggah PDF ke Cloudinary (<code>raw</code>, folder <code>dolphin_dokumen</code>), edit judul/nomor/tanggal/deskripsi, tampil/sembunyikan, geser urutan, hapus dengan konfirmasi Swal.</li><li><code>/dokumen/sop-perikanan</code> &amp; <code>/dokumen/sop-tangkap</code> tidak lagi hardcode — Server Component ISR 300 detik dengan <strong>fallback statis</strong> bila DB kosong/gagal.</li><li>Halaman baru <code>/dokumen/sk-lab</code> + entri menu <strong>SK Lab</strong> di dropdown Dokumen (desktop) dan accordion mobile.</li><li>Validasi berkas: hanya PDF, maksimal 10 MB (klien + helper <code>isAllowedPdf</code>).</li><li>Detail: <a href="5.5.0/PATCH.md">5.5.0/PATCH.md</a> · spec: <code>docs/superpowers/specs/2026-09-30-cms-dokumen-sop-sk-lab-design.md</code>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc EXIT=0 + build webpack; BUILD_ID <code>TLXxw7tcmZxMg2FhKLemA</code>; 3 rute dokumen static ISR 5m.</td></tr><tr><td>DB MIGRATION</td><td><span class="badge pass">Pass</span></td><td><code>v550_dokumen_cms</code>; index <code>(kategori,is_visible,sort_order)</code>; RLS ON; policy publik + admin; grant <code>anon</code> = SELECT saja.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>9390c16</code> di-push ke <code>origin/master</code> (30 Sep 2026).</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>30 Sep 2026 17:44 UTC; BUILD_ID <code>TLXxw7tcmZxMg2FhKLemA</code>; SHA-256 <code>0425b4c8…7394a</code>; smoke origin 4/4 HTTP 200 (bypass Cloudflare).</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pending">Pending</span></td><td>Menunggu uji PM di production. Upload PDF butuh preset <code>dolphin_dokumen</code> + env Plesk.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.5.0</h3><div class="metric"><span>Build ID</span><b style="font-size:12px;text-align:right">TLXxw7tcmZxMg2FhKLemA</b></div><div class="metric"><span>Kategori dokumen</span><b>3</b></div><div class="metric"><span>Seed dokumen</span><b>13 PDF</b></div><div class="metric"><span>Batas berkas</span><b>PDF · 10 MB</b></div><div class="metric"><span>Halaman publik baru</span><b>/dokumen/sk-lab</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DESAIN</time><span>30 Sep — spec arsitektural disetujui PM (Cloudinary raw, 1 tabel, 3 kategori).</span></li><li><time>MIGRASI</time><span>Tabel <code>dokumen</code> + RLS + seed 13 PDF lama.</span></li><li><time>KODE</time><span>Helper PDF Cloudinary, tab System Admin, 3 halaman publik, menu SK Lab.</span></li><li><time>BUILD</time><span>tsc + build lulus; rute dokumen ISR 5 menit.</span></li><li><time>GITHUB</time><span>Checkpoint <code>9390c16</code> di-push.</span></li><li><time>DEPLOY</time><span>BUILD_ID <code>TLXxw7tcmZxMg2FhKLemA</code>; smoke origin 4/4 HTTP 200.</span></li><li><time>NEXT</time><span>Uji PM + buat preset Cloudinary <code>dolphin_dokumen</code> + env Plesk.</span></li></ul></aside></div></section>
-    <section class="status-grid" aria-label="Status v5.4.0"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build ISR 5m</span></div><div class="status"><small>Deploy</small><strong>PASS</strong><span>29 Sep 16:56 UTC · smoke 9/10</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit 9dfeed1</span></div><div class="status"><small>Manual PM</small><strong>PASS</strong><span>ACC 29 Sep 2026</span></div></section>
-    <section class="card" id="v5-4-0"><div class="version-title"><h2>v5.4.0 · Hero 4–6, seleksi massal dokumentasi, modal unggah lab</h2><span class="badge pass">Terdeploy</span></div><p class="lede">29 September 2026 · Build <code>XT0ksLsTZt2P1_jQGczSX</code> · Deployed 16:56 UTC · Penyempurnaan UX media setelah ACC v5.3.0</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Foto Beranda: maks 6, min 4 (hapus ditolak di bawah 4). Tombol tambah aktif selama &lt; 6.</li><li>System Admin Dokumentasi: checkbox per kartu, Pilih semua/Batal, toolbar sticky Tampilkan/Sembunyikan/Hapus (aksi massal).</li><li>Admin lab Dokumentasi: modal unggah dengan preview foto, Nama kegiatan (wajib), Deskripsi (opsional).</li><li>Kolom baru <code>dokumentasi_foto.nama_kegiatan</code> + <code>deskripsi</code> (nullable, constraint panjang). Nama dipakai sebagai <code>alt</code> marquee beranda.</li><li>Setiap tombol hapus (hero, dokumentasi per-kartu &amp; massal, materi, mata kuliah, inventaris, jadwal, layanan, riwayat, admin lab) memunculkan dialog konfirmasi Swal sebelum eksekusi.</li><li>Detail: <a href="5.4.0/PATCH.md">5.4.0/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc + build webpack; BUILD_ID <code>XT0ksLsTZt2P1_jQGczSX</code>.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>9dfeed1</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>29 Sep 2026 16:56 UTC; BUILD_ID <code>XT0ksLsTZt2P1_jQGczSX</code>; SHA-256 <code>83c9e097…5383e</code>; smoke 9/10 (403 hanya <code>/api/admin/health</code> = proteksi auth).</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>ACC PM 29 Sep 2026.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.4.0</h3><div class="metric"><span>Build ID</span><b style="font-size:12px;text-align:right">XT0ksLsTZt2P1_jQGczSX</b></div><div class="metric"><span>Hero</span><b>min 4 · max 6</b></div><div class="metric"><span>Bulk dokumentasi</span><b>Tampil/Sembunyi/Hapus</b></div><div class="metric"><span>Modal unggah</span><b>nama wajib</b></div><div class="metric"><span>Konfirmasi hapus</span><b>12 titik</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>ACC 5.3.0</time><span>29 Sep — PM ACC v5.3.0.</span></li><li><time>DESAIN</time><span>Brainstorming bounded + UI UX Pro Max; ACC 5.4.0.</span></li><li><time>MIGRASI</time><span>v540_dokumentasi_metadata applied.</span></li><li><time>BUILD</time><span>tsc + build lulus.</span></li><li><time>GITHUB</time><span>Checkpoint <code>9dfeed1</code> di-push.</span></li><li><time>DEPLOY</time><span>BUILD_ID <code>XT0ksLsTZt2P1_jQGczSX</code>; smoke 9/10 HTTP 200.</span></li></ul></aside></div></section>
-    <section class="status-grid" aria-label="Status v5.3.0"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build ISR 5m</span></div><div class="status"><small>Deploy</small><strong>PENDING</strong><span>Env sudah diisi PM; deploy belum</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit 3461c7d</span></div><div class="status"><small>Manual PM</small><strong>PASS</strong><span>ACC 29 Sep 2026</span></div></section>
-    <section class="card" id="v5-3-0"><div class="version-title"><h2>v5.3.0 · Media kelola admin &amp; panel overview + hardening</h2><span class="badge pass">ACC PM</span></div><p class="lede">28 September 2026 · Build <code>gDTIBvHQ9KYcuwxnDoqe_</code> · Foto hero/dokumentasi/organisasi kelola admin + panel overview + hardening API; email Resend dihapus</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Foto hero (max 4, geser urutan), 3 pimpinan jurusan, dan 18 PJ lab bisa dikelola admin sistem; beranda &amp; <code>/organisasi</code> baca dari DB (ISR 5 menit) dengan <strong>fallback lokal</strong> sebelum admin mengganti foto.</li><li>Foto dokumentasi diunggah admin lab/PJ dan langsung tampil di marquee beranda; system admin mengkurasi via toggle <code>is_visible</code> atau hapus.</li><li><strong>Panel Overview</strong> — kesehatan DB (count per tabel, latency), pemakaian Cloudinary, antrian pengajuan, maintenance mode — hanya untuk system admin.</li><li>Hardening API hasil pentest: <code>/api/delete-cloudinary</code> wajib login + guard host akun; fitur email Resend dihapus total; <code>/api/send-notification</code> via service_role + RPC aman; RLS <code>push_subscriptions</code> diaktifkan.</li><li>Perlu env server baru: <code>SUPABASE_SERVICE_ROLE_KEY</code> dan 3 preset unsigned Cloudinary (<code>dolphin_hero/dokumentasi/organisasi</code>). Detail: <a href="5.3.0/PATCH.md">5.3.0/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc + build webpack; <code>/</code> &amp; <code>/organisasi</code> static 5m ISR.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>3461c7d</code> di-push ke <code>origin/master</code> (28 Sep 2026).</td></tr><tr><td>DEPLOYED</td><td><span class="badge pending">Pending</span></td><td>Env Plesk sudah diisi PM; deploy server belum.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>ACC PM 29 Sep 2026.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.3.0</h3><div class="metric"><span>Build ID</span><b style="font-size:12px;text-align:right">gDTIBvHQ9KYcuwxnDoqe_</b></div><div class="metric"><span>Hero</span><b>max 4, reorder</b></div><div class="metric"><span>Dokumentasi</span><b>lab_id + visible</b></div><div class="metric"><span>Hardening</span><b>K1–K6 fix</b></div><div class="metric"><span>Resend dihapus</span><b>0 ref</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>SPEC</time><span>28 Sep — spec disetujui PM.</span></li><li><time>MIGRASI</time><span>Tabel &amp; RLS &amp; RPC &amp; seed 18 PJ + 13 foto.</span></li><li><time>BUILD</time><span>tsc + build lulus, public routes static ISR.</span></li><li><time>NEXT</time><span>ACC PM → push ke GitHub + 3 env preset + deploy.</span></li></ul></aside></div></section>
-        <section class="status-grid" aria-label="Status versi terbaru"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build; alpha terverifikasi</span></div><div class="status"><small>Deploy</small><strong>PASS</strong><span>26 Sep 18:55 UTC · smoke 9/9</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>commit c3dc65e</span></div><div class="status"><small>Manual PM</small><strong>PASS</strong><span>ACC 27 Sep · ikon transparan tanpa kotak putih</span></div></section>
-    <section class="card" id="v5-2-1"><div class="version-title"><h2>v5.2.1 · Favicon &amp; apple-icon transparan</h2><span class="badge pass">Deployed</span></div><p class="lede">27 September 2026 · Favicon (16/32/48) &amp; apple-icon 180 kini berlatar transparan — sama seperti logo utama</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><code>favicon.ico</code> &amp; <code>apple-icon.png</code> yang sebelumnya berlatar putih solid (v5.0.3–v5.2.0) kini <strong>transparan</strong>, sesuai sumber <code>logo_dolphin.webp</code>.</li><li>Hanya <code>scripts/generate-favicons.mjs</code> yang berubah (kanvas transparan); tidak ada perubahan kode aplikasi.</li><li><code>apple-icon.png</code> tetap palette 256 warna + alpha (±17 KB). Catatan: iOS menampilkan area transparan sebagai <strong>hitam</strong> di home screen — sudah disetujui PM.</li><li>Detail: <a href="5.2.1/PATCH.md">5.2.1/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>Regenerate + alpha per entri terverifikasi; tsc + build.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>commit <code>c3dc65e</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>26 Sep 18:55 UTC · smoke 9/9 · SHA-256 file identik.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>PM ACC 27 Sep 2026: tab browser transparan tanpa kotak putih; home screen sesuai harapan.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.2.1</h3><div class="metric"><span>favicon.ico</span><b>8,3 KB · transparan</b></div><div class="metric"><span>apple-icon.png</span><b>17,1 KB · transparan</b></div><div class="metric"><span>Kode aplikasi berubah</span><b>0 file</b></div><div class="metric"><span>ZIP</span><b>27.7 MB / 3306 file</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DIAGNOSIS</time><span>favicon &amp; apple berlatar putih solid; navbar aman.</span></li><li><time>FIX</time><span>Kanvas transparan + palette+alpha apple.</span></li><li><time>VERIFY</time><span>Alpha 37–42% pada semua entri.</span></li><li><time>DEPLOY</time><span>26 Sep 18:55 UTC · smoke 9/9 · 0 502 baru.</span></li><li><time>NEXT</time><span>PM ACC 27 Sep 2026 — semua uji manual lolos.</span></li></ul></aside></div></section>
-    <section class="status-grid" aria-label="Status versi terbaru"><div class="status"><small>Otomatis</small><strong>PASS</strong><span>tsc + build; 18 rute</span></div><div class="status"><small>Deploy</small><strong>PASS</strong><span>v5.2.0 18:00 UTC · lCxcT0RdeMn</span></div><div class="status"><small>GitHub backup</small><strong>PASS</strong><span>Commit 82bb75f</span></div><div class="status"><small>Manual PM</small><strong>PASS</strong><span>ACC 27 Sep · dosen upload/hapus file; v5.1.0 juga lolos</span></div></section>
-    <section class="card" id="v5-2-0"><div class="version-title"><h2>v5.2.0 · Dosen upload &amp; hapus file materi</h2><span class="badge pass">Terdeploy</span></div><p class="lede">27 September 2026 · Build <code>lCxcT0RdeMnOEGY1VPtzw</code> · Deployed 18:00 UTC · Tombol Upload + Hapus (milik sendiri) pada halaman Akses Materi dosen — tanpa perubahan DB/RLS</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Dosen <code>@polinela.ac.id</code> kini bisa <strong>upload file</strong> ke kategori yang dibuka via PIN dan <strong>hapus file miliknya sendiri</strong> di <code>/dosen/materi</code>.</li><li>Tombol Hapus hanya muncul untuk file milik dosen yang login (<code>dosen_email</code> cocok); kategori tetap dikelola admin lab.</li><li>RLS &amp; DB tidak diubah — policy <em>Dosen bisa mengunggah materi sendiri</em> sudah ada sejak awal, kini diberi UI.</li><li>Halaman mahasiswa <code>/materi</code> tetap read-only. Detail: <a href="5.2.0/PATCH.md">5.2.0/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc + build webpack; BUILD_ID <code>lCxcT0RdeMnOEGY1VPtzw</code>.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>Commit <code>82bb75f</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>26 Sep 2026 18:00 UTC; BUILD_ID <code>lCxcT0RdeMnOEGY1VPtzw</code>; SHA-256 <code>238fcb6e…f433</code>; smoke origin 9/9; footer v5.2.0.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>PM ACC 27 Sep 2026: dosen upload + hapus file sendiri; tanpa tombol hapus pada file orang lain.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.2.0</h3><div class="metric"><span>File berubah</span><b>1 (dosen/materi)</b></div><div class="metric"><span>Perubahan DB/RLS</span><b>0</b></div><div class="metric"><span>Halaman terdampak</span><b>/dosen/materi</b></div><div class="metric"><span>ZIP</span><b>27.7 MB / 3306 file</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>KLARIFIKASI</time><span>PM: dosen bisa up/hapus file, kategori tetap admin.</span></li><li><time>CEK RLS</time><span>Policy dosen sudah ada — cukup UI.</span></li><li><time>BUILD</time><span>tsc + build lulus.</span></li><li><time>NEXT</time><span>PM ACC 27 Sep 2026 — uji dosen lolos.</span></li></ul></aside></div></section>
-    <section class="card" id="v5-1-0"><div class="version-title"><h2>v5.1.0 · MateriTab + halaman publik /materi</h2><span class="badge pass">Terdeploy</span></div><p class="lede">26 September 2026 · Build <code>OiHQGwnXwmWLzbOd08haz</code> · Deployed 17:25 UTC · Perbaikan regresi tombol Tambah Kelas, shared view kelas, halaman publik PIN</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Akar bug: SELECT whitelist dipersempit menjadi <code>role, lab_id</code> di v5.0.0, sehingga <code>activeProfile.email</code> hilang. MateriTab return diam-diam pada akun Gmail whitelisted; system admin tetap bisa karena profil sintetisnya menyertakan email.</li><li>SELECT diperluas menjadi <code>id, role, lab_id, email, nama_dosen</code> + jaring terakhir menempelkan <code>session.user.email</code>.</li><li>Semua admin melihat semua kelas (filter <code>created_by</code> dihapus); kartu menampilkan <code>Dibuat oleh</code>.</li><li>Halaman publik <code>/materi</code> di navbar Dokumen (setelah SOP Tangkap): PIN 6 digit, tanpa login, verifikasi via RPC <code>materi_public_by_pin</code> (PIN tidak pernah SELECT ke anon).</li><li>Policy RLS baru: admin lab dapat mengelola file <code>materi_dosen</code> orang lain. Detail: <a href="5.1.0/PATCH.md">5.1.0/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc + build webpack 18 rute termasuk /materi.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>Commit <code>490f101</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>26 Sep 2026 17:25 UTC; BUILD_ID <code>OiHQGwnXwmWLzbOd08haz</code>; ZIP SHA-256 <code>ca2c71c3…3211</code>; smoke origin 9/9 HTTP 200; chunk <code>materi/page-7aee9de57e9e2a72.js</code> ada; footer v5.1.0.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>PM ACC 27 Sep 2026: Tambah Kelas (Gmail/Polinela), shared view, PIN publik — semua lolos.</td></tr></tbody></table></div></div><aside><h3>Metrik v5.1.0</h3><div class="metric"><span>Tambah Kelas @gmail</span><b>diperbaiki</b></div><div class="metric"><span>Shared view</span><b>semua kelas</b></div><div class="metric"><span>Route publik</span><b>/materi</b></div><div class="metric"><span>RPC PIN</span><b>materi_public_by_pin</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DIAGNOSIS</time><span>SELECT sempit menghilangkan email; filter created_by menyembunyikan kelas.</span></li><li><time>FIX</time><span>Tempel email + hapus filter + RPC PIN + policy admin.</span></li><li><time>BUILD</time><span>tsc + build 18 rute lulus.</span></li><li><time>NEXT</time><span>PM ACC 27 Sep 2026 — 4 skenario lolos.</span></li></ul></aside></div></section>
-    <section class="card" id="v5-0-3"><div class="version-title"><h2>v5.0.3 · Favicon &amp; Apple Icon DOLPHIN</h2><span class="badge pass">Terdeploy</span></div><p class="lede">26 September 2026 · Build <code>waRbtoTz544HLAz6QwlY4</code> · Deployed 07:35 UTC (14:35 WIB) · Favicon &amp; Apple icon dari logo DOLPHIN</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Menambahkan <code>public/favicon.ico</code> multi-size (16/32/48) dari logo DOLPHIN; sebelumnya request langsung <code>/favicon.ico</code> dari user nyata menghasilkan 404.</li><li>Mengganti <code>apple-icon.png</code> yang masih ikon template dengan logo DOLPHIN 180×180 untuk home screen iOS/iPadOS.</li><li>Metadata kini mengeluarkan favicon ICO eksplisit dan tetap menyediakan ikon PNG 512×512 untuk PWA.</li><li>Audit aset diperbaiki: file di <code>public/</code> tidak lagi otomatis dianggap terpakai hanya karena namanya mengandung <code>icon</code>.</li><li>Laporan PM: berbagai route pada v5.0.2 belum mengalami 502; uji idle ±1 jam masih menunggu. Detail: <a href="5.0.3/PATCH.md">5.0.3/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td>tsc + build webpack lulus; HTML menghasilkan 3 link ikon.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>Commit <code>845b4dd</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>26 Sep 2026 07:35 UTC; smoke 9/9 termasuk favicon.ico.</td></tr><tr><td>MANUAL-TEST</td><td><span class="badge pass">Pass</span></td><td>PM ACC 27 Sep 2026: tab browser + home screen iOS terverifikasi.</td></tr></tbody></table></div><h3>Angka kunci</h3><div class="table-wrap"><table><thead><tr><th>Metrik</th><th>Sebelum</th><th>Sesudah</th></tr></thead><tbody><tr><td><code>favicon.ico</code></td><td>tidak ada (404)</td><td><strong>7,8 KB · 16/32/48</strong></td></tr><tr><td><code>apple-icon.png</code></td><td>2,6 KB (ikon template)</td><td><strong>17,4 KB · logo DOLPHIN</strong></td></tr><tr><td>Status <code>IMPLICIT</code> salah</td><td>1 (<code>icon.svg</code>)</td><td><strong>0</strong></td></tr></tbody></table></div></div><aside><h3>Metrik v5.0.3</h3><div class="metric"><span>favicon.ico</span><b>7,8 KB · 3 ukuran</b></div><div class="metric"><span>Apple icon</span><b>180×180 · 17,4 KB</b></div><div class="metric"><span>Ikon aktif</span><b>Logo DOLPHIN</b></div><div class="metric"><span>Ikon template sisa</span><b>0 aktif</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>VERIFY</time><span>Favicon dipetakan: tab browser, PWA Android, push, dan Apple.</span></li><li><time>FIX</time><span>ICO baru + Apple icon dari logo DOLPHIN.</span></li><li><time>BUILD</time><span>Type-check dan build webpack lulus.</span></li><li><time>GITHUB</time><span>Checkpoint <code>845b4dd</code> di-push.</span></li><li><time>DEPLOY</time><span>BUILD_ID <code>waRbtoTz544HLAz6QwlY4</code>; smoke 9/9 HTTP 200.</span></li><li><time>NEXT</time><span>Uji tab browser + home screen iOS; idle 1 jam masih menunggu.</span></li></ul></aside></div></section>
+  <!-- ============================ TOPBAR ============================ -->
+  <header class="topbar">
+    <div class="topbar__brand">
+      <span class="topbar__mark" aria-hidden="true">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12c2.5-4 6-6 10-6s7.5 2 10 6c-2.5 4-6 6-10 6S4.5 16 2 12Z"/><circle cx="12" cy="12" r="2.5"/></svg>
+      </span>
+      <div>
+        <p class="topbar__title">DOLPHIN</p>
+        <span class="topbar__sub">Rekam Rilis &amp; Patch</span>
+      </div>
+    </div>
+    <button class="theme-toggle" id="themeToggle" type="button" aria-label="Ganti tema gelap/terang" aria-pressed="false">
+      <span class="theme-toggle__icon" aria-hidden="true">
+        <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg>
+        <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+      </span>
+      <span id="themeLabel">Mode gelap</span>
+    </button>
+  </header>
 
-    <section class="card" id="v5-0-2"><div class="version-title"><h2>v5.0.2 · Cookie 1 chunk tuntas</h2><span class="badge pass">Terdeploy (digantikan v5.0.3)</span></div><p class="lede">25 September 2026 · Build <code>xs8ATU0djm6ntGl10t7w_</code> · Deployed 13:04 UTC (25 Sep 20:04 WIB) · Perbaikan tuntas 502 (sesi nyata 3330 → 2481 char)</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><strong>502 masih muncul setelah v5.0.1</strong> pada <code>GET /?code=…</code> (callback OAuth) dan <code>GET /</code> pukul 10:38, 11:08, 11:34 UTC.</li><li>Akar masalah: sesi nyata user Google (metadata asli 552 char + refresh setelah 1 jam) tetap <strong>3330 char / 2 chunk</strong> setelah slim v5.0.1 → <code>Set-Cookie</code> ±3,5 KB.</li><li>Slim kini memangkas berlapis (token OAuth, timestamp, URL foto Google ganda, allowlist metadata) dengan jaminan muat 1 chunk. Hasil data nyata: <strong>2481 char / 1 chunk</strong> (margin 699 char).</li><li>Regresi diperkuat memakai data user nyata + skrip edge 4/4 PASS (nama/email sangat panjang).</li><li>Bersih-bersih server: 404 MB → 210 MB (hapus generasi pre-v5.0.0 + ZIP lama; rollback v5.0.0 &amp; v5.0.1 dipertahankan).</li><li>Detail teknis: <a href="5.0.2/PATCH.md">5.0.2/PATCH.md</a>.</li></ul><h3>Angka kunci</h3><div class="table-wrap"><table><thead><tr><th>Metrik</th><th>v5.0.1</th><th>v5.0.2</th></tr></thead><tbody><tr><td>Cookie sesi (data nyata)</td><td>3330 char / 2 chunk</td><td><strong>2481 char / 1 chunk</strong></td></tr><tr><td><code>Set-Cookie</code> hasil refresh</td><td>±3,5 KB</td><td><strong>2,51 KB</strong></td></tr><tr><td>Skrip regresi edge</td><td>—</td><td>4/4 PASS</td></tr><tr><td>Smoke test route</td><td>7/7 (v5.0.0)</td><td><strong>7/7 HTTP 200</strong></td></tr><tr><td>502 pasca-deploy</td><td>6×6 entri pra-deploy</td><td><strong>0 (log bersih &gt; 13:04 UTC)</strong></td></tr></tbody></table></div><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td><code>npx tsc --noEmit</code> + <code>next build --webpack</code>.</td></tr><tr><td>SESSION &amp; EDGE CHECK</td><td><span class="badge pass">Pass</span></td><td>2481 char / 1 chunk; edge 4/4.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>Commit <code>d8d8e5d</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>25 Sep 2026 13:04 UTC; smoke test 7/7; footer v5.0.2.</td></tr><tr><td>MANUAL-VERIFIED</td><td><span class="badge pass">Pass</span></td><td>PM ACC: idle ±1 jam sudah teruji tanpa 502 ("5.02 sudah lebih dari 1 jam dan sudah teruji").</td></tr></tbody></table></div></div><aside><h3>Metrik v5.0.2</h3><div class="metric"><span>Cookie sesi</span><b>1 chunk · 2,51 KB</b></div><div class="metric"><span>Margin</span><b>699 char</b></div><div class="metric"><span>Edge case</span><b>4/4 PASS</b></div><div class="metric"><span>Build ID</span><b style="font-size:12px;text-align:right">xs8ATU0djm6ntGl10t7w_</b></div><div class="metric"><span>Vhost disk</span><b>210 MB</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>DIAGNOSIS</time><span>Sesi nyata diukur ulang (metadata Google asli) — terbukti 2 chunk.</span></li><li><time>FIX</time><span>Slim berlapis + jaminan 1 chunk; fallback email bila ekstrem.</span></li><li><time>BUILD</time><span>tsc, build, regresi nyata + edge lulus.</span></li><li><time>GITHUB</time><span>Checkpoint <code>d8d8e5d</code> di-push.</span></li><li><time>CLEANUP</time><span>404 MB → 210 MB; rollback v5.0.0/v5.0.1 dipertahankan.</span></li><li><time>DEPLOY</time><span>BUILD_ID <code>xs8ATU0djm6ntGl10t7w_</code>; smoke test 7/7 HTTP 200.</span></li><li><time>NEXT</time><span>Log nginx 0×502 pasca-deploy; uji PM idle ±1 jam → 200.</span></li></ul></aside></div></section>
+  <!-- ============================= HERO ============================= -->
+  <section class="hero">
+    <div class="shell hero__grid">
+      <div>
+        <p class="hero__kicker">Sistem Informasi Laboratorium Jurusan Perikanan &amp; Kelautan · Politeknik Negeri Lampung</p>
+        <h1 class="hero__title">Rekam rilis <span>teknis</span> tiap versi DOLPHIN.</h1>
+        <p class="hero__lede">Satu halaman statis untuk membaca perkembangan fitur, status pengujian otomatis, backup GitHub, dan status deploy DOLPHIN secara kronologis. Tanpa menjalankan perintah apa pun di browser.</p>
+        <div class="hero__facts">
+          <span class="fact">Versi aktif <b>5.8.0</b></span>
+          <span class="fact">Terdeploy <b>4 Okt 2026</b></span>
+          <span class="fact">Total versi <b>13</b></span>
+          <span class="fact">Format <b>release.major.minor</b></span>
+        </div>
+      </div>
+      <aside class="fingerprint" aria-label="Sidik jari build aktif">
+        <div class="fingerprint__head">
+          <span>Build aktif (production)</span>
+          <span class="live-dot">live</span>
+        </div>
+        <div class="fingerprint__body">
+          <div class="fingerprint__row">
+            <span class="fingerprint__label">BUILD_ID</span>
+            <div class="fingerprint__row-top">
+              <span class="fingerprint__value" id="buildIdValue">OAIJEx_T68C5ANlHPvIKX</span>
+              <button class="copy-btn" data-copy-target="buildIdValue" type="button" aria-label="Salin BUILD_ID">Salin</button>
+            </div>
+          </div>
+          <div class="fingerprint__row">
+            <span class="fingerprint__label">Footer aplikasi</span>
+            <span class="fingerprint__value">DOLPHIN System v5.8.0</span>
+          </div>
+          <div class="fingerprint__row">
+            <span class="fingerprint__label">Commit kode (GitHub)</span>
+            <div class="fingerprint__row-top">
+              <span class="fingerprint__value" id="commitValue">0ecfbb2</span>
+              <button class="copy-btn" data-copy-target="commitValue" type="button" aria-label="Salin commit">Salin</button>
+            </div>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
 
-    <section class="card" id="v5-0-1"><div class="version-title"><h2>v5.0.1 · PWA, aset, &amp; hotfix 502</h2><span class="badge pass">Terdeploy (digantikan v5.0.2)</span></div><p class="lede">26 September 2026 · Build <code>hXu-UzBl9gyYn7SRlHorK</code> · Deployed 25 Sep 2026 07:33 UTC</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li><strong>Hotfix 502:</strong> sesi Auth dilangsingkan (buang <code>identities</code>/<code>factors</code>/token OAuth) sehingga <code>Set-Cookie</code> hasil refresh JWT setelah idle ±1 jam tetap 1 chunk (±1,6 KB) — di bawah buffer nginx.</li><li>Matcher middleware melewati <code>sw.js</code>, <code>manifest.json</code>, dan file worker agar aset statis PWA tidak memicu refresh sesi.</li><li>Audit setiap aset <code>public/</code> (USED/DYNAMIC/IMPLICIT/PARTIAL/UNUSED/GENERATED); 11 file UNUSED (1,62 MB) ditandai, bukan dihapus.</li><li>Memperbaiki URL PDF SOP yang salah dan foto kaprodi placeholder yang hilang.</li><li>38 gambar dikonversi ke WebP (−70,2%); precache 126 → 77 entri; halaman dinamis/API <code>NetworkOnly</code> dengan push notification tetap aktif.</li><li>Detail teknis: <a href="5.0.1/PATCH.md">5.0.1/PATCH.md</a> · bukti mesin: <a href="asset-audit.json">asset-audit.json</a>.</li></ul><h3>Bukti akar 502 (log server 2026-09-25)</h3><div class="table-wrap"><table><thead><tr><th>Sinyal</th><th>Arti</th></tr></thead><tbody><tr><td>4× <code>upstream sent too big header</code> pukul 06:21–06:22 UTC</td><td>502 hanya pada request pertama setelah idle; pola refresh JWT.</td></tr><tr><td><code>access_ssl_log</code> mencetak <strong>200</strong> di detik yang sama, tanpa 502</td><td>Apache membalas 200 dengan header gemuk → nginx menolak. Node tidak crash, Passenger tidak mati.</td></tr><tr><td>Pola jam &amp; ukuran sesi (2 chunk ≈ 3,5 KB)</td><td>Set-Cookie hasil refresh melebihi buffer nginx (4k/8k).</td></tr></tbody></table></div></div><aside><h3>Metrik v5.0.1</h3><div class="metric"><span>Cookie sesi</span><b>1 chunk · 1,63 KB</b></div><div class="metric"><span><code>public/</code></span><b>8,99 MB</b></div><div class="metric"><span>Foto WebP</span><b>−70,2%</b></div><div class="metric"><span>Precache</span><b>77 entri</b></div><div class="metric"><span>UNUSED</span><b>1,62 MB</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>AUDIT</time><span>Aset di-trace &amp; bug PDF/avatar diperbaiki.</span></li><li><time>HOTFIX</time><span>Helper pelangsing sesi + regresi 1 chunk.</span></li><li><time>BUILD</time><span>tsc, build, inspeksi SW lulus.</span></li><li><time>NEXT</time><span>Terdeploy 07:33 UTC; 502 residu dituntaskan di v5.0.2.</span></li></ul></aside></div></section>
+  <!-- =========================== RINGKASAN =========================== -->
+  <section class="shell summary" aria-label="Ringkasan rekam">
+    <div class="stat">
+      <span class="stat__value">13</span>
+      <span class="stat__label">Versi tercatat</span>
+      <span class="stat__note">Sejak v5.0.0 (25 Sep 2026)</span>
+    </div>
+    <div class="stat">
+      <span class="stat__value">11</span>
+      <span class="stat__label">Terdeploy &amp; terverifikasi</span>
+      <span class="stat__note">Smoke test HTTP 200 via origin</span>
+    </div>
+    <div class="stat">
+      <span class="stat__value">0</span>
+      <span class="stat__label">502 pascadeploy (sejak v5.0.2)</span>
+      <span class="stat__note">Cookie sesi 1 chunk</span>
+    </div>
+    <div class="meter">
+      <div class="meter__head">
+        <span class="meter__title">Manual test PM</span>
+        <span class="meter__value" id="manualPct">69%</span>
+      </div>
+      <div class="meter__track"><div class="meter__fill" id="manualFill" style="width: 69%"></div></div>
+      <div class="meter__legend">
+        <span>9 PASS</span>
+        <span>4 pending (v5.5.0, v5.6.0, v5.7.0, v5.8.0)</span>
+      </div>
+    </div>
+  </section>
 
-    <section class="card" id="v5-0-0"><div class="version-title"><h2>v5.0.0 · System Admin &amp; anti-431</h2><span class="badge pass">Rilis terverifikasi</span></div><p class="lede">25 September 2026 · Build <code>s3sqnMmsD7Ca48sM0-5em</code> · Production Polinela</p><div class="grid"><div><h3>Ringkasan perubahan</h3><ul><li>Role <code>system_admin</code> dan dashboard <code>/admin/system</code> untuk mengelola admin dan seluruh lab.</li><li>Cookie OAuth di-strip dari <code>provider_token</code>, di-chunk ulang pada ukuran standar 3180, dan chunk lama dibersihkan.</li><li>Analytics Vercel hanya aktif di Vercel; hosting Plesk tidak memuat dependency eksternal tersebut.</li><li>Versi terpusat di <code>lib/version.ts</code> dan dicetak pada footer publik, maintenance, serta dashboard.</li><li>Patch log teknis versi ini tersedia di <a href="5.0.0/PATCH.md">5.0.0/PATCH.md</a>.</li></ul><h3>Status checkpoint</h3><div class="table-wrap"><table><thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead><tbody><tr><td>LOCAL-READY</td><td><span class="badge pass">Pass</span></td><td><code>npx tsc --noEmit</code> dan production build.</td></tr><tr><td>AUTO-TEST</td><td><span class="badge pass">Pass</span></td><td>Smoke test 7 route dari server, HTTP 200.</td></tr><tr><td>GITHUB-BACKUP</td><td><span class="badge pass">Pass</span></td><td>Commit <code>0be3391</code> di-push ke <code>origin/master</code>.</td></tr><tr><td>DEPLOYED</td><td><span class="badge pass">Pass</span></td><td>Build terpasang; rollback artifact tersedia.</td></tr><tr><td>MANUAL-VERIFIED</td><td><span class="badge pass">Pass</span></td><td>Project Manager sudah menguji dan memberi ACC.</td></tr></tbody></table></div></div><aside><h3>Metrik rilis</h3><div class="metric"><span>Build ID</span><b style="font-size:12px;text-align:right">s3sqnMmsD7Ca48sM0-5em</b></div><div class="metric"><span>Route smoke test</span><b>7 / 7</b></div><div class="metric"><span>Cookie lokal</span><b>4.7 KB</b></div><div class="metric"><span>Deploy ZIP</span><b>34 MB</b></div><h3>Linimasa</h3><ul class="timeline"><li><time>LOCAL</time><span>Type-check dan production build lulus.</span></li><li><time>DEPLOY</time><span>Passenger app direload per aplikasi tanpa restart global.</span></li><li><time>PM</time><span>Login, navigasi, dan hasil patch diuji serta di-ACC.</span></li><li><time>GITHUB</time><span>Checkpoint source dibackup ke GitHub (commit <code>0be3391</code>).</span></li></ul></aside></div></section>
-    <section class="card"><h2>Catatan operasional</h2><div class="callout"><strong>Rollback tersedia.</strong><br>Generasi terdeploy v5.4.0: <code>httpdocs.old-deploy-20260929-165452</code>; generasi lama <code>*.old-20260926-1722</code> (v5.2.0 / v5.0.3), <code>*.old-20260926-1946</code> (v5.1.0), dan <code>*.old-20260925-0735</code> (v5.0.0). Artefak pra-v5.0.0 dan ZIP deploy lama sudah dibersihkan. Deployment dan backup GitHub tercatat sebagai checkpoint terpisah.</div><h3>Status uji manual</h3><p class="muted">v5.0.0 – v5.4.0 berstatus <strong>MANUAL-TEST PASS</strong> — Project Manager mengonfirmasi semua skenario uji manual lolos. v5.5.0 masih <strong>PENDING</strong> sampai PM menguji di production.</p><h3>Versi berikutnya</h3><p class="muted">Setiap versi baru menambah folder <code>docs/patch-log/0.0.0/PATCH.md</code> dan memperbarui dashboard ini. Tidak perlu membuat file HTML baru per versi.</p></section>
-  </div></main><footer>DOLPHIN System v5.6.0 · Dashboard ini statis dan tidak menjalankan perintah apa pun.</footer>
+  <!-- =========================== KONTROL =========================== -->
+  <div class="shell">
+    <div class="controls">
+      <div class="search">
+        <span class="search__icon" aria-hidden="true">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+        </span>
+        <input id="searchInput" type="search" placeholder="Cari versi, fitur, atau kata kunci…" aria-label="Cari versi" autocomplete="off">
+      </div>
+      <div class="filters" role="group" aria-label="Filter status">
+        <button class="chip" type="button" data-filter="all" aria-pressed="true">Semua</button>
+        <button class="chip" type="button" data-filter="deployed" aria-pressed="false">Terdeploy</button>
+        <button class="chip" type="button" data-filter="verified" aria-pressed="false">Manual PASS</button>
+        <button class="chip" type="button" data-filter="pending" aria-pressed="false">Manual pending</button>
+      </div>
+      <span class="result-count" id="resultCount" aria-live="polite">13 versi</span>
+    </div>
+
+    <p class="no-result" id="noResult">Tidak ada versi yang cocok dengan pencarian atau filter ini.</p>
+
+    <!-- ========================= DAFTAR VERSI ========================= -->
+    <div class="releases" id="releases">
+
+      <!-- ---------------------------------------------------- v5.8.0 -->
+      <article class="release" id="v5-8-0" data-status="deployed" data-manual="pending"
+        data-search="master lab tefa dinamis crud system admin is_active pagination status organisasi jadwal inventaris pengajuan">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.8.0</span>
+          <span class="release__tag">terbaru</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">3 Oktober 2026</p>
+              <h2 class="release__title">Master Lab/TEFA Dinamis + CRUD System Admin</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--warn">Manual PM pending</span>
+            </div>
+          </header>
+          <p class="release__lede">Lab/TEFA tidak lagi hardcode di kode. Peta 18 lab dihapus dari 10+ file dan diganti sumber dinamis tabel <code>laboratorium</code>, dengan kolom baru <code>is_active</code> untuk nonaktifkan (disable, bukan hapus). System Admin dapat tambah/edit/nonaktifkan lab dari tab Semua Lab. Ditambah pagination 20/baris di Cek Status.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><strong>Master Lab dari DB</strong>: <code>lib/labs.ts</code> (<code>fetchLabs</code>/<code>fetchLabsCached</code>, <code>KATEGORI_LAB</code>, <code>JENIS_LAB</code>, <code>resolveLabName</code> + fallback <code>LAB_MAP</code>). Diterapkan di navbar, dashboard admin (+3 tab), jadwal, inventaris publik, organisasi, dan pengajuan.</li>
+                  <li><strong>Migration <code>v580_laboratorium_is_active</code></strong>: kolom <code>is_active boolean NOT NULL DEFAULT true</code> (18 lab = true); unique index atas <code>lower(nama_lab)</code>; policy publik <code>USING (is_active = true)</code>; system admin tetap melihat semua via <code>is_system_admin()</code>.</li>
+                  <li><strong>CRUD Lab/TEFA</strong>: komponen <code>LabAdminTab</code> — tambah (jenis + kategori + PJ manual, tanpa membuat akun login), edit, nonaktifkan (konfirmasi Swal berisi ringkasan data terkait), aktifkan kembali, dan tombol Buka Dashboard.</li>
+                  <li><strong>Pagination publik</strong>: <code>/administrasi/status</code> 20 peminjaman/halaman + tombol Sebelumnya/Berikutnya + count exact + reset halaman saat pencarian berubah.</li>
+                  <li>Efusi efisiensi: <strong>−285 baris</strong> kode hardcode dibersihkan dari diff.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td><code>tsc</code> EXIT=0 + build webpack lulus; smoke standalone 7/7 halaman HTTP 200; footer <code>DOLPHIN System v5.8.0</code>.</td></tr>
+                      <tr><td>DB MIGRATION</td><td><span class="badge badge--ok">Pass</span></td><td>Kolom <code>is_active</code> terpasang, 18 lab aktif, unique index <code>laboratorium_nama_lab_unique</code>, policy publik diperketat; <code>get_advisors</code> tanpa temuan baru.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>0ecfbb2</code> (kode) + <code>c7c29e6</code> (dokumentasi) di-push ke <code>origin/master</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>4 Okt 2026; BUILD_ID <code>OAIJEx_T68C5ANlHPvIKX</code>; SHA-256 <code>d5035539b2b9…7ed786a</code>; ZIP 28,0 MB; smoke origin HTTP 200 + footer v5.8.0. Backup <code>httpdocs.old-deploy-20261003-185310</code>.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--warn">Pending</span></td><td>Menunggu uji PM: tambah/edit/nonaktifkan lab, dropdown dinamis, pagination 20, RLS publik.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="block">
+                <h3 class="block__title">File berubah</h3>
+                <ul class="files">
+                  <li>lib/labs.ts (baru)</li>
+                  <li>app/admin/system/_components/LabAdminTab.tsx (baru)</li>
+                  <li>app/admin/system/page.tsx</li>
+                  <li>app/administrasi/status/page.tsx</li>
+                  <li>app/administrasi/pengajuan/page.tsx</li>
+                  <li>app/inventaris/page.tsx</li>
+                  <li>app/jadwal/page.tsx</li>
+                  <li>app/organisasi/page.tsx</li>
+                  <li>components/navbar.tsx</li>
+                  <li>app/admin/dashboard/page.tsx</li>
+                  <li>app/admin/dashboard/_components/{PengajuanTab,RiwayatTab,InventarisTab}.tsx</li>
+                  <li>lib/version.ts</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Risiko &amp; rollback</h3>
+                <div class="callout callout--warn">
+                  <span class="callout__title">Menonaktifkan lab bersifat non-destruktif.</span>
+                  <p>Menonaktifkan hanya mengubah <code>is_active=false</code>. Peminjaman, inventaris, riwayat, dan akun <code>whitelist_admin</code> tetap utuh; dashboard lab masih bisa dibuka. Rollback cukup set <code>is_active=true</code> kembali. Tidak ada tombol hapus permanen di antarmuka.</p>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>labMap dihapus</dt><dd>10+ file</dd></div>
+                  <div><dt>Baris hardcode berkurang</dt><dd>−285</dd></div>
+                  <div><dt>Kolom DB baru</dt><dd>is_active</dd></div>
+                  <div><dt>Komponen CRUD baru</dt><dd>LabAdminTab</dd></div>
+                  <div><dt>Pagination status</dt><dd>20 / halaman</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Desain</time><span>Spec master <code>is_active</code>: disable bukan hapus, PJ manual, RLS anon aktif-only.</span></li>
+                  <li><time>Database</time><span>Migration v580 + unique index; advisor keamanan bersih.</span></li>
+                  <li><time>Kode</time><span><code>lib/labs</code>, refactor 10+ file, <code>LabAdminTab</code>, pagination status.</span></li>
+                  <li><time>Build</time><span>tsc + build lulus; smoke 7/7 halaman 200.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>0ecfbb2</code> di-push; deploy BUILD_ID <code>OAIJEx…</code>.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.8.0/PATCH.md">Catatan teknis v5.8.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/0ecfbb2" rel="noopener">Commit 0ecfbb2</a>
+            <a class="link-pill" href="../superpowers/specs/2026-10-03-lab-master-is-active-design.md">Spec desain</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.7.0 -->
+      <article class="release" id="v5-7-0" data-status="deployed" data-manual="pending"
+        data-search="export excel riwayat inventaris xlsx write-excel-file admin lab unduhan">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.7.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">3 Oktober 2026</p>
+              <h2 class="release__title">Export Excel Riwayat &amp; Inventaris per Lab</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--warn">Manual PM pending</span>
+            </div>
+          </header>
+          <p class="release__lede">PJ/admin setiap lab dapat mengunduh data milik labnya dalam format Excel asli (<code>.xlsx</code>) langsung dari dashboard: riwayat peminjaman yang disetujui dalam dua sheet, dan inventaris dalam satu sheet. File dibangkitkan di server, otorisasi lewat <code>whitelist_admin</code>.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><strong>Dua endpoint baru</strong>: <code>GET /api/export/riwayat?lab_id=</code> dan <code>GET /api/export/inventaris?lab_id=</code>. Memakai sesi login server dan memeriksa <code>whitelist_admin</code>; admin lab hanya boleh labnya, system admin bebas memilih.</li>
+                  <li><strong>Sheet Riwayat</strong>: peminjam, kategori, judul kegiatan, tanggal/jam, status, biaya, bukti pembayaran, feedback. <strong>Sheet Detail Barang</strong>: alat/bahan, jumlah dipinjam, kondisi pengembalian, catatan.</li>
+                  <li><strong>Sheet Inventaris</strong>: kategori, jenis alat, spesifikasi, jumlah baik, rusak ringan, rusak berat, keterangan.</li>
+                  <li>Sel teks diamankan dari formula injection Excel (<code>=</code>, <code>+</code>, <code>-</code>, <code>@</code>). Query memakai paging 1.000 baris agar tidak terpotong limit default.</li>
+                  <li>Tombol <strong>Unduh Riwayat (Excel)</strong> dan <strong>Unduh Inventaris (Excel)</strong> di header tab, lengkap dengan status memuat, unduhan blob, dan notifikasi galat.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td><code>tsc</code> + build lulus; kedua route tampil sebagai dynamic; smoke tanpa login 401; parameter tak sah 400; berkas uji valid (signature <code>PK</code>).</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>b2b5cfc</code> di-push <code>origin/master</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>3 Okt 2026 14:41 UTC; BUILD_ID <code>e80DDU6GRjd7OBEzBdSIB</code>; SHA-256 <code>086649d1ecaf…fe27</code>; smoke origin 4/4 HTTP 200.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--warn">Pending</span></td><td>Uji asap origin lulus (beranda 200, footer v5.7.0, kedua route 401 tanpa login). Uji unduh Excel dengan akun login menunggu PM.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="block">
+                <h3 class="block__title">File berubah</h3>
+                <ul class="files">
+                  <li>lib/export-excel.ts (baru)</li>
+                  <li>app/api/export/riwayat/route.ts (baru)</li>
+                  <li>app/api/export/inventaris/route.ts (baru)</li>
+                  <li>components/export-excel-button.tsx (baru)</li>
+                  <li>lib/lab-map.ts</li>
+                  <li>app/admin/dashboard/_components/{RiwayatTab,InventarisTab}.tsx</li>
+                  <li>package.json (write-excel-file@4.1.1)</li>
+                </ul>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Format</dt><dd>.xlsx (2+1 sheet)</dd></div>
+                  <div><dt>Library</dt><dd>write-excel-file 4.1.1</dd></div>
+                  <div><dt>Endpoint baru</dt><dd>2 route</dd></div>
+                  <div><dt>Tombol baru</dt><dd>2 tab admin</dd></div>
+                  <div><dt>Layer autentikasi</dt><dd>whitelist_admin</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Desain</time><span>PJ lab mengunduh riwayat yang disetujui + inventaris sebagai .xlsx.</span></li>
+                  <li><time>Keputusan</time><span>Pakai <code>write-excel-file</code>, bukan CSV, agar hasilnya berkas Excel asli.</span></li>
+                  <li><time>Kode</time><span>Pembangkit workbook, dua route API, tombol di dua tab.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>b2b5cfc</code>; deploy BUILD_ID <code>e80DDU…</code>.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.7.0/PATCH.md">Catatan teknis v5.7.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/b2b5cfc" rel="noopener">Commit b2b5cfc</a>
+            <a class="link-pill" href="../superpowers/specs/2026-10-03-export-excel-riwayat-inventaris-design.md">Spec desain</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.6.0 -->
+      <article class="release" id="v5-6-0" data-status="deployed" data-manual="pending"
+        data-search="seo kanonik canonical noindex vercel robots sitemap open graph json-ld">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.6.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">1 Oktober 2026</p>
+              <h2 class="release__title">SEO Kanonik Polinela + Noindex Demo Vercel</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--warn">Manual PM pending</span>
+            </div>
+          </header>
+          <p class="release__lede">Semua halaman publik memakai satu alamat kanonik ke domain Polinela. Demo Vercel diberi noindex dua lapis agar tidak bersaing dengan situs resmi. Origin kanonik di-hardcode agar tidak pernah salah arah ke localhost atau domain demo.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><strong>Canonical tunggal</strong> di seluruh halaman publik ke domain Polinela, termasuk HTML yang disajikan dari Vercel. Sumber tunggal di <code>lib/site-seo.ts</code>.</li>
+                  <li><strong>Judul &amp; deskripsi</strong> memuat kata kunci "Lab Perikanan Polinela"; tiap halaman punya judul, deskripsi, dan canonical sendiri.</li>
+                  <li><strong><code>/robots.txt</code> &amp; <code>/sitemap.xml</code></strong> dibangun sebagai route handler (bukan berkas statis yang ditimpa Apache Plesk). Sitemap memuat 8 URL publik.</li>
+                  <li><strong>Open Graph + Twitter Card</strong> dan <code>og-image.png</code> (1200×630) untuk cuplikan sosial.</li>
+                  <li><strong>JSON-LD</strong> Organization + WebSite dirender di HTML awal tanpa JS, menyebut Polinela sebagai induk.</li>
+                  <li><strong>Noindex demo Vercel</strong> saat build dan saat runtime lewat header untuk host <code>*.vercel.app</code>.</li>
+                  <li><strong>Perbaikan bug</strong>: berkas SEO tidak lagi ikut dialihkan ke halaman maintenance.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>Verifikasi 15/15 sesuai: canonical, judul, Open Graph, JSON-LD, noindex area admin, header Vercel, tembol maintenance.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>4a381e7</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>1 Okt 2026 06:58 UTC; BUILD_ID <code>OtEhZRn7mfXLAimFBzRjB</code>; smoke origin 5/5 HTTP 200.</td></tr>
+                      <tr><td>VERCEL-NOINDEX</td><td><span class="badge badge--ok">Pass</span></td><td>Auto-redeploy: <code>robots.txt</code> <code>Disallow: /</code> + header <code>X-Robots-Tag</code>.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--warn">Pending</span></td><td>Menunggu PM dan Search Console.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Risiko &amp; rollback</h3>
+                <div class="callout">
+                  <span class="callout__title">Verifikasi Search Console tertahan lapisan keamanan.</span>
+                  <p>Berkas verifikasi dan meta tag sudah benar di origin (200 OK). Namun Cloudflare dan ModSecurity di depan origin memaksa tantangan keamanan sehingga crawler Google menerima 403. Perlu daftar putih bot terverifikasi pada lapisan WAF, atau subdomain khusus yang melewati CDN.</p>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Canonical</dt><dd>1 origin Polinela</dd></div>
+                  <div><dt>URL sitemap</dt><dd>8 publik</dd></div>
+                  <div><dt>OG image</dt><dd>1200×630</dd></div>
+                  <div><dt>JSON-LD</dt><dd>Organization + WebSite</dd></div>
+                  <div><dt>Halaman noindex</dt><dd>4 area</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Diagnosis</time><span>Enam temuan: duplikat tanpa canonical, Vercel terindeks, berkas SEO hilang, judul tanpa kata kunci.</span></li>
+                  <li><time>Keputusan</time><span>Origin kanonik di-hardcode, bukan dari env.</span></li>
+                  <li><time>Kode</time><span>Pustaka SEO, route handler, JSON-LD, header runtime.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>4a381e7</code>; deploy BUILD_ID <code>OtEhZR…</code>.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.6.0/PATCH.md">Catatan teknis v5.6.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/4a381e7" rel="noopener">Commit 4a381e7</a>
+            <a class="link-pill" href="../superpowers/specs/2026-10-01-seo-kanonik-polikonsolidasi-design.md">Spec desain</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.5.0 -->
+      <article class="release" id="v5-5-0" data-status="deployed" data-manual="pending"
+        data-search="cms dokumen sop sk lab cloudinary pdf upload system admin isr">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.5.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">30 September 2026</p>
+              <h2 class="release__title">CMS Dokumen: SOP Terkelola + Menu SK Lab</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--warn">Manual PM pending</span>
+            </div>
+          </header>
+          <p class="release__lede">Dokumen SOP perikanan dan SOP perikanan tangkap dipindahkan dari berkas statis ke database dengan pembaruan berkala. Ditambah halaman SK Lab baru dan panel kelola PDF di System Admin.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Tabel <code>public.dokumen</code> melayani tiga kategori: SOP perikanan, SOP tangkap, dan SK Lab. Akses lewat <code>is_system_admin()</code>; 13 PDF lama di-seed dengan URL lokal.</li>
+                  <li><strong>Panel System Admin › Dokumen</strong>: pilih kategori, unggah PDF ke Cloudinary, edit judul/nomor/tanggal/deskripsi, tampilkan atau sembunyikan, atur urutan, dan hapus dengan konfirmasi.</li>
+                  <li>Halaman SOP tidak lagi menulis dokumen secara hardcode; memakai Server Component dengan pembaruan berkala dan cadangan statis bila database kosong.</li>
+                  <li>Halaman baru <code>/dokumen/sk-lab</code> plus entri menu di navigasi desktop dan ponsel.</li>
+                  <li>Validasi berkas: hanya PDF, maksimal 10 MB, diperiksa di sisi klien dan server.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>Build lulus; tiga rute dokumen dengan pembaruan berkala 5 menit.</td></tr>
+                      <tr><td>DB MIGRATION</td><td><span class="badge badge--ok">Pass</span></td><td>Migration <code>v550_dokumen_cms</code>; indeks komposit; RLS aktif; hak akses anonim hanya baca.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>9390c16</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>30 Sep 2026 17:44 UTC; BUILD_ID <code>TLXxw7tcmZxMg2FhKLemA</code>; smoke origin 4/4 HTTP 200.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--warn">Pending</span></td><td>Menunggu uji PM. Unggah PDF butuh preset Cloudinary dan env di Plesk.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="block">
+                <h3 class="block__title">File berubah</h3>
+                <ul class="files">
+                  <li>lib/dokumen.ts (baru)</li>
+                  <li>lib/cloudinary-upload.ts (baru)</li>
+                  <li>app/admin/system/_components/DokumenAdminTab.tsx (baru)</li>
+                  <li>app/dokumen/sop-perikanan/page.tsx</li>
+                  <li>app/dokumen/sop-tangkap/page.tsx</li>
+                  <li>app/dokumen/sk-lab/page.tsx (baru)</li>
+                  <li>components/dokumen-list.tsx</li>
+                  <li>app/api/delete-cloudinary/route.ts</li>
+                </ul>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Kategori dokumen</dt><dd>3</dd></div>
+                  <div><dt>Dokumen di-seed</dt><dd>13 PDF</dd></div>
+                  <div><dt>Batas berkas</dt><dd>PDF · 10 MB</dd></div>
+                  <div><dt>Halaman publik baru</dt><dd>/dokumen/sk-lab</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Desain</time><span>Spec arsitektural: satu tabel, tiga kategori, PDF di Cloudinary.</span></li>
+                  <li><time>Migrasi</time><span>Tabel dokumen, RLS, seed 13 PDF lama.</span></li>
+                  <li><time>Kode</time><span>Helper unggah, panel admin, tiga halaman publik, menu SK Lab.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>9390c16</code>; deploy BUILD_ID <code>TLXxw…</code>.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.5.0/PATCH.md">Catatan teknis v5.5.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/9390c16" rel="noopener">Commit 9390c16</a>
+            <a class="link-pill" href="../superpowers/specs/2026-09-30-cms-dokumen-sop-sk-lab-design.md">Spec desain</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.4.0 -->
+      <article class="release" id="v5-4-0" data-status="deployed" data-manual="verified"
+        data-search="hero dokumentasi bulk unggah modal swal konfirmasi select">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.4.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">29 September 2026</p>
+              <h2 class="release__title">Hero 4–6 Foto, Seleksi Massal Dokumentasi, Modal Unggah</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Penyempurnaan pengalaman pengelolaan media setelah persetujuan v5.3.0: batas foto beranda dikunci, dokumentasi bisa diseleksi massal, dan setiap penghapusan meminta konfirmasi.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Foto beranda dibatasi 4–6; tombol tambah nonaktif saat sudah 6. Penghapusan ditolak bila jumlah turun di bawah 4.</li>
+                  <li>Dokumentasi System Admin punya kotak centang per kartu, Pilih semua/Batal, dan bilah alat lengket untuk Tampilkan, Sembunyikan, Hapus sekaligus.</li>
+                  <li>Admin lab mendapat modal unggah dengan pratinjau foto, Nama kegiatan (wajib), dan Deskripsi (opsional).</li>
+                  <li>Kolom baru pada tabel dokumentasi: nama kegiatan dan deskripsi, dengan batas panjang. Nama dipakai sebagai teks alternatif di beranda.</li>
+                  <li>Dialog konfirmasi diseragamkan di 12 titik penghapusan (hero, dokumentasi, materi, inventaris, jadwal, layanan, riwayat, admin lab).</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>tsc + build lulus; BUILD_ID <code>XT0ksLsTZt2P1_jQGczSX</code>.</td></tr>
+                      <tr><td>DB MIGRATION</td><td><span class="badge badge--ok">Pass</span></td><td><code>v540_dokumentasi_metadata</code> terpasang.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>9dfeed1</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>29 Sep 2026 16:56 UTC; smoke 9/10 (403 hanya endpoint kesehatan yang memang dilindungi).</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>PM menyetujui 29 Sep 2026.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Foto beranda</dt><dd>min 4 · maks 6</dd></div>
+                  <div><dt>Aksi massal</dt><dd>3 aksi</dd></div>
+                  <div><dt>Konfirmasi hapus</dt><dd>12 titik</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Desain</time><span>Brainstorming terbatas + UI/UX review.</span></li>
+                  <li><time>Migrasi</time><span>Metadata dokumentasi terpasang.</span></li>
+                  <li><time>Kode</time><span>Bilah alat lengket, modal unggah, konfirmasi seragam.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>9dfeed1</code>; deploy BUILD_ID <code>XT0ks…</code>.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.4.0/PATCH.md">Catatan teknis v5.4.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/9dfeed1" rel="noopener">Commit 9dfeed1</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.3.0 -->
+      <article class="release" id="v5-3-0" data-status="deployed" data-manual="verified"
+        data-search="media overview admin hardening api resend hapus overview sistem">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.3.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">28 September 2026</p>
+              <h2 class="release__title">Media Kelola Admin, Panel Overview, dan Hardening</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Foto beranda, pimpinan jurusan, dan penanggung jawab tiap laboratorium kini dikelola dari panel admin dan dibaca dari database. Ditambah panel kesehatan sistem dan pengerasan API hasil uji keamanan. Layanan email dihapus total.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Foto hero (maks 4, bisa diurutkan), tiga pimpinan jurusan, dan 18 penanggung jawab lab dapat dikelola System Admin; beranda dan halaman organisasi membaca dari database dengan cadangan lokal.</li>
+                  <li>Foto dokumentasi dapat diunggah admin lab dan langsung tampil di beranda; System Admin mengkurasi lewat sakelar tampil atau hapus.</li>
+                  <li><strong>Panel Overview</strong>: kesehatan database (jumlah baris per tabel, latensi), pemakaian Cloudinary, antrean pengajuan, dan mode maintenance — khusus System Admin.</li>
+                  <li><strong>Hardening API</strong>: endpoint hapus media wajib login dan cek kepemilikan; email dihapus; notifikasi memakai jalur aman; RLS langganan notifikasi diaktifkan.</li>
+                  <li>Perlu variabel server baru: kunci layanan Supabase dan tiga preset unggah Cloudinary.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>tsc + build; beranda dan organisasi memakai pembaruan berkala 5 menit.</td></tr>
+                      <tr><td>DB MIGRATION</td><td><span class="badge badge--ok">Pass</span></td><td>Tabel, RLS, fungsi, seed 18 PJ dan 13 foto.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>3461c7d</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>Env Plesk terisi; deploy mengikuti persetujuan PM.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>PM menyetujui 29 Sep 2026.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Foto hero</dt><dd>maks 4, bisa urut</dd></div>
+                  <div><dt>Hardening</dt><dd>6 temuan ditutup</dd></div>
+                  <div><dt>Referensi email</dt><dd>0 tersisa</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Spec</time><span>Disetujui PM.</span></li>
+                  <li><time>Migrasi</time><span>Tabel, RLS, fungsi, seed.</span></li>
+                  <li><time>Kode</time><span>Panel overview, pengelola media, pengerasan API.</span></li>
+                  <li><time>Rilis</time><span>Commit <code>3461c7d</code>; ACC PM 29 Sep 2026.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.3.0/PATCH.md">Catatan teknis v5.3.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/3461c7d" rel="noopener">Commit 3461c7d</a>
+          </div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.2.1 -->
+      <article class="release" id="v5-2-1" data-status="deployed" data-manual="verified"
+        data-search="favicon apple-icon transparan logo ikon">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.2.1</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">27 September 2026</p>
+              <h2 class="release__title">Favicon &amp; Apple Ikon Transparan</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Favicon dan ikon Apple kini berlatar transparan, sama seperti logo utama DOLPHIN.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><code>favicon.ico</code> dan <code>apple-icon.png</code> yang sebelumnya berlatar putih solid kini transparan, mengikuti sumber logo DOLPHIN.</li>
+                  <li>Hanya skrip pembuat ikon yang berubah; tidak ada perubahan kode aplikasi.</li>
+                  <li>Ikon Apple tetap memakai palet 256 warna dengan alfa (±17 KB). Catatan: iOS menampilkan area transparan sebagai hitam di layar utama — disetujui PM.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>Regenerasi + alfa per entri terverifikasi; tsc + build lulus.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>26 Sep 2026 18:55 UTC; smoke 9/9; SHA-256 berkas identik.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>PM menyetujui 27 Sep 2026: tab browser transparan tanpa kotak putih.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>favicon.ico</dt><dd>8,3 KB · transparan</dd></div>
+                  <div><dt>apple-icon.png</dt><dd>17,1 KB · transparan</dd></div>
+                  <div><dt>Berkas aplikasi berubah</dt><dd>0</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.2.1/PATCH.md">Catatan teknis v5.2.1</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.2.0 -->
+      <article class="release" id="v5-2-0" data-status="deployed" data-manual="verified"
+        data-search="dosen upload hapus file materi pin kategori">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.2.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">27 September 2026</p>
+              <h2 class="release__title">Dosen Unggah &amp; Hapus File Materi</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Dosen bisa mengunggah berkas ke kategori yang dibuka admin, dan menghapus berkas miliknya sendiri. Tanpa perubahan database atau RLS.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Halaman akses materi dosen kini punya tombol Unggah dan Hapus untuk berkas milik sendiri.</li>
+                  <li>Tombol Hapus hanya muncul bila email dosen yang masuk cocok dengan pemilik berkas; kategori tetap dikelola admin lab.</li>
+                  <li>Kebijakan RLS untuk dosen sudah ada sejak awal; versi ini hanya memberi antarmukanya.</li>
+                  <li>Halaman mahasiswa tetap hanya-baca.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>tsc + build; BUILD_ID <code>lCxcT0RdeMnOEGY1VPtzw</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>26 Sep 2026 18:00 UTC; smoke origin 9/9; footer v5.2.0.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>PM menyetujui 27 Sep 2026: dosen bisa unggah dan hapus berkas sendiri.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Berkas berubah</dt><dd>1 halaman</dd></div>
+                  <div><dt>Perubahan DB/RLS</dt><dd>0</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.2.0/PATCH.md">Catatan teknis v5.2.0</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.1.0 -->
+      <article class="release" id="v5-1-0" data-status="deployed" data-manual="verified"
+        data-search="materitab halaman publik materi pin regression regresi kelas">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.1.0</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">26 September 2026</p>
+              <h2 class="release__title">MateriTab + Halaman Publik /materi</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Perbaikan regresi tombol Tambah Kelas pada akun tertentu, tampilan kelas bersama, dan halaman publik materi berbasis PIN.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Akar regresi: pemilihan kolom pada tabel whitelist berubah pada v5.0.0 sehingga email admin ikut hilang. Tombol Tambah Kelas gagal diam-diam.</li>
+                  <li>Pemilihan kolom diperluas kembali dan email sesi ditempelkan sebagai jaring pengaman.</li>
+                  <li>Semua admin melihat semua kelas; setiap kartu menampilkan pembuatnya.</li>
+                  <li>Halaman publik <code>/materi</code> memakai PIN enam digit tanpa login, diverifikasi lewat fungsi database sehingga PIN tidak pernah terekspos ke klien.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>18 rute termasuk halaman publik materi.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>26 Sep 2026 17:25 UTC; BUILD_ID <code>OiHQGwnXwmWLzbOd08haz</code>; smoke origin 9/9.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>PM menyetujui 27 Sep 2026: empat skenario lolos.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Tambah kelas</dt><dd>diperbaiki</dd></div>
+                  <div><dt>Tampilan kelas</dt><dd>semua bersama</dd></div>
+                  <div><dt>Halaman PIN</dt><dd>fungsi DB</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.1.0/PATCH.md">Catatan teknis v5.1.0</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.0.3 -->
+      <article class="release" id="v5-0-3" data-status="deployed" data-manual="verified"
+        data-search="favicon apple ikon logo 404 audit aset">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.0.3</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">26 September 2026</p>
+              <h2 class="release__title">Favicon &amp; Apple Ikon DOLPHIN</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Favicon dan ikon Apple dibuat dari logo DOLPHIN, menggantikan ikon templat dan permintaan yang sebelumnya gagal.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Favicon multi-ukuran (16/32/48) ditambahkan; sebelumnya permintaan favicon menghasilkan 404.</li>
+                  <li>Ikon Apple diganti dengan logo DOLPHIN 180×180 untuk layar utama iOS/iPadOS.</li>
+                  <li>Metadata kini mengeluarkan favicon ICO eksplisit dan tetap menyediakan ikon 512×512 untuk PWA.</li>
+                  <li>Audit aset diperbaiki agar berkas di direktori publik tidak lagi dianggap terpakai hanya karena namanya mengandung "ikon".</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Angka kunci</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Metrik</th><th>Sebelum</th><th>Sesudah</th></tr></thead>
+                    <tbody>
+                      <tr><td>favicon.ico</td><td>Tidak ada (404)</td><td><strong>7,8 KB · 16/32/48</strong></td></tr>
+                      <tr><td>apple-icon.png</td><td>2,6 KB (templat)</td><td><strong>17,4 KB · logo DOLPHIN</strong></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>favicon.ico</dt><dd>7,8 KB · 3 ukuran</dd></div>
+                  <div><dt>Apple icon</dt><dd>180×180 · 17,4 KB</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.0.3/PATCH.md">Catatan teknis v5.0.3</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.0.2 -->
+      <article class="release" id="v5-0-2" data-status="replaced" data-manual="verified"
+        data-search="cookie 502 chunk slim sesi edge 431">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.0.2</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">25 September 2026</p>
+              <h2 class="release__title">Cookie Sesi 1 Chunk Tuntas</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--info">Digantikan v5.0.3</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Perbaikan tuntas 502 setelah idle: cookie sesi kini muat dalam satu chunk dengan margin aman, menghapus 6 kejadian 502 pascadeploy.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>502 masih muncul pada v5.0.1 di jalur callback OAuth dan beranda setelah idle ±1 jam.</li>
+                  <li>Akar masalah: sesi nyata pengguna Google tetap 3.330 karakter / 2 chunk meski sudah dilangsingkan, sehingga header Set-Cookie melebihi buffer nginx.</li>
+                  <li>Pemangkasan diperkuat berlapis dengan jaminan muat satu chunk. Data nyata: 2.481 karakter / 1 chunk (margin 699 karakter).</li>
+                  <li>Regresi diperkuat dengan data pengguna nyata dan skrip kasus batas 4/4 lulus.</li>
+                  <li>Bersih-bersih server: 404 MB → 210 MB; artefak rilis lama dihapus, titik rollback tetap disimpan.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Angka kunci</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Metrik</th><th>v5.0.1</th><th>v5.0.2</th></tr></thead>
+                    <tbody>
+                      <tr><td>Cookie sesi (data nyata)</td><td>3.330 char / 2 chunk</td><td><strong>2.481 char / 1 chunk</strong></td></tr>
+                      <tr><td>Set-Cookie hasil penyegaran</td><td>±3,5 KB</td><td><strong>2,51 KB</strong></td></tr>
+                      <tr><td>502 pascadeploy</td><td>6 kejadian</td><td><strong>0</strong></td></tr>
+                      <tr><td>Disk vhost</td><td>404 MB</td><td><strong>210 MB</strong></td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Cookie sesi</dt><dd>1 chunk · 2,51 KB</dd></div>
+                  <div><dt>Margin aman</dt><dd>699 char</dd></div>
+                  <div><dt>Kasus batas</dt><dd>4/4 lulus</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.0.2/PATCH.md">Catatan teknis v5.0.2</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.0.1 -->
+      <article class="release" id="v5-0-1" data-status="replaced" data-manual="verified"
+        data-search="pwa aset webp hotfix 502 cookie worker precache">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.0.1</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">25–26 September 2026</p>
+              <h2 class="release__title">PWA, Aset WebP, dan Hotfix 502</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--info">Digantikan v5.0.2</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Hotfix 502 setelah idle, migrasi aset ke WebP, dan perbaikan jalur PWA agar tidak memicu penyegaran sesi.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><strong>Hotfix 502</strong>: sesi autentikasi dilangsingkan sehingga Set-Cookie hasil penyegaran tetap satu chunk setelah idle ±1 jam, di bawah buffer nginx.</li>
+                  <li>Pemeriksa middleware melewati berkas service worker, manifest, dan worker agar aset statis tidak memicu penyegaran sesi.</li>
+                  <li>Audit aset publik: 11 berkas tidak terpakai (1,62 MB) ditandai, bukan dihapus.</li>
+                  <li>URL PDF SOP yang salah dan foto kaprodi yang hilang diperbaiki.</li>
+                  <li>38 gambar dikonversi ke WebP (−70,2%); pratinjau service worker dikurangi 126 → 77 entri; halaman dinamis memakai strategi jaringan saja.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Bukti akar 502 (log server)</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Sinyal</th><th>Arti</th></tr></thead>
+                    <tbody>
+                      <tr><td>4× <code>upstream sent too big header</code></td><td>502 hanya pada permintaan pertama setelah idle; pola penyegaran JWT.</td></tr>
+                      <tr><td>Log akses mencatat 200 di detik yang sama</td><td>Server aplikasi membalas 200 dengan header gemuk → proxy menolak. Proses tidak tumbang.</td></tr>
+                      <tr><td>Pola jam &amp; ukuran sesi (2 chunk)</td><td>Set-Cookie melebihi buffer proxy.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Cookie sesi</dt><dd>1 chunk · 1,63 KB</dd></div>
+                  <div><dt>Aset publik</dt><dd>8,99 MB</dd></div>
+                  <div><dt>Gambar WebP</dt><dd>−70,2%</dd></div>
+                  <div><dt>Pratinjau</dt><dd>77 entri</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.0.1/PATCH.md">Catatan teknis v5.0.1</a><a class="link-pill" href="asset-audit.json">Bukti audit aset</a></div>
+        </div>
+      </article>
+
+      <!-- ---------------------------------------------------- v5.0.0 -->
+      <article class="release" id="v5-0-0" data-status="replaced" data-manual="verified"
+        data-search="system admin 431 cookie oauth role rilis awal">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.0.0</span>
+          <span class="release__tag">awal</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">25 September 2026</p>
+              <h2 class="release__title">System Admin &amp; Anti-431</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--info">Digantikan</span>
+              <span class="badge badge--ok">Manual PASS</span>
+            </div>
+          </header>
+          <p class="release__lede">Rilis terverifikasi pertama: peran System Admin dengan dasbor khusus, dan perbaikan 431 (cookie OAuth terlalu besar) melalui pelangsingan serta pengemasan ulang cookie.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li>Peran <code>system_admin</code> dan dasbor <code>/admin/system</code> untuk mengelola admin dan seluruh laboratorium.</li>
+                  <li>Cookie OAuth dilepas dari Penyedia token, dikemas ulang pada ukuran standar, dan cookie lama dibersihkan.</li>
+                  <li>Analitik hanya aktif di lingkungan demo; hosting produksi tidak memuat dependensi eksternal tersebut.</li>
+                  <li>Versi terpusat di satu berkas dan dicetak pada seluruh footer.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td>Pemeriksaan tipe dan build produksi lulus.</td></tr>
+                      <tr><td>AUTO-TEST</td><td><span class="badge badge--ok">Pass</span></td><td>Uji asap 7 rute, HTTP 200.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>0be3391</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>Build terpasang; artefak rollback tersedia.</td></tr>
+                      <tr><td>MANUAL-VERIFIED</td><td><span class="badge badge--ok">Pass</span></td><td>Project Manager sudah menguji dan menyetujui.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Rute uji asap</dt><dd>7 / 7</dd></div>
+                  <div><dt>Cookie lokal</dt><dd>4,7 KB → 1 chunk</dd></div>
+                  <div><dt>ZIP deploy</dt><dd>34 MB</dd></div>
+                </dl>
+              </section>
+            </aside>
+          </div>
+          <div class="links"><a class="link-pill" href="5.0.0/PATCH.md">Catatan teknis v5.0.0</a></div>
+        </div>
+      </article>
+    </div>
+
+    <!-- ======================= CATATAN OPERASIONAL ======================= -->
+    <section class="notes" aria-label="Catatan operasional">
+      <div class="panel">
+        <h2>Cara membaca halaman ini</h2>
+        <p>Setiap versi punya satu kartu dengan lima isian yang selalu sama: ringkasan perubahan, status checkpoint, daftar berkas yang berubah, metrik, dan linimasa. Kartu tersusun kronologis dari yang terbaru.</p>
+        <ul class="points">
+          <li>Lencana <strong>hijau</strong> berarti lulus, <strong>kuning</strong> berarti menunggu, <strong>biru</strong> berarti versi sudah digantikan.</li>
+          <li>Gunakan pencarian dan filter di atas untuk menyaring versi.</li>
+          <li>Klik nama versi pada rail kiri untuk melompat ke tautan PATCH teknis.</li>
+        </ul>
+      </div>
+      <div class="panel">
+        <h2>Catatan operasional</h2>
+        <div class="callout">
+          <span class="callout__title">Rollback selalu tersedia.</span>
+          <p>Generasi aktif memakai <code>BUILD_ID OAIJEx_T68C5ANlHPvIKX</code>. Backup sebelum deploy v5.8.0: <code>httpdocs.old-deploy-20261003-185310</code>. Backup sebelumnya: <code>httpdocs.old-deploy-20261003-143957</code> dan <code>httpdocs.old-deploy-20261001-065833</code>. Status deployment dan status backup GitHub dicatat sebagai checkpoint terpisah.</p>
+        </div>
+        <div class="callout callout--warn" style="margin-top: var(--space-3)">
+          <span class="callout__title">Pekerjaan yang masih menunggu.</span>
+          <p>Uji manual PM untuk v5.5.0, v5.6.0, v5.7.0, dan v5.8.0. Verifikasi Google Search Console tertahan tantangan keamanan Cloudflare/ModSecurity di depan origin. Preset Cloudinary <code>dolphin_dokumen</code> dan variabel Plesk untuk unggah dokumen belum diisi.</p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <footer class="site-footer">
+    <p>DOLPHIN System v5.8.0 · Halaman statis, tidak menjalankan perintah apa pun. Terakhir diperbarui 4 Oktober 2026.</p>
+  </footer>
+
+  <script>
+    /* ---------------------------- Tema gelap / terang ---------------------------- */
+    (function () {
+      var root = document.documentElement;
+      var toggle = document.getElementById('themeToggle');
+      var label = document.getElementById('themeLabel');
+
+      function sync() {
+        var dark = root.getAttribute('data-theme') === 'dark';
+        label.textContent = dark ? 'Mode terang' : 'Mode gelap';
+        toggle.setAttribute('aria-pressed', String(dark));
+      }
+
+      toggle.addEventListener('click', function () {
+        var next = root.getAttribute('data-theme') === 'dark' ? 'light' : 'dark';
+        root.setAttribute('data-theme', next);
+        try { localStorage.setItem('dolphin-patch-theme', next); } catch (e) {}
+        sync();
+      });
+
+      /* Ikuti preferensi sistem selama pengguna belum memilih manual. */
+      window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', function (e) {
+        var saved = null;
+        try { saved = localStorage.getItem('dolphin-patch-theme'); } catch (err) {}
+        if (!saved) { root.setAttribute('data-theme', e.matches ? 'dark' : 'light'); sync(); }
+      });
+
+      sync();
+    })();
+
+    /* ------------------------------ Salin ke papan klip ---------------------------- */
+    document.addEventListener('click', function (e) {
+      var btn = e.target.closest('[data-copy-target]');
+      if (!btn) return;
+      var src = document.getElementById(btn.getAttribute('data-copy-target'));
+      if (!src) return;
+      var text = src.textContent.trim();
+      var done = function () {
+        var old = btn.textContent;
+        btn.textContent = 'Tersalin';
+        setTimeout(function () { btn.textContent = old; }, 1400);
+      };
+      if (navigator.clipboard && window.isSecureContext) {
+        navigator.clipboard.writeText(text).then(done, function () { fallback(); });
+      } else { fallback(); }
+      function fallback() {
+        var ta = document.createElement('textarea');
+        ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0';
+        document.body.appendChild(ta); ta.select();
+        try { document.execCommand('copy'); done(); } catch (err) {}
+        document.body.removeChild(ta);
+      }
+    });
+
+    /* ----------------------------- Pencarian + filter ---------------------------- */
+    (function () {
+      var input = document.getElementById('searchInput');
+      var count = document.getElementById('resultCount');
+      var noResult = document.getElementById('noResult');
+      var chips = Array.prototype.slice.call(document.querySelectorAll('.chip'));
+      var releases = Array.prototype.slice.call(document.querySelectorAll('.release'));
+      var activeFilter = 'all';
+
+      function apply() {
+        var q = input.value.trim().toLowerCase();
+        var shown = 0;
+        releases.forEach(function (el) {
+          var haystack = (el.textContent + ' ' + (el.dataset.search || '')).toLowerCase();
+          var matchText = !q || haystack.indexOf(q) !== -1;
+          var st = el.dataset.status, mn = el.dataset.manual;
+          var matchFilter =
+            activeFilter === 'all' ||
+            (activeFilter === 'deployed' && st === 'deployed') ||
+            (activeFilter === 'verified' && mn === 'verified') ||
+            (activeFilter === 'pending' && mn === 'pending');
+          var visible = matchText && matchFilter;
+          el.hidden = !visible;
+          if (visible) shown++;
+        });
+        count.textContent = shown + (shown === 1 ? ' versi' : ' versi');
+        noResult.classList.toggle('is-visible', shown === 0);
+      }
+
+      input.addEventListener('input', apply);
+      chips.forEach(function (chip) {
+        chip.addEventListener('click', function () {
+          activeFilter = chip.dataset.filter;
+          chips.forEach(function (c) { c.setAttribute('aria-pressed', String(c === chip)); });
+          apply();
+        });
+      });
+      apply();
+    })();
+  </script>
 </body>
 </html>
