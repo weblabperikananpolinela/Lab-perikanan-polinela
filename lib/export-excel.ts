@@ -20,7 +20,8 @@ import { labName } from '@/lib/lab-map';
 // ---------------------------------------------------------------------------
 
 export interface RiwayatExportRow {
-  id: number;
+  /** UUID (kolom DB `peminjaman.id` bertipe uuid) — tulis sebagai teks. */
+  id: string;
   nama_lengkap: string | null;
   kategori_pemohon: string | null;
   judul_kegiatan: string | null;
@@ -35,7 +36,8 @@ export interface RiwayatExportRow {
 }
 
 export interface DetailExportRow {
-  peminjaman_id: number;
+  /** UUID (kolom DB `peminjaman_item.peminjaman_id` bertipe uuid) — tulis sebagai teks. */
+  peminjaman_id: string;
   nama_peminjam: string | null;
   nama_alat_bahan: string | null;
   jumlah: number | null;
@@ -120,7 +122,7 @@ function header(value: string): { value: string; fontWeight: 'bold'; backgroundC
 // ---------------------------------------------------------------------------
 
 const riwayatColumns: Column<RiwayatExportRow>[] = [
-  { header: header('ID'), width: 8, cell: (r) => num(r.id) },
+  { header: header('ID'), width: 38, cell: (r) => text(r.id) },
   { header: header('Tanggal'), width: 12, cell: (r) => text(fmtDate(r.tanggal)) },
   { header: header('Hari'), width: 12, cell: (r) => text(weekdayOf(r.tanggal)) },
   { header: header('Jam Mulai'), width: 11, cell: (r) => text(r.jam_mulai) },
@@ -146,7 +148,7 @@ const riwayatColumns: Column<RiwayatExportRow>[] = [
 // ---------------------------------------------------------------------------
 
 const detailColumns: Column<DetailExportRow>[] = [
-  { header: header('ID Peminjaman'), width: 12, cell: (r) => num(r.peminjaman_id) },
+  { header: header('ID Peminjaman'), width: 38, cell: (r) => text(r.peminjaman_id) },
   { header: header('Nama Peminjam'), width: 24, cell: (r) => text(r.nama_peminjam) },
   { header: header('Nama Alat/Bahan'), width: 26, cell: (r) => text(r.nama_alat_bahan) },
   { header: header('Jumlah Dipinjam'), width: 13, cell: (r) => num(r.jumlah) },
