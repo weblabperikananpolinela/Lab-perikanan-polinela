@@ -9,6 +9,11 @@ import {
   staleAuthCookieNames,
 } from '@/lib/supabase/slim-session';
 import { SEO_FILE_PATHS } from '@/lib/site-seo';
+import {
+  checkSession,
+  SESSION_SID_COOKIE,
+  SESSION_SID_COOKIE_OPTIONS,
+} from '@/lib/supabase/session-gate';
 
 const MAINTENANCE_CACHE_SECONDS = 30;
 
@@ -115,6 +120,11 @@ export async function middleware(request: NextRequest) {
 
   let response = NextResponse.next({ request });
 
+  // Tangkap SEMUA tulis cookie auth Supabase agar bisa diputar ulang ke
+  // response redirect (kasus sesi expired) — NextResponse tujuan tidak
+  // mewarisi Set-Cookie dari response yang dibuang.
+  const pendingCookieWrites: { name: string; value: string; options?: any }[] = [];
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -124,6 +134,9 @@ export async function middleware(request: NextRequest) {
           return request.cookies.getAll();
         },
         setAll(cookiesToSet) {
+          for (const c of cookiesToSet) {
+            pendingCookieWrites.push({ name: c.name, value: c.value, options: c.options });
+          }
           const slimmed = slimCookieWrites(cookiesToSet) ?? cookiesToSet;
           slimmed.forEach(({ name, value }) => request.cookies.set(name, value));
           response = NextResponse.next({ request });
@@ -138,7 +151,44 @@ export async function middleware(request: NextRequest) {
   // Refresh the JWT when it is close to expiry. After ~1 hour idle this
   // writes a new Set-Cookie; slimCookieWrites above keeps it under the
   // nginx proxy buffer.
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  // Gate idle-expiry (v5.9.0): user login wajib punya baris sesi aktif.
+  if (user) {
+    const sessionCheck = await checkSession(
+      supabase,
+      request.cookies.get(SESSION_SID_COOKIE)?.value,
+      user,
+    );
+    if (!sessionCheck.ok) {
+      // Cabut sesi Supabase (revoke refresh token) lalu arahkan ke landing
+      // login. `expired=false` = sesi belum bisa dibuat/diverifikasi;
+      // fail-closed agar JWT saja tidak cukup melewati gate (anti login-loop).
+      await supabase.auth.signOut();
+      const url = request.nextUrl.clone();
+      const nextPath = `${request.nextUrl.pathname}${request.nextUrl.search}`;
+      url.pathname = '/';
+      url.search = '';
+      url.searchParams.set('login', sessionCheck.expired ? 'expired' : 'required');
+      if (nextPath !== '/' && nextPath.length > 1 && nextPath.length < 500) {
+        url.searchParams.set('next', nextPath);
+      }
+      const redirect = NextResponse.redirect(url);
+      for (const w of pendingCookieWrites) {
+        redirect.cookies.set(w.name, w.value, w.options);
+      }
+      redirect.cookies.set(SESSION_SID_COOKIE, '', { path: '/', maxAge: 0 });
+      return redirect;
+    } else if (sessionCheck.fresh) {
+      // Baris baru/adopsi → tanam cookie sid (heartbeat rutin tak perlu).
+      response.cookies.set(SESSION_SID_COOKIE, sessionCheck.sid, {
+        ...SESSION_SID_COOKIE_OPTIONS,
+        maxAge: sessionCheck.idleSeconds,
+      });
+    }
+  }
 
   slimAuthCookies(request, response);
 

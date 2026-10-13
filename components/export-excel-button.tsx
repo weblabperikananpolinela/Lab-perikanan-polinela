@@ -35,11 +35,20 @@ export default function ExportExcelButton({
 
       if (!res.ok) {
         let message = 'Gagal membuat berkas Excel.';
+        let expired = false;
         try {
           const body = await res.json();
           if (body?.error) message = body.error;
+          if (res.status === 401 && body?.code === 'SESSION_EXPIRED') expired = true;
         } catch {
           // respons bukan JSON — pakai pesan default
+        }
+        if (expired) {
+          const next = encodeURIComponent(
+            window.location.pathname + window.location.search,
+          );
+          window.location.href = `/?login=expired&next=${next}`;
+          return;
         }
         throw new Error(message);
       }

@@ -1,6 +1,10 @@
 import { NextResponse } from 'next/server';
 import { v2 as cloudinary } from 'cloudinary';
 import { createClient } from '@/lib/supabase/server';
+import {
+  checkSession,
+  parseSidFromCookieHeader,
+} from '@/lib/supabase/session-gate';
 
 // Konfigurasi Cloudinary SDK
 cloudinary.config({
@@ -54,10 +58,22 @@ function extractPublicId(url: string) {
 
 export async function POST(req: Request) {
   try {
-    const { user } = await requireAuth();
+    const { user, supabase } = await requireAuth();
     if (!user) {
       return NextResponse.json(
         { success: false, error: 'Anda harus login untuk menghapus file.' },
+        { status: 401 },
+      );
+    }
+
+    const sessionCheck = await checkSession(
+      supabase,
+      parseSidFromCookieHeader(req.headers.get('cookie')),
+      user,
+    );
+    if (!sessionCheck.ok) {
+      return NextResponse.json(
+        { success: false, error: 'Sesi Anda berakhir. Silakan login kembali.', code: 'SESSION_EXPIRED' },
         { status: 401 },
       );
     }

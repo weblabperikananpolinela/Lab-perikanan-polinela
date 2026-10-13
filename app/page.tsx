@@ -1,5 +1,6 @@
 import { createPublicClient } from '@/lib/supabase/public';
 import { Navbar } from '@/components/navbar';
+import { SessionExpiredHandler } from '@/components/session-expired-handler';
 import { HeroSection } from '@/components/hero-section';
 import { OrganisasiSection } from '@/components/organisasi-section';
 import { SopSection } from '@/components/sop-section';
@@ -33,6 +34,7 @@ export default async function HomePage() {
     <main className='min-h-screen'>
       {/* <Navbar /> */}
       <InstallPWA />
+      <SessionExpiredHandler />
       <HeroSection banners={banners} />
       <OrganisasiSection />
       <SopSection />

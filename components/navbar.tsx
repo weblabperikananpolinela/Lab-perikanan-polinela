@@ -5,6 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import Swal from 'sweetalert2';
 import { createClient } from '@/lib/supabase/client';
+import { consumeStoredNext } from '@/components/session-expired-handler';
 import {
   Users,
   Menu,
@@ -138,15 +139,24 @@ export function Navbar() {
   };
 
   const handleLogin = async () => {
+    const next = consumeStoredNext();
+    const redirectTo = next
+      ? `${window.location.origin}${next}`
+      : `${window.location.origin}/`;
     await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: {
-        redirectTo: `${window.location.origin}/`,
-      },
+      options: { redirectTo },
     });
   };
 
   const handleLogout = async () => {
+    // Tandai baris sesi berakhir di server (best-effort) sebelum signOut
+    // agar audit user_sessions mencatat 'logout'. Gagal = tetap lanjut.
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+    } catch {
+      /* abaikan */
+    }
     Swal.fire({
       title: 'Memutus Sesi...',
       text: 'Mengamankan data Anda.',

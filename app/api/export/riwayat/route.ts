@@ -2,6 +2,11 @@ import { NextResponse } from 'next/server';
 
 import { createClient } from '@/lib/supabase/server';
 import {
+  applyFreshSid,
+  checkSession,
+  parseSidFromCookieHeader,
+} from '@/lib/supabase/session-gate';
+import {
   buildRiwayatWorkbook,
   labName,
   labSlug,
@@ -130,6 +135,19 @@ export async function GET(req: Request) {
       return NextResponse.json({ error: 'Silakan login terlebih dahulu.' }, { status: 401 });
     }
 
+    // Gate idle-expiry (v5.9.0): middleware tidak mencakup /api.
+    const sess = await checkSession(
+      supabase,
+      parseSidFromCookieHeader(req.headers.get('cookie')),
+      user,
+    );
+    if (!sess.ok) {
+      return NextResponse.json(
+        { error: 'Sesi Anda berakhir. Silakan login kembali.', code: 'SESSION_EXPIRED' },
+        { status: 401 },
+      );
+    }
+
     const auth = await authorizeLabId(supabase, user.email, labId);
     if (!auth.ok) {
       return NextResponse.json({ error: auth.message }, { status: auth.status });
@@ -143,7 +161,7 @@ export async function GET(req: Request) {
     const today = new Date().toISOString().slice(0, 10);
     const filename = `Riwayat-Peminjaman-${labSlug(labId)}-${today}.xlsx`;
 
-    return new NextResponse(new Uint8Array(buffer), {
+    const res = new NextResponse(new Uint8Array(buffer), {
       status: 200,
       headers: {
         'Content-Type':
@@ -153,6 +171,7 @@ export async function GET(req: Request) {
         'X-Lab-Name': encodeURIComponent(labName(labId)),
       },
     });
+    return applyFreshSid(res, sess);
   } catch (error: any) {
     console.error('Export riwayat error:', error);
     return NextResponse.json(
