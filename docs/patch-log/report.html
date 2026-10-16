@@ -53,7 +53,7 @@
         <h1 class="hero__title">Rekam rilis <span>teknis</span> tiap versi DOLPHIN.</h1>
         <p class="hero__lede">Satu halaman statis untuk membaca perkembangan fitur, status pengujian otomatis, backup GitHub, dan status deploy DOLPHIN secara kronologis. Tanpa menjalankan perintah apa pun di browser.</p>
         <div class="hero__facts">
-          <span class="fact">Versi aktif <b>5.8.0</b></span>
+          <span class="fact">Versi aktif <b>5.9.0</b></span>
           <span class="fact">Terdeploy <b>4 Okt 2026</b></span>
           <span class="fact">Total versi <b>13</b></span>
           <span class="fact">Format <b>release.major.minor</b></span>
@@ -68,13 +68,13 @@
           <div class="fingerprint__row">
             <span class="fingerprint__label">BUILD_ID</span>
             <div class="fingerprint__row-top">
-              <span class="fingerprint__value" id="buildIdValue">OAIJEx_T68C5ANlHPvIKX</span>
+              <span class="fingerprint__value" id="buildIdValue">AiYrIKA7KJGjlvKbeYTvT</span>
               <button class="copy-btn" data-copy-target="buildIdValue" type="button" aria-label="Salin BUILD_ID">Salin</button>
             </div>
           </div>
           <div class="fingerprint__row">
             <span class="fingerprint__label">Footer aplikasi</span>
-            <span class="fingerprint__value">DOLPHIN System v5.8.0</span>
+            <span class="fingerprint__value">DOLPHIN System v5.9.0</span>
           </div>
           <div class="fingerprint__row">
             <span class="fingerprint__label">Commit kode (GitHub)</span>
@@ -96,7 +96,7 @@
       <span class="stat__note">Sejak v5.0.0 (25 Sep 2026)</span>
     </div>
     <div class="stat">
-      <span class="stat__value">11</span>
+      <span class="stat__value">12</span>
       <span class="stat__label">Terdeploy &amp; terverifikasi</span>
       <span class="stat__note">Smoke test HTTP 200 via origin</span>
     </div>
@@ -108,12 +108,12 @@
     <div class="meter">
       <div class="meter__head">
         <span class="meter__title">Manual test PM</span>
-        <span class="meter__value" id="manualPct">69%</span>
+        <span class="meter__value" id="manualPct">60%</span>
       </div>
-      <div class="meter__track"><div class="meter__fill" id="manualFill" style="width: 69%"></div></div>
+      <div class="meter__track"><div class="meter__fill" id="manualFill" style="width: 60%"></div></div>
       <div class="meter__legend">
         <span>9 PASS</span>
-        <span>4 pending (v5.5.0, v5.6.0, v5.7.0, v5.8.0)</span>
+        <span>6 pending (v5.5.0–v5.9.0)</span>
       </div>
     </div>
   </section>
@@ -133,7 +133,7 @@
         <button class="chip" type="button" data-filter="verified" aria-pressed="false">Manual PASS</button>
         <button class="chip" type="button" data-filter="pending" aria-pressed="false">Manual pending</button>
       </div>
-      <span class="result-count" id="resultCount" aria-live="polite">13 versi</span>
+      <span class="result-count" id="resultCount" aria-live="polite">14 versi</span>
     </div>
 
     <p class="no-result" id="noResult">Tidak ada versi yang cocok dengan pencarian atau filter ini.</p>
@@ -141,12 +141,112 @@
     <!-- ========================= DAFTAR VERSI ========================= -->
     <div class="releases" id="releases">
 
+      <!-- ---------------------------------------------------- v5.9.0 -->
+      <article class="release" id="v5-9-0" data-status="deployed" data-manual="pending"
+        data-search="session idle expiry server-tracked login logout relogin uuid excel export expired kembali">
+        <div class="release__rail" aria-hidden="true">
+          <span class="release__node">5.9.0</span>
+          <span class="release__tag">terbaru</span>
+        </div>
+        <div class="release__body">
+          <header class="release__head">
+            <div>
+              <p class="release__date">13 Oktober 2026</p>
+              <h2 class="release__title">Session Idle Expiry Server-Tracked + Hotfix Export Excel UUID</h2>
+            </div>
+            <div class="release__badges">
+              <span class="badge badge--ok">Terdeploy</span>
+              <span class="badge badge--warn">Manual PM pending</span>
+            </div>
+          </header>
+          <p class="release__lede">Sesi login kini punya idle expiry server-side via tabel <code>user_sessions</code>: 4 jam untuk semua pengguna, 1 jam untuk <code>system_admin</code>. Setelah tidak aktif, pengguna dipaksa login ulang dan dikembalikan ke halaman asal. Juga memperbaiki error export Excel ketika kolom ID peminjaman bertipe UUID.</p>
+          <div class="release__grid">
+            <div>
+              <section class="block">
+                <h3 class="block__title">Ringkasan perubahan</h3>
+                <ul class="points">
+                  <li><strong>Server-tracked session</strong>: tabel baru <code>user_sessions</code> (migration <code>v590_user_sessions</code>) + RLS owner-policy <code>(select auth.uid()) = user_id</code> + trigger anti-tamper <code>trg_lock_session_idle</code>.</li>
+                  <li><strong>Middleware gate</strong>: setelah <code>getUser()</code>, user login wajib lolos <code>checkSession</code> di <code>lib/supabase/session-gate.ts</code>; expired → redirect <code>/?login=expired&amp;next=&lt;path&gt;</code>; cookie <code>dolphin_sid</code> httpOnly di luar chunk auth Supabase.</li>
+                  <li><strong>API guard</strong>: <code>/api/export/riwayat</code>, <code>/api/export/inventaris</code>, <code>/api/delete-cloudinary</code> diproteksi (matcher middleware tidak mencakup <code>/api</code>); <code>app/api/auth/logout</code> baru menandai <code>end_reason='logout'</code>.</li>
+                  <li><strong>UX idle</strong>: <code>session-expired-handler.tsx</code> menampilkan toast di homepage + simpan tujuan kembali di <code>sessionStorage</code>; navbar memakai <code>consumeStoredNext()</code> untuk redirect OAuth.</li>
+                  <li><strong>Hotfix Excel UUID</strong>: <code>lib/export-excel.ts</code> — kolom ID &amp; ID Peminjaman diubah dari sel <code>Number</code> ke sel teks karena kolom DB bertipe <code>uuid</code>.</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Status checkpoint</h3>
+                <div class="table-wrap">
+                  <table>
+                    <thead><tr><th>Tahap</th><th>Status</th><th>Bukti</th></tr></thead>
+                    <tbody>
+                      <tr><td>LOCAL-READY</td><td><span class="badge badge--ok">Pass</span></td><td><code>tsc</code> EXIT=0 + build webpack lulus (BUILD_ID <code>AiYrIKA7KJGjlvKbeYTvT</code>).</td></tr>
+                      <tr><td>DB MIGRATION</td><td><span class="badge badge--ok">Pass</span></td><td>Tabel <code>user_sessions</code> + RLS + trigger terpasang; <code>get_advisors</code> tanpa temuan baru untuk tabel ini.</td></tr>
+                      <tr><td>GITHUB-BACKUP</td><td><span class="badge badge--ok">Pass</span></td><td>Commit <code>68435dd</code> (spec) + <code>c2920fc</code> (kode) + bump versi di-push ke <code>origin/master</code>.</td></tr>
+                      <tr><td>DEPLOYED</td><td><span class="badge badge--ok">Pass</span></td><td>13 Okt 2026; BUILD_ID <code>AiYrIKA7KJGjlvKbeYTvT</code>; SHA-256 <code>242ce23c…81a37a3</code>; ZIP 28,1 MB. Smoke origin: <code>/</code> 200, <code>robots.txt</code>/<code>sitemap.xml</code> 200, export tanpa login 401, <code>/api/auth/logout</code> GET 405. Backup <code>httpdocs.old-deploy-20261013-101927</code>. Footer <code>DOLPHIN System v5.9.0</code>.</td></tr>
+                      <tr><td>MANUAL-TEST</td><td><span class="badge badge--warn">Pending</span></td><td>Menunggu uji PM: paksa <code>expires_at</code> ke masa lalu via SQL → reload harus redirect; login ulang kembali ke halaman asal; unduh Excel riwayat lab ber-UUID.</td></tr>
+                    </tbody>
+                  </table>
+                </div>
+              </section>
+              <section class="block">
+                <h3 class="block__title">File berubah</h3>
+                <ul class="files">
+                  <li>lib/version.ts</li>
+                  <li>lib/supabase/session-gate.ts (baru)</li>
+                  <li>supabase/migrations/20261013050000_v590_user_sessions.sql (baru)</li>
+                  <li>middleware.ts</li>
+                  <li>app/api/auth/logout/route.ts (baru)</li>
+                  <li>app/api/export/riwayat/route.ts</li>
+                  <li>app/api/export/inventaris/route.ts</li>
+                  <li>app/api/delete-cloudinary/route.ts</li>
+                  <li>components/session-expired-handler.tsx (baru)</li>
+                  <li>components/navbar.tsx</li>
+                  <li>app/page.tsx</li>
+                  <li>components/export-excel-button.tsx</li>
+                  <li>lib/export-excel.ts</li>
+                </ul>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Risiko &amp; rollback</h3>
+                <div class="callout callout--warn">
+                  <span class="callout__title">Gate fail-closed.</span>
+                  <p>Sesi yang tidak dapat diverifikasi (mis. error DB) → pengguna diarahkan login ulang, bukan dibiarkan masuk. Rollback cepat via ZIP v5.8.0 dari backup <code>httpdocs.old-deploy-20261003-185310</code>; tabel <code>user_sessions</code> boleh dibiarkan (kosong) atau di-<code>DROP</code> manual.</p>
+                </div>
+              </section>
+            </div>
+            <aside>
+              <section class="block">
+                <h3 class="block__title">Metrik</h3>
+                <dl class="metrics">
+                  <div><dt>Idle publik/dosen/admin</dt><dd>4 jam</dd></div>
+                  <div><dt>Idle system_admin</dt><dd>1 jam</dd></div>
+                  <div><dt>Heartbeat DB</dt><dd>throttled 60 dtk</dd></div>
+                  <div><dt>API di-guard</dt><dd>export ×2 + delete</dd></div>
+                </dl>
+              </section>
+              <section class="block">
+                <h3 class="block__title">Linimasa</h3>
+                <ul class="chronology">
+                  <li><time>Desain</time><span>Spec server-tracked, idle 4 jam / 1 jam, sesi per-device.</span></li>
+                  <li><time>Database</time><span>Migration <code>user_sessions</code> + RLS + trigger anti-tamper.</span></li>
+                  <li><time>Kode</time><span><code>session-gate</code>, gate middleware, guard API, route logout, UX toast + kembali.</span></li>
+                  <li><time>Build &amp; deploy</time><span>tsc + webpack lulus; deploy BUILD_ID <code>AiYr…vT</code> ke production.</span></li>
+                </ul>
+              </section>
+            </aside>
+          </div>
+          <div class="links">
+            <a class="link-pill" href="5.9.0/PATCH.md">Catatan teknis v5.9.0</a>
+            <a class="link-pill" href="https://github.com/weblabperikananpolinela/Lab-perikanan-polinela/commit/c2920fc" rel="noopener">Commit c2920fc</a>
+            <a class="link-pill" href="../superpowers/specs/2026-10-13-session-expiry-design.md">Spec desain</a>
+          </div>
+        </div>
+      </article>
+
       <!-- ---------------------------------------------------- v5.8.0 -->
       <article class="release" id="v5-8-0" data-status="deployed" data-manual="pending"
         data-search="master lab tefa dinamis crud system admin is_active pagination status organisasi jadwal inventaris pengajuan">
         <div class="release__rail" aria-hidden="true">
           <span class="release__node">5.8.0</span>
-          <span class="release__tag">terbaru</span>
         </div>
         <div class="release__body">
           <header class="release__head">
@@ -1074,18 +1174,18 @@
         <h2>Catatan operasional</h2>
         <div class="callout">
           <span class="callout__title">Rollback selalu tersedia.</span>
-          <p>Generasi aktif memakai <code>BUILD_ID OAIJEx_T68C5ANlHPvIKX</code>. Backup sebelum deploy v5.8.0: <code>httpdocs.old-deploy-20261003-185310</code>. Backup sebelumnya: <code>httpdocs.old-deploy-20261003-143957</code> dan <code>httpdocs.old-deploy-20261001-065833</code>. Status deployment dan status backup GitHub dicatat sebagai checkpoint terpisah.</p>
+          <p>Generasi aktif memakai <code>BUILD_ID AiYrIKA7KJGjlvKbeYTvT</code>. Backup sebelum deploy v5.9.0: <code>httpdocs.old-deploy-20261013-101927</code>. Backup v5.8.0: <code>httpdocs.old-deploy-20261003-185310</code>. Backup sebelumnya: <code>httpdocs.old-deploy-20261003-143957</code> dan <code>httpdocs.old-deploy-20261001-065833</code>. Status deployment dan status backup GitHub dicatat sebagai checkpoint terpisah.</p>
         </div>
         <div class="callout callout--warn" style="margin-top: var(--space-3)">
           <span class="callout__title">Pekerjaan yang masih menunggu.</span>
-          <p>Uji manual PM untuk v5.5.0, v5.6.0, v5.7.0, dan v5.8.0. Verifikasi Google Search Console tertahan tantangan keamanan Cloudflare/ModSecurity di depan origin. Preset Cloudinary <code>dolphin_dokumen</code> dan variabel Plesk untuk unggah dokumen belum diisi.</p>
+          <p>Uji manual PM untuk v5.5.0, v5.6.0, v5.7.0, v5.8.0, dan v5.9.0. Verifikasi Google Search Console tertahan tantangan keamanan Cloudflare/ModSecurity di depan origin. Preset Cloudinary <code>dolphin_dokumen</code> dan variabel Plesk untuk unggah dokumen belum diisi.</p>
         </div>
       </div>
     </section>
   </div>
 
   <footer class="site-footer">
-    <p>DOLPHIN System v5.8.0 · Halaman statis, tidak menjalankan perintah apa pun. Terakhir diperbarui 4 Oktober 2026.</p>
+    <p>DOLPHIN System v5.9.0 · Halaman statis, tidak menjalankan perintah apa pun. Terakhir diperbarui 13 Oktober 2026.</p>
   </footer>
 
   <script>
